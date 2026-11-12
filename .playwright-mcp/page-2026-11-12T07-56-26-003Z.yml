@@ -1,0 +1,145 @@
+- generic [ref=f7e3]:
+  - banner [ref=f7e4]:
+    - generic [ref=f7e5]: Ordering from Lexie & Taylor — Engagement · Use code LEXIE10 for 10% off
+    - generic [ref=f7e7]:
+      - link "L Lumen Studio" [ref=f7e9] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f7e10]: L
+        - text: Lumen Studio
+      - generic [ref=f7e11]:
+        - button "Open cart" [ref=f7e12]:
+          - generic [ref=f7e15]: "7"
+        - button "Menu" [ref=f7e17]
+  - main [ref=f7e20]:
+    - generic [ref=f7e21]:
+      - navigation [ref=f7e22]:
+        - link "Store" [ref=f7e23] [cursor=pointer]:
+          - /url: /
+        - text: /
+        - link "Packages" [ref=f7e24] [cursor=pointer]:
+          - /url: /packages
+        - text: /The Heirloom
+      - generic [ref=f7e25]:
+        - generic [ref=f7e26]:
+          - generic [ref=f7e27]:
+            - paragraph [ref=f7e36]: Lexie & Taylor
+            - generic [ref=f7e37]: 1 × Heirloom Album
+          - generic [ref=f7e38]: 1 × Framed Print
+          - generic [ref=f7e46]: 2 × Fine Art Print
+        - generic [ref=f7e57]:
+          - generic [ref=f7e58]: Most loved
+          - heading "The Heirloom" [level=1] [ref=f7e59]
+          - paragraph [ref=f7e60]: Our signature album with wall art to match.
+          - generic [ref=f7e61]:
+            - generic [ref=f7e62]: $540
+            - generic [ref=f7e63]: $691
+            - generic [ref=f7e64]: Save $151 (22%)
+          - generic [ref=f7e67]:
+            - paragraph [ref=f7e68]: What’s included
+            - generic [ref=f7e69]:
+              - generic [ref=f7e70]:
+                - paragraph [ref=f7e80]: Lexie & Taylor
+                - generic [ref=f7e81]:
+                  - paragraph [ref=f7e82]: 1 × Heirloom Album
+                  - paragraph [ref=f7e83]: 10 × 10" · Charcoal Linen · Lustre
+                  - paragraph [ref=f7e84]: 20–60 photos · 20 included
+                - generic [ref=f7e85]: $495
+              - generic [ref=f7e86]:
+                - generic [ref=f7e94]:
+                  - paragraph [ref=f7e95]: 1 × Framed Print
+                  - paragraph [ref=f7e96]: 16 × 20" · Black Oak · White mat · Standard acrylic
+                  - paragraph [ref=f7e97]: Choose 1 photo
+                - generic [ref=f7e98]: $160
+              - generic [ref=f7e99]:
+                - generic [ref=f7e110]:
+                  - paragraph [ref=f7e111]: 2 × Fine Art Print
+                  - paragraph [ref=f7e112]: 8 × 10" · Lustre · Borderless
+                  - paragraph [ref=f7e113]: Choose 2 photos
+                - generic [ref=f7e114]: $36
+          - paragraph [ref=f7e118]: Next you’ll choose photos for each piece, then fine-tune every crop. Albums can hold extra photos for a small fee.
+          - button "Choose photos for this package" [ref=f7e119]
+      - generic [ref=f7e127]:
+        - heading "Other packages" [level=2] [ref=f7e128]
+        - generic [ref=f7e129]:
+          - link "× 4 Save 16% The Keepsake A framed favourite and a stack of prints to share. 1 × Framed Print · 11 × 14\" 4 × Fine Art Print · 5 × 7\" $110 $131" [ref=f7e130] [cursor=pointer]:
+            - /url: /packages/the-keepsake
+            - generic [ref=f7e131]:
+              - generic [ref=f7e132]: × 4
+              - generic [ref=f7e152]: Save 16%
+            - generic [ref=f7e153]:
+              - generic [ref=f7e155]:
+                - paragraph [ref=f7e156]: The Keepsake
+                - paragraph [ref=f7e157]: A framed favourite and a stack of prints to share.
+              - list [ref=f7e161]:
+                - listitem [ref=f7e162]: 1 × Framed Print · 11 × 14"
+                - listitem [ref=f7e165]: 4 × Fine Art Print · 5 × 7"
+              - generic [ref=f7e168]:
+                - generic [ref=f7e169]: $110
+                - generic [ref=f7e170]: $131
+          - link "× 2 × 2 Save 20% Gallery Wall Five pieces, styled to hang together. 1 × Gallery Canvas · 16 × 20\" 2 × Framed Print · 11 × 14\" 2 × Metal Print · 8 × 12\" $355 $445" [ref=f7e171] [cursor=pointer]:
+            - /url: /packages/gallery-wall
+            - generic [ref=f7e172]:
+              - generic [ref=f7e174]:
+                - generic [ref=f7e181]: × 2
+                - generic [ref=f7e189]: × 2
+              - generic [ref=f7e196]: Save 20%
+            - generic [ref=f7e197]:
+              - generic [ref=f7e199]:
+                - paragraph [ref=f7e200]: Gallery Wall
+                - paragraph [ref=f7e201]: Five pieces, styled to hang together.
+              - list [ref=f7e205]:
+                - listitem [ref=f7e206]: 1 × Gallery Canvas · 16 × 20"
+                - listitem [ref=f7e209]: 2 × Framed Print · 11 × 14"
+                - listitem [ref=f7e212]: 2 × Metal Print · 8 × 12"
+              - generic [ref=f7e215]:
+                - generic [ref=f7e216]: $355
+                - generic [ref=f7e217]: $445
+  - contentinfo [ref=f7e218]:
+    - generic [ref=f7e219]:
+      - generic [ref=f7e220]:
+        - generic [ref=f7e221]:
+          - paragraph [ref=f7e222]: Printed with care for the people in the photographs.
+          - paragraph [ref=f7e223]: Lumen Studio · Monika Frias
+        - generic [ref=f7e224]:
+          - paragraph [ref=f7e225]: Shop
+          - list [ref=f7e226]:
+            - listitem [ref=f7e227]:
+              - link "Wall Art" [ref=f7e228] [cursor=pointer]:
+                - /url: /shop/wall-art
+            - listitem [ref=f7e229]:
+              - link "Albums & Books" [ref=f7e230] [cursor=pointer]:
+                - /url: /shop/albums
+            - listitem [ref=f7e231]:
+              - link "Fine Prints" [ref=f7e232] [cursor=pointer]:
+                - /url: /shop/prints
+            - listitem [ref=f7e233]:
+              - link "Desk & Gifts" [ref=f7e234] [cursor=pointer]:
+                - /url: /shop/desk-gifts
+        - generic [ref=f7e235]:
+          - paragraph [ref=f7e236]: Help
+          - list [ref=f7e237]:
+            - listitem [ref=f7e238]:
+              - link "Shipping" [ref=f7e239] [cursor=pointer]:
+                - /url: /packages/the-heirloom
+            - listitem [ref=f7e240]:
+              - link "Returns" [ref=f7e241] [cursor=pointer]:
+                - /url: /packages/the-heirloom
+            - listitem [ref=f7e242]:
+              - link "Print quality" [ref=f7e243] [cursor=pointer]:
+                - /url: /packages/the-heirloom
+        - generic [ref=f7e244]:
+          - paragraph [ref=f7e245]: Studio
+          - list [ref=f7e246]:
+            - listitem [ref=f7e247]:
+              - link "Gallery" [ref=f7e248] [cursor=pointer]:
+                - /url: /packages/the-heirloom
+            - listitem [ref=f7e249]:
+              - link "Contact" [ref=f7e250] [cursor=pointer]:
+                - /url: /packages/the-heirloom
+            - listitem [ref=f7e251]:
+              - link "Instagram" [ref=f7e252] [cursor=pointer]:
+                - /url: /packages/the-heirloom
+      - paragraph [ref=f7e254]: Lumen Studio
+      - generic [ref=f7e255]:
+        - generic [ref=f7e256]: © 2026 Lumen Studio. Prototype store.
+        - generic [ref=f7e257]: Powered by your photographer’s gallery

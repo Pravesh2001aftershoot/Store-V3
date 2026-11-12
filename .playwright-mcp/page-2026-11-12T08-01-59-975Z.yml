@@ -1,0 +1,397 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: Ordering from Lexie & Taylor — Engagement ·
+      - text: Use code LEXIE10 for 10% off
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]:
+        - link "Aftershoot home" [ref=f1e10] [cursor=pointer]:
+          - /url: /
+          - img "Aftershoot" [ref=f1e11]
+        - navigation [ref=f1e12]:
+          - link "Shop all" [ref=f1e13] [cursor=pointer]:
+            - /url: /shop
+          - link "Wall Art" [ref=f1e14] [cursor=pointer]:
+            - /url: /shop/wall-art
+          - link "Albums & Books" [ref=f1e15] [cursor=pointer]:
+            - /url: /shop/albums
+          - link "Fine Prints" [ref=f1e16] [cursor=pointer]:
+            - /url: /shop/prints
+          - link "Desk & Gifts" [ref=f1e17] [cursor=pointer]:
+            - /url: /shop/desk-gifts
+          - link "Packages" [ref=f1e18] [cursor=pointer]:
+            - /url: /packages
+      - generic [ref=f1e19]:
+        - link "Back to gallery" [ref=f1e20] [cursor=pointer]:
+          - /url: "#gallery"
+        - button "Open cart" [ref=f1e23]:
+          - generic [ref=f1e26]: Cart
+          - generic [ref=f1e27]: "7"
+  - main [ref=f1e29]:
+    - generic [ref=f1e31]:
+      - generic [ref=f1e32]:
+        - generic [ref=f1e33]: 28 photos from Lexie & Taylor — Engagement
+        - heading "Your favourite moments, made to hold." [level=1] [ref=f1e36]:
+          - generic [ref=f1e37]: Your
+          - generic [ref=f1e39]: favourite
+          - generic [ref=f1e41]: moments,
+          - generic [ref=f1e43]: made
+          - generic [ref=f1e45]: to
+          - generic [ref=f1e47]: hold.
+        - paragraph [ref=f1e49]: Archival prints, hand-bound albums and wall art — curated by Monika Frias and made from the photos in your gallery.
+        - generic [ref=f1e50]:
+          - link "Shop the collection" [ref=f1e51] [cursor=pointer]:
+            - /url: /shop
+          - link "View packages" [ref=f1e57] [cursor=pointer]:
+            - /url: /packages
+      - generic [ref=f1e58]:
+        - paragraph [ref=f1e76]: Lexie & Taylor
+        - generic [ref=f1e77]:
+          - paragraph [ref=f1e78]: Packages from
+          - paragraph [ref=f1e79]: $110
+          - paragraph [ref=f1e80]: Save up to 22%
+    - generic [ref=f1e83]:
+      - generic [ref=f1e84]:
+        - generic [ref=f1e85]:
+          - paragraph [ref=f1e86]: Shop by category
+          - heading "Something for every wall, shelf and story." [level=2] [ref=f1e88]:
+            - generic [ref=f1e89]: Something
+            - generic [ref=f1e91]: for
+            - generic [ref=f1e93]: every
+            - generic [ref=f1e95]: wall,
+            - generic [ref=f1e97]: shelf
+            - generic [ref=f1e99]: and
+            - generic [ref=f1e101]: story.
+        - link "Shop all" [ref=f1e103] [cursor=pointer]:
+          - /url: /shop
+      - generic [ref=f1e109]:
+        - link "Wall Art Framed prints, canvas and metal — made to be lived with. 01 · 4 products" [ref=f1e111] [cursor=pointer]:
+          - /url: /shop/wall-art
+          - generic [ref=f1e120]:
+            - paragraph [ref=f1e121]: Wall Art
+            - paragraph [ref=f1e122]: Framed prints, canvas and metal — made to be lived with.
+          - generic [ref=f1e126]: 01 · 4 products
+        - link "Lexie & Taylor Albums & Books Heirloom albums and layflat books that tell the whole story. 02 · 2 products" [ref=f1e128] [cursor=pointer]:
+          - /url: /shop/albums
+          - paragraph [ref=f1e138]: Lexie & Taylor
+          - generic [ref=f1e140]:
+            - paragraph [ref=f1e141]: Albums & Books
+            - paragraph [ref=f1e142]: Heirloom albums and layflat books that tell the whole story.
+          - generic [ref=f1e146]: 02 · 2 products
+        - link "Fine Prints Archival papers, printed by hand in small batches. 03 · 1 products" [ref=f1e148] [cursor=pointer]:
+          - /url: /shop/prints
+          - generic [ref=f1e160]:
+            - paragraph [ref=f1e161]: Fine Prints
+            - paragraph [ref=f1e162]: Archival papers, printed by hand in small batches.
+          - generic [ref=f1e166]: 03 · 1 products
+        - link "Desk & Gifts Small keepsakes for shelves, desks and the people you love. 04 · 2 products" [ref=f1e168] [cursor=pointer]:
+          - /url: /shop/desk-gifts
+          - generic [ref=f1e177]:
+            - paragraph [ref=f1e178]: Desk & Gifts
+            - paragraph [ref=f1e179]: Small keepsakes for shelves, desks and the people you love.
+          - generic [ref=f1e183]: 04 · 2 products
+    - generic [ref=f1e185]:
+      - generic [ref=f1e186]:
+        - paragraph [ref=f1e187]: How it works
+        - heading "From gallery to your hands in four steps." [level=2] [ref=f1e189]:
+          - generic [ref=f1e190]: From
+          - generic [ref=f1e192]: gallery
+          - generic [ref=f1e194]: to
+          - generic [ref=f1e196]: your
+          - generic [ref=f1e198]: hands
+          - generic [ref=f1e200]: in
+          - generic [ref=f1e202]: four
+          - generic [ref=f1e204]: steps.
+        - paragraph [ref=f1e206]: Every order is reviewed by Monika Frias before it goes to print, so colour and crop are exactly right.
+      - generic [ref=f1e207]:
+        - generic [ref=f1e208]:
+          - generic [ref=f1e209]: "01"
+          - generic [ref=f1e210]:
+            - paragraph [ref=f1e211]: Pick a product
+            - paragraph [ref=f1e212]: Browse wall art, albums, prints and gifts curated by your photographer.
+        - generic [ref=f1e216]:
+          - generic [ref=f1e217]: "02"
+          - generic [ref=f1e218]:
+            - paragraph [ref=f1e219]: Make it yours
+            - paragraph [ref=f1e220]: Choose size, frame, paper and finish — the preview updates as you go.
+        - generic [ref=f1e224]:
+          - generic [ref=f1e225]: "03"
+          - generic [ref=f1e226]:
+            - paragraph [ref=f1e227]: Choose your photos
+            - paragraph [ref=f1e228]: Select one or many straight from your gallery. More photos, more prints.
+        - generic [ref=f1e232]:
+          - generic [ref=f1e233]: "04"
+          - generic [ref=f1e234]:
+            - paragraph [ref=f1e235]: Perfect every crop
+            - paragraph [ref=f1e236]: Drag and zoom each photo so it fits exactly how you want it printed.
+    - generic [ref=f1e240]:
+      - generic [ref=f1e241]:
+        - generic [ref=f1e242]:
+          - paragraph [ref=f1e243]: Client favourites
+          - heading "Most ordered this season" [level=2] [ref=f1e245]:
+            - generic [ref=f1e246]: Most
+            - generic [ref=f1e248]: ordered
+            - generic [ref=f1e250]: this
+            - generic [ref=f1e252]: season
+        - paragraph [ref=f1e254]: Drag to explore →
+      - generic [ref=f1e256]:
+        - link "Bestseller Framed Print Solid wood frame, archival print, ready to hang. from $65 Black Oak Natural Oak White Ash Walnut 4 sizes" [ref=f1e258] [cursor=pointer]:
+          - /url: /product/framed-print
+          - generic [ref=f1e259]: Bestseller
+          - generic [ref=f1e271]:
+            - generic [ref=f1e272]:
+              - paragraph [ref=f1e273]: Framed Print
+              - paragraph [ref=f1e274]: Solid wood frame, archival print, ready to hang.
+            - paragraph [ref=f1e275]: from $65
+          - generic [ref=f1e276]:
+            - generic "Black Oak" [ref=f1e277]
+            - generic "Natural Oak" [ref=f1e278]
+            - generic "White Ash" [ref=f1e279]
+            - generic "Walnut" [ref=f1e280]
+            - generic [ref=f1e281]: 4 sizes
+        - link "Gallery Canvas Hand-stretched on solid pine bars. from $85 Mirror White Black 4 sizes" [ref=f1e283] [cursor=pointer]:
+          - /url: /product/canvas
+          - generic [ref=f1e294]:
+            - generic [ref=f1e295]:
+              - paragraph [ref=f1e296]: Gallery Canvas
+              - paragraph [ref=f1e297]: Hand-stretched on solid pine bars.
+            - paragraph [ref=f1e298]: from $85
+          - generic [ref=f1e299]:
+            - generic "Mirror" [ref=f1e300]
+            - generic "White" [ref=f1e301]
+            - generic "Black" [ref=f1e302]
+            - generic [ref=f1e303]: 4 sizes
+        - link "New Metal Print Infused into aluminium for vivid depth. from $70" [ref=f1e305] [cursor=pointer]:
+          - /url: /product/metal
+          - generic [ref=f1e306]: New
+          - generic [ref=f1e317]:
+            - generic [ref=f1e318]:
+              - paragraph [ref=f1e319]: Metal Print
+              - paragraph [ref=f1e320]: Infused into aluminium for vivid depth.
+            - paragraph [ref=f1e321]: from $70
+        - link "Framed Triptych Three moments, one story. from $165 Black Oak Natural Oak White Ash Walnut 3 sizes" [ref=f1e323] [cursor=pointer]:
+          - /url: /product/triptych
+          - generic [ref=f1e342]:
+            - generic [ref=f1e343]:
+              - paragraph [ref=f1e344]: Framed Triptych
+              - paragraph [ref=f1e345]: Three moments, one story.
+            - paragraph [ref=f1e346]: from $165
+          - generic [ref=f1e347]:
+            - generic "Black Oak" [ref=f1e348]
+            - generic "Natural Oak" [ref=f1e349]
+            - generic "White Ash" [ref=f1e350]
+            - generic "Walnut" [ref=f1e351]
+            - generic [ref=f1e352]: 3 sizes
+        - link "Lexie & Taylor Signature Heirloom Album Thick layflat pages bound in linen or leather. from $395 Charcoal Linen Sand Linen Ivory Leather Black Leather 3 sizes" [ref=f1e354] [cursor=pointer]:
+          - /url: /product/heirloom-album
+          - generic [ref=f1e355]:
+            - paragraph [ref=f1e365]: Lexie & Taylor
+            - generic [ref=f1e366]: Signature
+          - generic [ref=f1e370]:
+            - generic [ref=f1e371]:
+              - paragraph [ref=f1e372]: Heirloom Album
+              - paragraph [ref=f1e373]: Thick layflat pages bound in linen or leather.
+            - paragraph [ref=f1e374]: from $395
+          - generic [ref=f1e375]:
+            - generic "Charcoal Linen" [ref=f1e376]
+            - generic "Sand Linen" [ref=f1e377]
+            - generic "Ivory Leather" [ref=f1e378]
+            - generic "Black Leather" [ref=f1e379]
+            - generic [ref=f1e380]: 3 sizes
+        - link [ref=f1e382] [cursor=pointer]:
+          - /url: /product/layflat-book
+          - generic [ref=f1e394]:
+            - generic [ref=f1e395]:
+              - paragraph [ref=f1e396]: Layflat Photo Book
+              - paragraph [ref=f1e397]: A photo-wrapped hardcover for every shelf.
+            - paragraph [ref=f1e398]: from $120
+        - link [ref=f1e400] [cursor=pointer]:
+          - /url: /product/fine-art-print
+          - generic [ref=f1e415]:
+            - generic [ref=f1e416]:
+              - paragraph [ref=f1e417]: Fine Art Print
+              - paragraph [ref=f1e418]: Archival prints in every size you need.
+            - paragraph [ref=f1e419]: from $6
+        - link [ref=f1e421] [cursor=pointer]:
+          - /url: /product/acrylic-block
+          - generic [ref=f1e433]:
+            - generic [ref=f1e434]:
+              - paragraph [ref=f1e435]: Acrylic Block
+              - paragraph [ref=f1e436]: A crystal-clear keepsake that stands on its own.
+            - paragraph [ref=f1e437]: from $45
+        - link "Desk Frame A small wooden frame with an easel back. from $38 Black Oak Natural Oak White Ash Walnut 2 sizes" [ref=f1e439] [cursor=pointer]:
+          - /url: /product/desk-frame
+          - generic [ref=f1e452]:
+            - generic [ref=f1e453]:
+              - paragraph [ref=f1e454]: Desk Frame
+              - paragraph [ref=f1e455]: A small wooden frame with an easel back.
+            - paragraph [ref=f1e456]: from $38
+          - generic [ref=f1e457]:
+            - generic "Black Oak" [ref=f1e458]
+            - generic "Natural Oak" [ref=f1e459]
+            - generic "White Ash" [ref=f1e460]
+            - generic "Walnut" [ref=f1e461]
+            - generic [ref=f1e462]: 2 sizes
+    - generic [ref=f1e464]:
+      - generic [ref=f1e465]:
+        - generic [ref=f1e466]:
+          - paragraph [ref=f1e467]: Packages
+          - heading "Bundle your favourites and save up to 22%." [level=2] [ref=f1e469]:
+            - generic [ref=f1e470]: Bundle
+            - generic [ref=f1e472]: your
+            - generic [ref=f1e474]: favourites
+            - generic [ref=f1e476]: and
+            - generic [ref=f1e478]: save
+            - generic [ref=f1e480]: up
+            - generic [ref=f1e482]: to
+            - generic [ref=f1e484]: 22%.
+        - link "All packages" [ref=f1e486] [cursor=pointer]:
+          - /url: /packages
+      - generic [ref=f1e492]:
+        - link "× 4 Save 16% The Keepsake A framed favourite and a stack of prints to share. 1 × Framed Print · 11 × 14\" 4 × Fine Art Print · 5 × 7\" $110 $131" [ref=f1e494] [cursor=pointer]:
+          - /url: /packages/the-keepsake
+          - generic [ref=f1e495]:
+            - generic [ref=f1e496]: × 4
+            - generic [ref=f1e516]: Save 16%
+          - generic [ref=f1e517]:
+            - generic [ref=f1e519]:
+              - paragraph [ref=f1e520]: The Keepsake
+              - paragraph [ref=f1e521]: A framed favourite and a stack of prints to share.
+            - list [ref=f1e525]:
+              - listitem [ref=f1e526]: 1 × Framed Print · 11 × 14"
+              - listitem [ref=f1e529]: 4 × Fine Art Print · 5 × 7"
+            - generic [ref=f1e532]:
+              - generic [ref=f1e533]: $110
+              - generic [ref=f1e534]: $131
+        - link "Lexie & Taylor × 2 Save 22% Most loved The Heirloom Our signature album with wall art to match. 1 × Heirloom Album · 10 × 10\" 1 × Framed Print · 16 × 20\" 2 × Fine Art Print · 8 × 10\" $540 $691" [ref=f1e536] [cursor=pointer]:
+          - /url: /packages/the-heirloom
+          - generic [ref=f1e537]:
+            - generic [ref=f1e539]:
+              - paragraph [ref=f1e549]: Lexie & Taylor
+              - generic [ref=f1e557]: × 2
+            - generic [ref=f1e568]: Save 22%
+            - generic [ref=f1e569]: Most loved
+          - generic [ref=f1e570]:
+            - generic [ref=f1e572]:
+              - paragraph [ref=f1e573]: The Heirloom
+              - paragraph [ref=f1e574]: Our signature album with wall art to match.
+            - list [ref=f1e578]:
+              - listitem [ref=f1e579]: 1 × Heirloom Album · 10 × 10"
+              - listitem [ref=f1e582]: 1 × Framed Print · 16 × 20"
+              - listitem [ref=f1e585]: 2 × Fine Art Print · 8 × 10"
+            - generic [ref=f1e588]:
+              - generic [ref=f1e589]: $540
+              - generic [ref=f1e590]: $691
+        - link "× 2 × 2 Save 20% Gallery Wall Five pieces, styled to hang together. 1 × Gallery Canvas · 16 × 20\" 2 × Framed Print · 11 × 14\" 2 × Metal Print · 8 × 12\" $355 $445" [ref=f1e592] [cursor=pointer]:
+          - /url: /packages/gallery-wall
+          - generic [ref=f1e593]:
+            - generic [ref=f1e595]:
+              - generic [ref=f1e602]: × 2
+              - generic [ref=f1e610]: × 2
+            - generic [ref=f1e617]: Save 20%
+          - generic [ref=f1e618]:
+            - generic [ref=f1e620]:
+              - paragraph [ref=f1e621]: Gallery Wall
+              - paragraph [ref=f1e622]: Five pieces, styled to hang together.
+            - list [ref=f1e626]:
+              - listitem [ref=f1e627]: 1 × Gallery Canvas · 16 × 20"
+              - listitem [ref=f1e630]: 2 × Framed Print · 11 × 14"
+              - listitem [ref=f1e633]: 2 × Metal Print · 8 × 12"
+            - generic [ref=f1e636]:
+              - generic [ref=f1e637]: $355
+              - generic [ref=f1e638]: $445
+        - link "× 2 × 10 Save 18% Family Share A book for the shelf and gifts for the grandparents. 1 × Layflat Photo Book · 8 × 8\" 2 × Acrylic Block · 5 × 7\" 10 × Fine Art Print · 4 × 6\" $245 $298" [ref=f1e640] [cursor=pointer]:
+          - /url: /packages/family-share
+          - generic [ref=f1e641]:
+            - generic [ref=f1e643]:
+              - generic [ref=f1e651]: × 2
+              - generic [ref=f1e659]: × 10
+            - generic [ref=f1e670]: Save 18%
+          - generic [ref=f1e671]:
+            - generic [ref=f1e673]:
+              - paragraph [ref=f1e674]: Family Share
+              - paragraph [ref=f1e675]: A book for the shelf and gifts for the grandparents.
+            - list [ref=f1e679]:
+              - listitem [ref=f1e680]: 1 × Layflat Photo Book · 8 × 8"
+              - listitem [ref=f1e683]: 2 × Acrylic Block · 5 × 7"
+              - listitem [ref=f1e686]: 10 × Fine Art Print · 4 × 6"
+            - generic [ref=f1e689]:
+              - generic [ref=f1e690]: $245
+              - generic [ref=f1e691]: $298
+    - generic [ref=f1e692]:
+      - generic [ref=f1e693]:
+        - paragraph [ref=f1e696]: Museum-grade
+        - paragraph [ref=f1e697]: Archival papers and inks rated 100+ years.
+      - generic [ref=f1e698]:
+        - paragraph [ref=f1e701]: Reviewed by your photographer
+        - paragraph [ref=f1e702]: Every crop is checked before printing.
+      - generic [ref=f1e703]:
+        - paragraph [ref=f1e706]: Responsibly made
+        - paragraph [ref=f1e707]: FSC wood and recyclable packaging.
+      - generic [ref=f1e708]:
+        - paragraph [ref=f1e711]: Insured shipping
+        - paragraph [ref=f1e712]: Tracked, insured and carefully packed.
+    - generic [ref=f1e713]:
+      - generic [ref=f1e714]:
+        - paragraph [ref=f1e715]: FAQ
+        - heading "Good to know" [level=2] [ref=f1e717]
+      - generic [ref=f1e718]:
+        - generic [ref=f1e719]:
+          - button "What happens if I select several photos for one product?" [expanded] [ref=f1e720]
+          - generic [ref=f1e727]: For single-photo products like framed prints, each photo you select becomes its own item in the same size and finish — so choosing 4 photos gives you 4 framed prints. Albums and books hold all selected photos in one item.
+        - button "Can I adjust how my photos are cropped?" [ref=f1e730]
+        - button "How do packages work?" [ref=f1e738]
+        - button "When will my order arrive?" [ref=f1e746]
+        - button "Do you print the photos exactly as they appear in the gallery?" [ref=f1e754]
+  - contentinfo [ref=f1e761]:
+    - generic [ref=f1e762]:
+      - generic [ref=f1e763]:
+        - generic [ref=f1e764]:
+          - link "Aftershoot home" [ref=f1e765] [cursor=pointer]:
+            - /url: /
+            - img "Aftershoot" [ref=f1e766]
+          - paragraph [ref=f1e767]: Printed with care for the people in the photographs.
+          - paragraph [ref=f1e768]: Aftershoot · Monika Frias
+        - generic [ref=f1e769]:
+          - paragraph [ref=f1e770]: Shop
+          - list [ref=f1e771]:
+            - listitem [ref=f1e772]:
+              - link "Wall Art" [ref=f1e773] [cursor=pointer]:
+                - /url: /shop/wall-art
+            - listitem [ref=f1e774]:
+              - link "Albums & Books" [ref=f1e775] [cursor=pointer]:
+                - /url: /shop/albums
+            - listitem [ref=f1e776]:
+              - link "Fine Prints" [ref=f1e777] [cursor=pointer]:
+                - /url: /shop/prints
+            - listitem [ref=f1e778]:
+              - link "Desk & Gifts" [ref=f1e779] [cursor=pointer]:
+                - /url: /shop/desk-gifts
+        - generic [ref=f1e780]:
+          - paragraph [ref=f1e781]: Help
+          - list [ref=f1e782]:
+            - listitem [ref=f1e783]:
+              - link "Shipping" [ref=f1e784] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f1e785]:
+              - link "Returns" [ref=f1e786] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f1e787]:
+              - link "Print quality" [ref=f1e788] [cursor=pointer]:
+                - /url: /
+        - generic [ref=f1e789]:
+          - paragraph [ref=f1e790]: Studio
+          - list [ref=f1e791]:
+            - listitem [ref=f1e792]:
+              - link "Gallery" [ref=f1e793] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f1e794]:
+              - link "Contact" [ref=f1e795] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f1e796]:
+              - link "Instagram" [ref=f1e797] [cursor=pointer]:
+                - /url: /
+      - paragraph [ref=f1e799]: aftershoot
+      - generic [ref=f1e800]:
+        - generic [ref=f1e801]: © 2026 Aftershoot. Prototype store.
+        - generic [ref=f1e802]: Powered by your photographer’s gallery

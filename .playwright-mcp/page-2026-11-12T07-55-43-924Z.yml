@@ -1,0 +1,105 @@
+- generic [ref=f5e154]:
+  - banner [ref=f5e155]:
+    - generic [ref=f5e156]:
+      - link "L Lumen Studio" [ref=f5e157] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f5e158]: L
+        - text: Lumen Studio
+      - navigation [ref=f5e159]:
+        - link "Cart" [ref=f5e161] [cursor=pointer]:
+          - /url: /cart
+        - link "Details" [ref=f5e165] [cursor=pointer]:
+          - /url: /checkout
+        - generic [ref=f5e166]: Payment
+      - generic [ref=f5e170]: Secure checkout
+  - generic [ref=f5e173]:
+    - generic [ref=f5e175]:
+      - heading "Payment" [level=1] [ref=f5e176]
+      - generic [ref=f5e177]:
+        - generic [ref=f5e178]:
+          - generic [ref=f5e179]: Contact
+          - generic [ref=f5e180]: lexie@example.com
+          - link "Change" [ref=f5e181] [cursor=pointer]:
+            - /url: /checkout
+        - generic [ref=f5e182]:
+          - generic [ref=f5e183]: Ship to
+          - generic [ref=f5e184]: 24 Orchard Lane, Apt 3, Austin, TX 78701
+          - link "Change" [ref=f5e185] [cursor=pointer]:
+            - /url: /checkout
+        - generic [ref=f5e186]:
+          - generic [ref=f5e187]: Method
+          - generic [ref=f5e188]: Express · 3–5 business days · $28
+          - link "Change" [ref=f5e189] [cursor=pointer]:
+            - /url: /checkout
+      - generic [ref=f5e190]:
+        - paragraph [ref=f5e191]:
+          - generic [ref=f5e192]: "4"
+          - text: Payment method
+        - generic [ref=f5e193]:
+          - button "Card" [ref=f5e194]
+          - button "PayPal" [ref=f5e199]
+          - button "Apple Pay" [ref=f5e203]
+        - generic [ref=f5e208]:
+          - generic [ref=f5e209]:
+            - generic [ref=f5e210]:
+              - generic [ref=f5e211]: Card number
+              - textbox "Card number" [ref=f5e212]:
+                - /placeholder: 1234 1234 1234 1234
+            - generic [ref=f5e213]:
+              - generic [ref=f5e214]: Name on card
+              - textbox "Name on card" [ref=f5e215]: Lexie Taylor
+            - generic [ref=f5e216]:
+              - generic [ref=f5e217]: Expiry
+              - textbox "Expiry" [ref=f5e218]:
+                - /placeholder: MM / YY
+            - generic [ref=f5e219]:
+              - generic [ref=f5e220]: CVC
+              - textbox "CVC" [ref=f5e221]:
+                - /placeholder: "123"
+          - generic [ref=f5e226]:
+            - paragraph [ref=f5e231]: •••• •••• •••• ••••
+            - generic [ref=f5e232]:
+              - generic [ref=f5e233]: Lexie Taylor
+              - generic [ref=f5e234]: MM / YY
+        - generic [ref=f5e235] [cursor=pointer]:
+          - checkbox "Billing address same as shipping" [checked] [ref=f5e236]
+          - text: Billing address same as shipping
+      - button "Make payment · $1,166.79" [active] [ref=f5e237]
+      - paragraph [ref=f5e240]: Prototype ends here. No payment was processed.
+      - paragraph [ref=f5e243]: Payments are encrypted and processed securely. You won’t be charged until your photographer approves the order.
+    - complementary [ref=f5e244]:
+      - generic [ref=f5e245]:
+        - paragraph [ref=f5e246]: Order summary
+        - generic [ref=f5e247]:
+          - generic [ref=f5e256]:
+            - generic [ref=f5e257]:
+              - paragraph [ref=f5e258]: Framed Print
+              - paragraph [ref=f5e259]: $480
+            - paragraph [ref=f5e260]:
+              - generic [ref=f5e261]: 3 × Framed Print 16 × 20"
+          - generic [ref=f5e262]:
+            - paragraph [ref=f5e272]: Lexie & Taylor
+            - generic [ref=f5e273]:
+              - generic [ref=f5e274]:
+                - paragraph [ref=f5e275]: The Heirloom Package
+                - paragraph [ref=f5e276]: $572
+              - paragraph [ref=f5e277]:
+                - generic [ref=f5e278]: 1 × Heirloom Album 10 × 10" · 28 photos
+              - paragraph [ref=f5e279]:
+                - generic [ref=f5e280]: 1 × Framed Print 16 × 20"
+              - paragraph [ref=f5e281]:
+                - generic [ref=f5e282]: 2 × Fine Art Print 8 × 10"
+        - generic [ref=f5e284]:
+          - generic [ref=f5e285]:
+            - generic [ref=f5e286]: Subtotal
+            - generic [ref=f5e287]: $1,052
+          - generic [ref=f5e288]:
+            - generic [ref=f5e289]: Shipping
+            - generic [ref=f5e290]: $28
+          - generic [ref=f5e291]:
+            - generic [ref=f5e292]: Estimated tax
+            - generic [ref=f5e293]: $86.79
+          - generic [ref=f5e294]:
+            - generic [ref=f5e295]: Total
+            - generic [ref=f5e296]: $1,166.79
+          - paragraph [ref=f5e297]: You’re saving $151 on this order

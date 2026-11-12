@@ -1,0 +1,62 @@
+[     877ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:15802
+[    1688ms] [ERROR] %s must not return anything besides a function, which is used for clean-up.%s useEffect 
+
+It looks like you wrote useEffect(async () => ...) or returned a Promise. Instead, write the async function inside your effect and call it immediately:
+
+useEffect(() => {
+  async function fetchData() {
+    // You can await here
+    const response = await MyAPI.getData(someId);
+    // ...
+  }
+  fetchData();
+}, [someId]); // Or [] if effect doesn't need props or state
+
+Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching @ http://localhost:5180/@vite/client:364
+[    1696ms] [ERROR] %s must not return anything besides a function, which is used for clean-up.%s useEffect 
+
+It looks like you wrote useEffect(async () => ...) or returned a Promise. Instead, write the async function inside your effect and call it immediately:
+
+useEffect(() => {
+  async function fetchData() {
+    // You can await here
+    const response = await MyAPI.getData(someId);
+    // ...
+  }
+  fetchData();
+}, [someId]); // Or [] if effect doesn't need props or state
+
+Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching @ http://localhost:5180/@vite/client:364
+[    1699ms] TypeError: destroy is not a function
+    at Object.react_stack_bottom_frame (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:14179:5)
+    at runWithFiberInDEV (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:941:66)
+    at commitHookEffectListUnmount (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:6923:149)
+    at commitHookPassiveUnmountEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:6936:55)
+    at disconnectPassiveEffect (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8549:6)
+    at recursivelyTraverseDisconnectPassiveEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8541:65)
+    at disconnectPassiveEffect (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8556:14)
+    at recursivelyTraverseDisconnectPassiveEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8541:65)
+    at disconnectPassiveEffect (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8550:6)
+    at recursivelyTraverseDisconnectPassiveEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8541:65)
+[    1698ms] [WARNING] %s
+
+%s
+ An error occurred in the <Layout> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5180/@vite/client:364
+[    1699ms] TypeError: destroy is not a function
+    at Object.react_stack_bottom_frame (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:14179:5)
+    at runWithFiberInDEV (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:941:66)
+    at commitHookEffectListUnmount (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:6923:149)
+    at commitHookPassiveUnmountEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:6936:55)
+    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8571:7)
+    at recursivelyTraversePassiveUnmountEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8490:6)
+    at commitPassiveUnmountOnFiber (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:8509:6)
+    at flushPassiveEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:9576:5)
+    at flushPendingEffects (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:9541:11)
+    at flushSpawnedWork (http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:9518:40)
+[    1699ms] [WARNING] %s
+
+%s
+ An error occurred in the <Layout> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5180/@vite/client:364
+[    1803ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5180/favicon.ico:1

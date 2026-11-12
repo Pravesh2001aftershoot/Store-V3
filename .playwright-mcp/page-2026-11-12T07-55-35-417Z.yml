@@ -1,0 +1,152 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]: Ordering from Lexie & Taylor — Engagement · Use code LEXIE10 for 10% off
+    - generic [ref=f4e7]:
+      - generic [ref=f4e8]:
+        - link "L Lumen Studio" [ref=f4e9] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f4e10]: L
+          - text: Lumen Studio
+        - navigation [ref=f4e11]:
+          - link "Shop all" [ref=f4e12] [cursor=pointer]:
+            - /url: /shop
+          - link "Wall Art" [ref=f4e13] [cursor=pointer]:
+            - /url: /shop/wall-art
+          - link "Albums & Books" [ref=f4e14] [cursor=pointer]:
+            - /url: /shop/albums
+          - link "Fine Prints" [ref=f4e15] [cursor=pointer]:
+            - /url: /shop/prints
+          - link "Desk & Gifts" [ref=f4e16] [cursor=pointer]:
+            - /url: /shop/desk-gifts
+          - link "Packages" [ref=f4e17] [cursor=pointer]:
+            - /url: /packages
+      - generic [ref=f4e18]:
+        - link "Back to gallery" [ref=f4e19] [cursor=pointer]:
+          - /url: "#gallery"
+        - button "Open cart" [ref=f4e22]:
+          - generic [ref=f4e25]: Cart
+          - generic [ref=f4e26]: "7"
+  - main [ref=f4e28]:
+    - generic [ref=f4e29]:
+      - heading "Your cart" [level=1] [ref=f4e30]:
+        - generic [ref=f4e31]: Your
+        - generic [ref=f4e33]: cart
+      - paragraph [ref=f4e35]: 7 items · 2 lines
+      - generic [ref=f4e36]:
+        - generic [ref=f4e37]:
+          - generic [ref=f4e47]:
+            - generic [ref=f4e48]:
+              - generic [ref=f4e49]:
+                - paragraph [ref=f4e51]: Framed Print
+                - paragraph [ref=f4e52]: 16 × 20" · Natural Oak · White mat · Standard acrylic
+              - paragraph [ref=f4e54]: $480
+            - paragraph [ref=f4e56]:
+              - generic [ref=f4e57]: Qty 3
+              - generic [ref=f4e58]: · 3 photos · $160 each
+            - generic [ref=f4e63]:
+              - button "Edit photos & crops" [ref=f4e64]
+              - button "Duplicate" [ref=f4e67]
+              - button "Remove" [ref=f4e70]
+          - generic [ref=f4e74]:
+            - paragraph [ref=f4e84]: Lexie & Taylor
+            - generic [ref=f4e85]:
+              - generic [ref=f4e86]:
+                - generic [ref=f4e88]:
+                  - paragraph [ref=f4e89]: The Heirloom Package
+                  - generic [ref=f4e90]: Package
+                - generic [ref=f4e93]:
+                  - paragraph [ref=f4e94]: $572
+                  - paragraph [ref=f4e95]: $723
+              - generic [ref=f4e96]:
+                - generic [ref=f4e97]:
+                  - paragraph [ref=f4e98]:
+                    - generic [ref=f4e99]: 1 × Heirloom Album 10 × 10" · 28 photos
+                  - paragraph [ref=f4e100]: Charcoal Linen · Lustre
+                  - generic [ref=f4e101]: "+20"
+                - generic [ref=f4e111]:
+                  - paragraph [ref=f4e112]:
+                    - generic [ref=f4e113]: 1 × Framed Print 16 × 20"
+                  - paragraph [ref=f4e114]: Black Oak · White mat · Standard acrylic
+                - generic [ref=f4e117]:
+                  - paragraph [ref=f4e118]:
+                    - generic [ref=f4e119]: 2 × Fine Art Print 8 × 10"
+                  - paragraph [ref=f4e120]: Lustre · Borderless
+              - generic [ref=f4e124]:
+                - button "Edit photos & crops" [ref=f4e125]
+                - button "Duplicate" [ref=f4e128]
+                - button "Remove" [ref=f4e131]
+          - link "← Continue shopping" [ref=f4e134] [cursor=pointer]:
+            - /url: /shop
+        - complementary [ref=f4e135]:
+          - generic [ref=f4e136]:
+            - paragraph [ref=f4e137]: Summary
+            - generic [ref=f4e139]:
+              - textbox "Discount code" [ref=f4e140]
+              - button "Apply" [ref=f4e141]
+            - generic [ref=f4e142]:
+              - generic [ref=f4e143]:
+                - generic [ref=f4e144]: Subtotal
+                - generic [ref=f4e145]: $1,052
+              - generic [ref=f4e146]:
+                - generic [ref=f4e147]: Shipping
+                - generic [ref=f4e148]: Calculated next
+              - generic [ref=f4e149]:
+                - generic [ref=f4e150]: Estimated tax
+                - generic [ref=f4e151]: $86.79
+              - generic [ref=f4e152]:
+                - generic [ref=f4e153]: Total
+                - generic [ref=f4e154]: $1,138.79
+              - paragraph [ref=f4e155]: You’re saving $151 on this order
+            - button "Checkout" [ref=f4e158]
+            - generic [ref=f4e164]:
+              - paragraph [ref=f4e165]: Every crop reviewed by your photographer
+              - paragraph [ref=f4e168]: Tracked & insured shipping
+  - contentinfo [ref=f4e171]:
+    - generic [ref=f4e172]:
+      - generic [ref=f4e173]:
+        - generic [ref=f4e174]:
+          - paragraph [ref=f4e175]: Printed with care for the people in the photographs.
+          - paragraph [ref=f4e176]: Lumen Studio · Monika Frias
+        - generic [ref=f4e177]:
+          - paragraph [ref=f4e178]: Shop
+          - list [ref=f4e179]:
+            - listitem [ref=f4e180]:
+              - link "Wall Art" [ref=f4e181] [cursor=pointer]:
+                - /url: /shop/wall-art
+            - listitem [ref=f4e182]:
+              - link "Albums & Books" [ref=f4e183] [cursor=pointer]:
+                - /url: /shop/albums
+            - listitem [ref=f4e184]:
+              - link "Fine Prints" [ref=f4e185] [cursor=pointer]:
+                - /url: /shop/prints
+            - listitem [ref=f4e186]:
+              - link "Desk & Gifts" [ref=f4e187] [cursor=pointer]:
+                - /url: /shop/desk-gifts
+        - generic [ref=f4e188]:
+          - paragraph [ref=f4e189]: Help
+          - list [ref=f4e190]:
+            - listitem [ref=f4e191]:
+              - link "Shipping" [ref=f4e192] [cursor=pointer]:
+                - /url: /cart
+            - listitem [ref=f4e193]:
+              - link "Returns" [ref=f4e194] [cursor=pointer]:
+                - /url: /cart
+            - listitem [ref=f4e195]:
+              - link "Print quality" [ref=f4e196] [cursor=pointer]:
+                - /url: /cart
+        - generic [ref=f4e197]:
+          - paragraph [ref=f4e198]: Studio
+          - list [ref=f4e199]:
+            - listitem [ref=f4e200]:
+              - link "Gallery" [ref=f4e201] [cursor=pointer]:
+                - /url: /cart
+            - listitem [ref=f4e202]:
+              - link "Contact" [ref=f4e203] [cursor=pointer]:
+                - /url: /cart
+            - listitem [ref=f4e204]:
+              - link "Instagram" [ref=f4e205] [cursor=pointer]:
+                - /url: /cart
+      - paragraph [ref=f4e207]: Lumen Studio
+      - generic [ref=f4e208]:
+        - generic [ref=f4e209]: © 2026 Lumen Studio. Prototype store.
+        - generic [ref=f4e210]: Powered by your photographer’s gallery

@@ -1,0 +1,261 @@
+- generic:
+  - generic [aria-hidden]:
+    - generic:
+      - banner:
+        - generic: Ordering from Lexie & Taylor — Engagement · Use code LEXIE10 for 10% off
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /
+                - generic: L
+                - text: Lumen Studio
+              - navigation:
+                - link:
+                  - /url: /shop
+                  - text: Shop all
+                - link:
+                  - /url: /shop/wall-art
+                  - text: Wall Art
+                - link:
+                  - /url: /shop/albums
+                  - text: Albums & Books
+                - link:
+                  - /url: /shop/prints
+                  - text: Fine Prints
+                - link:
+                  - /url: /shop/desk-gifts
+                  - text: Desk & Gifts
+                - link:
+                  - /url: /packages
+                  - text: Packages
+            - generic:
+              - link:
+                - /url: "#gallery"
+                - text: Back to gallery
+              - button:
+                - generic: Cart
+                - generic: "3"
+      - main:
+        - generic:
+          - navigation:
+            - link:
+              - /url: /
+              - text: Store
+            - text: /
+            - link:
+              - /url: /shop/wall-art
+              - text: Wall Art
+            - text: /Framed Print
+          - generic:
+            - generic:
+              - generic:
+                - generic: Bestseller
+                - generic:
+                  - button:
+                    - generic: In room
+                  - button:
+                    - generic: Detail
+                  - button:
+                    - generic: Photo
+              - paragraph: Preview updates as you change options. You’ll pick your own photos next.
+            - generic:
+              - heading [level=1]: Framed Print
+              - paragraph: Solid wood frame, archival print, ready to hang.
+              - generic:
+                - generic: $160
+                - generic: per piece
+              - generic:
+                - generic:
+                  - generic:
+                    - paragraph: Size
+                  - generic:
+                    - button:
+                      - generic: 8 × 10"
+                      - generic: $65
+                    - button:
+                      - generic: 11 × 14"
+                      - generic: $95
+                    - button:
+                      - generic: 16 × 20"
+                      - generic: $145
+                    - button:
+                      - generic: 20 × 30"
+                      - generic: $225
+                - generic:
+                  - generic:
+                    - paragraph: FrameNatural Oak
+                  - generic:
+                    - button
+                    - button
+                    - button
+                    - button
+                - generic:
+                  - generic:
+                    - paragraph: Mat
+                    - generic: +$15
+                  - generic:
+                    - button:
+                      - generic: No mat
+                    - button:
+                      - generic: White mat
+                - generic:
+                  - generic:
+                    - paragraph: Glazing
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic: Standard acrylic
+                        - generic: Shatter-resistant
+                      - generic: Incl.
+                    - button:
+                      - generic:
+                        - generic: Museum glass
+                        - generic: 99% UV protection, anti-glare
+                      - generic: +$35
+              - generic:
+                - generic:
+                  - paragraph:
+                    - text: You can select multiple photos next. Each photo becomes its own framed print in 16 × 20" — e.g. 3 photos =
+                    - generic: 3 × Framed Print
+                    - text: .
+                - button: Choose photos from gallery
+                - paragraph: Ships in 5–7 business days · Free returns on damaged items
+              - generic:
+                - paragraph: Save more in a package
+                - generic:
+                  - link:
+                    - /url: /packages/the-keepsake
+                    - generic: The Keepsake
+                    - generic: Save 16%
+                  - link:
+                    - /url: /packages/the-heirloom
+                    - generic: The Heirloom
+                    - generic: Save 22%
+                  - link:
+                    - /url: /packages/gallery-wall
+                    - generic: Gallery Wall
+                    - generic: Save 20%
+              - generic:
+                - generic:
+                  - button [expanded]: Details
+                  - generic:
+                    - generic:
+                      - paragraph: Your photograph printed on archival lustre paper and hand-framed in solid hardwood. Every frame arrives with hanging hardware fitted and a dust-sealed back.
+                      - list:
+                        - listitem: Solid FSC-certified hardwood, 1" profile
+                        - listitem: Archival lustre paper, rated 100+ years
+                        - listitem: Shatter-resistant acrylic glazing as standard
+                        - listitem: Ready to hang, hardware included
+                - generic:
+                  - button: Shipping & production
+                - generic:
+                  - button: Care
+          - generic:
+            - heading [level=2]: You may also like
+            - generic:
+              - link:
+                - /url: /product/canvas
+                - generic:
+                  - generic:
+                    - paragraph: Gallery Canvas
+                    - paragraph: Hand-stretched on solid pine bars.
+                  - paragraph: from $85
+                - generic: 4 sizes
+              - link:
+                - /url: /product/metal
+                - generic: New
+                - generic:
+                  - generic:
+                    - paragraph: Metal Print
+                    - paragraph: Infused into aluminium for vivid depth.
+                  - paragraph: from $70
+              - link:
+                - /url: /product/triptych
+                - generic:
+                  - generic:
+                    - paragraph: Framed Triptych
+                    - paragraph: Three moments, one story.
+                  - paragraph: from $165
+                - generic: 3 sizes
+      - contentinfo:
+        - generic:
+          - generic:
+            - generic:
+              - paragraph: Printed with care for the people in the photographs.
+              - paragraph: Lumen Studio · Monika Frias
+            - generic:
+              - paragraph: Shop
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /shop/wall-art
+                    - text: Wall Art
+                - listitem:
+                  - link:
+                    - /url: /shop/albums
+                    - text: Albums & Books
+                - listitem:
+                  - link:
+                    - /url: /shop/prints
+                    - text: Fine Prints
+                - listitem:
+                  - link:
+                    - /url: /shop/desk-gifts
+                    - text: Desk & Gifts
+            - generic:
+              - paragraph: Help
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /product/framed-print
+                    - text: Shipping
+                - listitem:
+                  - link:
+                    - /url: /product/framed-print
+                    - text: Returns
+                - listitem:
+                  - link:
+                    - /url: /product/framed-print
+                    - text: Print quality
+            - generic:
+              - paragraph: Studio
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /product/framed-print
+                    - text: Gallery
+                - listitem:
+                  - link:
+                    - /url: /product/framed-print
+                    - text: Contact
+                - listitem:
+                  - link:
+                    - /url: /product/framed-print
+                    - text: Instagram
+          - generic:
+            - paragraph: Lumen Studio
+          - generic:
+            - generic: © 2026 Lumen Studio. Prototype store.
+            - generic: Powered by your photographer’s gallery
+  - dialog "Your cart (3)" [ref=f2e751]:
+    - generic [ref=f2e752]:
+      - heading "Your cart (3)" [level=2] [ref=f2e753]:
+        - text: Your cart
+        - generic [ref=f2e754]: (3)
+      - button [active] [ref=f2e755]
+    - generic [ref=f2e767]:
+      - generic [ref=f2e768]:
+        - paragraph [ref=f2e769]: Framed Print
+        - paragraph [ref=f2e771]: $480
+      - paragraph [ref=f2e773]:
+        - generic [ref=f2e774]: 3 × Framed Print 16 × 20"
+      - button "Remove" [ref=f2e775]
+    - generic [ref=f2e778]:
+      - generic [ref=f2e779]:
+        - generic [ref=f2e780]: Subtotal
+        - generic [ref=f2e781]: $480
+      - paragraph [ref=f2e782]: Shipping and taxes calculated at checkout.
+      - generic [ref=f2e783]:
+        - button "View cart" [ref=f2e784]
+        - button "Checkout" [ref=f2e785]
