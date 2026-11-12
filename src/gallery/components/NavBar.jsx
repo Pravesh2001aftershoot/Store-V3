@@ -171,6 +171,7 @@ function LayoutMenu({ settings, onChange }) {
 export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, showFavs, onToggleFavs, onClearFavs }) {
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
+  const isPhone = useBreakpoint() === 'mobile'
   useEffect(() => {
     const row = tabsRef.current
     const btn = row?.querySelector('[aria-current="true"]')
@@ -179,63 +180,63 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
     const b = btn.getBoundingClientRect()
     const left = row.scrollLeft + (b.left - r.left) - (r.width - b.width) / 2
     row.scrollTo({ left, behavior: 'smooth' })
-  }, [collection, showFavs])
+  }, [collection, showFavs, isPhone])
+
+  const tabs = showFavs ? (
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          onClick={onToggleFavs}
+          className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1.5 text-14-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
+        >
+          <CaretLeft size={14} /> All photos
+        </button>
+        <span className="h-4 w-px bg-border" />
+        <p className="truncate text-14-m text-type-0">
+          Favourites <span className="text-type-3">{favCount}</span>
+        </p>
+        {favCount > 0 && (
+          <button
+            onClick={() => window.confirm(`Remove all ${favCount} favourites?`) && onClearFavs()}
+            className="shrink-0 rounded-full px-3 py-1.5 text-13-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+    ) : (
+      <nav ref={tabsRef} aria-label="Collections" className="no-scrollbar flex h-full min-w-0 gap-6 overflow-x-auto">
+        {collections.map((c) => (
+          <button
+            key={c}
+            onClick={() => onCollection(c)}
+            aria-current={collection === c && !showFavs}
+            className={cn(
+              'relative h-full shrink-0 text-14-r text-type-2 transition hover:text-type-0',
+              collection === c && !showFavs && 'text-type-0'
+            )}
+          >
+            {collection === c && !showFavs && (
+              <motion.span layoutId="collection-underline" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />
+            )}
+            <span className="relative">
+              {c} <span className="text-type-3">{counts[c]}</span>
+            </span>
+          </button>
+        ))}
+      </nav>
+    )
 
   return (
     <div ref={navRef} className="sticky top-0 z-40 border-b border-border bg-surface-0">
       <div className="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-4 md:gap-6 md:px-8">
-        <div className="min-w-0 max-w-[40%] shrink-0 md:max-w-[240px]">
+        <div className={cn('min-w-0', isPhone ? 'flex-1' : 'max-w-[40%] shrink-0 md:max-w-[240px]')}>
           <p className="truncate text-16-sb text-type-0">{gallery.client}</p>
           <p className="truncate text-12-r text-type-2">{gallery.photographer}</p>
         </div>
 
-        <span className="h-6 w-px shrink-0 bg-border" />
+        {!isPhone && <span className="h-6 w-px shrink-0 bg-border" />}
 
-        <div className="flex h-full min-w-0 flex-1 items-center">
-          {showFavs ? (
-            <div className="flex min-w-0 items-center gap-2">
-              <button
-                onClick={onToggleFavs}
-                className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1.5 text-14-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
-              >
-                <CaretLeft size={14} /> All photos
-              </button>
-              <span className="h-4 w-px bg-border" />
-              <p className="truncate text-14-m text-type-0">
-                Favourites <span className="text-type-3">{favCount}</span>
-              </p>
-              {favCount > 0 && (
-                <button
-                  onClick={() => window.confirm(`Remove all ${favCount} favourites?`) && onClearFavs()}
-                  className="shrink-0 rounded-full px-3 py-1.5 text-13-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-          ) : (
-            <nav ref={tabsRef} aria-label="Collections" className="no-scrollbar flex h-full min-w-0 gap-6 overflow-x-auto">
-              {collections.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => onCollection(c)}
-                  aria-current={collection === c && !showFavs}
-                  className={cn(
-                    'relative h-full shrink-0 text-14-r text-type-2 transition hover:text-type-0',
-                    collection === c && !showFavs && 'text-type-0'
-                  )}
-                >
-                  {collection === c && !showFavs && (
-                    <motion.span layoutId="collection-underline" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />
-                  )}
-                  <span className="relative">
-                    {c} <span className="text-type-3">{counts[c]}</span>
-                  </span>
-                </button>
-              ))}
-            </nav>
-          )}
-        </div>
+        {!isPhone && <div className="flex h-full min-w-0 flex-1 items-center">{tabs}</div>}
 
         <div className="flex shrink-0 items-center gap-1">
           <LayoutMenu settings={settings} onChange={onSetting} />
@@ -264,6 +265,9 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
           </Link>
         </div>
       </div>
+
+      {/* Phone: collections get their own row under the bar. */}
+      {isPhone && <div className="flex h-11 items-center border-t border-border px-4">{tabs}</div>}
     </div>
   )
 }
