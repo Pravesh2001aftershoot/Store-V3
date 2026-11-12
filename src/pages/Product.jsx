@@ -91,12 +91,12 @@ export default function Product() {
               </motion.div>
             </AnimatePresence>
             {product.badge && <Badge className="absolute left-4 top-4">{product.badge}</Badge>}
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1 rounded-full bg-surface-1/85 p-1 shadow-sm ring-1 ring-border backdrop-blur">
+            <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 gap-1 rounded-full bg-surface-1/85 p-1 shadow-sm ring-1 ring-border backdrop-blur">
               {views.map((v) => (
                 <button
                   key={v.id}
                   onClick={() => setView(v.id)}
-                  className={cn('relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-12-r transition', view === v.id ? 'text-white' : 'text-type-1 hover:text-type-0')}
+                  className={cn('relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-12-r transition', view === v.id ? 'text-white' : 'text-type-1 hover:text-type-0')}
                 >
                   {view === v.id && <motion.span layoutId="view-pill" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.4, ease }} />}
                   <v.icon size={14} className="relative" />

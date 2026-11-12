@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowUpRight, Cursor, Crop, ImagesSquare, Sliders, Leaf, Truck, ShieldCheck, Medal } from '@phosphor-icons/react'
@@ -206,26 +206,56 @@ function HowItWorks() {
   )
 }
 
+function useIsDesktop() {
+  const query = '(min-width: 768px) and (pointer: fine)'
+  const [match, setMatch] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const onChange = () => setMatch(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return match
+}
+
 function Bestsellers() {
   const ref = useRef(null)
+  const isDesktop = useIsDesktop()
   return (
-    <section className="py-24">
-      <div className="mx-auto mb-10 flex max-w-[1360px] items-end justify-between gap-4 px-4 md:px-8">
+    <section className="pb-24">
+      <div className="mx-auto max-w-[1360px] px-4 md:px-8">
+        <div className="border-t-[0.5px] border-border" />
+      </div>
+      <div className="mx-auto mb-10 mt-24 flex max-w-[1360px] items-end justify-between gap-4 px-4 md:px-8">
         <div>
           <Eyebrow>Client favourites</Eyebrow>
           <SplitText as="h2" text="Most ordered this season" className="mt-4 text-36-sb md:text-48-sb" />
         </div>
         <p className="hidden text-13-r text-type-3 md:block">Drag to explore →</p>
       </div>
-      <div ref={ref} className="overflow-hidden px-4 md:px-8">
-        <motion.div drag="x" dragConstraints={ref} dragElastic={0.08} className="mx-auto flex max-w-[1360px] cursor-grab gap-5 active:cursor-grabbing">
+      {isDesktop ? (
+        <div className="overflow-hidden">
+          <div className="mx-auto max-w-[1360px] px-8">
+            <div ref={ref}>
+              <motion.div drag="x" dragConstraints={ref} dragElastic={0.08} className="flex w-max cursor-grab gap-5 active:cursor-grabbing">
+                {products.map((p) => (
+                  <div key={p.id} className="w-[340px] shrink-0">
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overscroll-x-contain px-4 md:scroll-px-8 md:px-8">
           {products.map((p) => (
-            <div key={p.id} className="w-[72vw] shrink-0 sm:w-[340px]">
+            <div key={p.id} className="w-[72vw] shrink-0 snap-start sm:w-[340px]">
               <ProductCard product={p} />
             </div>
           ))}
-        </motion.div>
-      </div>
+        </div>
+      )}
     </section>
   )
 }
