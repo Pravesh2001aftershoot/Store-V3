@@ -58,7 +58,6 @@ export function Badge({ className, tone = 'default', children }) {
 
 export const Eyebrow = ({ children, className }) => (
   <p className={cn('flex items-center gap-2 text-12-sb uppercase text-type-2', className)}>
-    <span className="h-1.5 w-1.5 rounded-full bg-type-0" />
     {children}
   </p>
 )

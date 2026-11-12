@@ -47,7 +47,7 @@ const raw = [
   [453, P, 'Portraits'],
 ]
 
-export const photos = raw.map(([pid, [w, h], collection], i) => ({
+const placeholderPhotos = raw.map(([pid, [w, h], collection], i) => ({
   id: `p${pid}`,
   name: `LT_${String(2040 + i * 7).padStart(4, '0')}.jpg`,
   w,
@@ -59,7 +59,60 @@ export const photos = raw.map(([pid, [w, h], collection], i) => ({
   thumb: `https://picsum.photos/id/${pid}/${Math.round(w / 2)}/${Math.round(h / 2)}`,
 }))
 
+// ── Gallery photos (src/gallery/assets/photos) ──────────────────────────────
+// When the gallery has local images, the whole store uses them. Their pixel sizes come from
+// dims.json (regenerate with `npm run photos:dims` after adding images).
+const COLLECTIONS = gallery.collections.filter((c) => c !== 'All')
+const localFiles = import.meta.glob('../gallery/assets/photos/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP}', { eager: true, import: 'default' })
+const localThumbFiles = import.meta.glob('../gallery/assets/photos/thumbs/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP}', { eager: true, import: 'default' })
+const localDims = Object.values(import.meta.glob('../gallery/assets/photos/dims.json', { eager: true, import: 'default' }))[0] || {}
+const fileName = (path) => path.split('/').pop()
+const thumbByName = Object.fromEntries(Object.entries(localThumbFiles).map(([path, src]) => [fileName(path), src]))
+
+// Exports are ~2000px on the long edge; originals are simulated at 3× for print-quality checks.
+const ORIGINAL_SCALE = 3
+
+export const localPhotos = Object.entries(localFiles)
+  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+  .map(([path, src], i) => {
+    const name = fileName(path)
+    const [w, h] = localDims[name] || [0, 0] // 0 → measured at runtime by the gallery
+    return {
+      id: `local-${name}`, // filename-based so saved favourites survive reordering
+      name,
+      src,
+      thumb: thumbByName[name] || src,
+      w,
+      h,
+      ow: w * ORIGINAL_SCALE,
+      oh: h * ORIGINAL_SCALE,
+      collection: COLLECTIONS[i % COLLECTIONS.length],
+    }
+  })
+
+export const hasLocalPhotos = localPhotos.length > 0
+
+// The store only offers photos whose size is known (crops and print checks need it).
+const sizedLocal = localPhotos.filter((p) => p.w && p.h)
+const useLocal = sizedLocal.length > 0
+export const photos = useLocal ? sizedLocal : placeholderPhotos
+
 export const photoById = Object.fromEntries(photos.map((p) => [p.id, p]))
+
+// Catalog heroes, product mockups and saved carts refer to the placeholder ids (p1011, …).
+// With local photos, each one maps to a distinct gallery photo of the same orientation.
+if (useLocal) {
+  const shape = (w, h) => (w > h ? 'L' : w < h ? 'P' : 'S')
+  const pools = { L: photos.filter((p) => p.w > p.h), P: photos.filter((p) => p.w < p.h) }
+  const used = { L: 0, P: 0 }
+  placeholderPhotos.forEach((p) => {
+    let s = shape(p.w, p.h)
+    if (s === 'S') s = pools.L.length >= pools.P.length ? 'L' : 'P'
+    const pool = pools[s].length ? pools[s] : photos
+    const match = pool[used[s]++ % pool.length]
+    if (match) photoById[p.id] = match
+  })
+}
 
 // Photos bought straight from the client gallery (local uploads, placeholders) aren't in the list
 // above. They're registered when a quick buy starts so cart lines can resolve them, and persisted

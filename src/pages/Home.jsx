@@ -108,7 +108,8 @@ function Hero() {
 }
 
 function Marquee() {
-  const row = [...photos, ...photos]
+  const picks = photos.slice(0, 30)
+  const row = [...picks, ...picks]
   return (
     <section className="overflow-hidden py-6">
       <div className="flex w-max animate-marquee gap-3 hover:[animation-play-state:paused]">

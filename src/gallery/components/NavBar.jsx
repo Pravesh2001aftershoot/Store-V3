@@ -219,7 +219,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
               <motion.span layoutId="collection-underline" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />
             )}
             <span className="relative">
-              {c} <span className="text-type-3">{counts[c]}</span>
+              {c}
             </span>
           </button>
         ))}

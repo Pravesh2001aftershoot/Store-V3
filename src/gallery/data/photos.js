@@ -2,41 +2,20 @@
 //
 // To use real images, drop them into `src/gallery/assets/photos/` (jpg / jpeg / png / webp / avif).
 // They're picked up automatically, in filename order, and replace the placeholders.
-// Their dimensions are measured in the browser on load (see `useMeasuredPhotos`).
+// Their dimensions come from `dims.json` (`npm run photos:dims`); any missing ones are measured
+// in the browser on load (see `useMeasuredPhotos`).
 //
 // Without local images, the gallery uses the store's photos plus generated placeholders,
 // so infinite scroll has enough to load.
 
-import { gallery, photos as storePhotos } from '../../data/gallery'
+import { gallery, photos as storePhotos, localPhotos } from '../../data/gallery'
 
 export { gallery }
 
 const COLLECTIONS = gallery.collections.filter((c) => c !== 'All')
 
 // ── Local images (if any) ───────────────────────────────────────────────────
-const local = import.meta.glob('../assets/photos/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP}', {
-  eager: true,
-  import: 'default',
-})
-const localThumbs = import.meta.glob('../assets/photos/thumbs/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP}', {
-  eager: true,
-  import: 'default',
-})
-const thumbByName = Object.fromEntries(
-  Object.entries(localThumbs).map(([path, src]) => [path.split('/').pop(), src]),
-)
-
-const localPhotos = Object.entries(local)
-  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-  .map(([path, src], i) => ({
-    id: `local-${path.split('/').pop()}`, // filename-based so saved favourites survive reordering
-    name: path.split('/').pop(),
-    src,
-    thumb: thumbByName[path.split('/').pop()] || src,
-    w: 0, // measured at runtime
-    h: 0,
-    collection: COLLECTIONS[i % COLLECTIONS.length],
-  }))
+// Loaded once in the store's data module so the gallery and the store share the same photos.
 
 // ── Placeholders ────────────────────────────────────────────────────────────
 const SHAPES = [
