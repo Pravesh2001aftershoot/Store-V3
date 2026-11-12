@@ -3,7 +3,6 @@ import { COLUMNS, GAP, MARGIN } from '../lib/settings'
 import { useBreakpoint, useInfinite } from '../lib/hooks'
 import { justifiedRows, masonry } from '../lib/layout'
 import Photo from './Photo'
-import { cn } from '../../lib/utils'
 import { Eyebrow } from '../../components/ui'
 
 /** DOM id of a collection's section heading (used for jumping and scroll-spy). */
@@ -50,7 +49,7 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       {blocks.map((b, i) => (
         <div key={b.title ?? 'all'}>
           {b.title && (
-            <header id={sectionId(b.title)} className={cn('px-1 pb-10 md:pb-14', i === 0 ? 'pt-8 md:pt-14' : 'pt-20 md:pt-28')}>
+            <header id={sectionId(b.title)} className="px-1 py-10 md:py-16">
               <Eyebrow>{b.end - b.start} photos</Eyebrow>
               <h2 className="mt-4 text-48-sb text-type-0 md:text-72-sb">{b.title}</h2>
             </header>
