@@ -1,0 +1,431 @@
+# Store V3: Interactions and Motion
+
+This doc lists every animated or interactive UI element, screen by screen. For each one it gives the trigger, what moves, the exact values, the library that runs it, and the source file. [DesignSystem.md](DesignSystem.md) has the motion principles. This doc records what the code actually does.
+
+## Libraries
+
+| Library | Version | What it does here |
+|---|---|---|
+| **framer-motion** | 14.12.0 | Most motion: `motion.*` enter/exit, `AnimatePresence`, shared-element pills (`layoutId`), list reflow (`layout`), scroll-linked values (`useScroll` + `useTransform`), drag (sheets, carousel, lightbox swipe), and in-view reveals (`whileInView`) |
+| **Tailwind CSS** | 4.3.5 | CSS transitions through utility classes (`transition`, `duration-*`, `ease-*`, `hover:scale-*`, `group-hover:*`, `active:scale-*`), plus the `animate-spin` keyframe |
+| **CSS `@keyframes`** | n/a | `marquee` in `src/index.css`. It is used only by the Home marquee, which is not currently rendered. |
+| **@radix-ui/react-dialog** | 1.3.1 | Handles focus trap, Esc and aria for the cart drawer, Quick buy and the Builder lightbox. It does no animation itself: framer-motion animates its parts through `forceMount` + `asChild`. |
+| **Browser native** | n/a | Smooth scrolling: `scrollTo` / `scrollIntoView` with `behavior: 'smooth'`, `html { scroll-behavior: smooth }`, and CSS scroll-snap |
+
+### Shared values
+
+| Name | Value | Where it's defined |
+|---|---|---|
+| `ease` | `cubic-bezier(0.22, 1, 0.36, 1)` (ease-out-quint style) | Redeclared as `const ease = [0.22, 1, 0.36, 1]` at the top of almost every file. Tailwind classes use it as `ease-[cubic-bezier(.22,1,.36,1)]`. |
+| Tailwind `transition` | 150ms, `cubic-bezier(0.4, 0, 0.2, 1)`, on colour, background, border, opacity, shadow, transform and filter | Tailwind default. It applies wherever a row below says "Tailwind default". |
+| Tailwind `ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | Tailwind default |
+| framer-motion default | A spring for transform values (`x`, `y`, `scale`, `rotate`). A tween for `opacity`. | It applies wherever a row says "framer default". In those places the code sets no `transition`. |
+
+### How to read the tables
+
+- **`a → b`** is the start value and the end value. **Exit** is the leave animation under `AnimatePresence`.
+- **`layoutId="x"`** means a single element slides and resizes between the positions of the selected item (the "moving pill" pattern).
+- **`layout`** means framer-motion animates the element's position or size when the layout around it changes.
+- Durations are in seconds (s) for framer-motion and in milliseconds (ms) for Tailwind, matching how each is written in the code.
+
+---
+
+## Shared components
+
+These appear on several screens. The screen sections below refer back here instead of repeating the values.
+
+### `Button`: [src/components/ui/index.jsx](src/components/ui/index.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Button body | Hover | Background colour change | `transition-all duration-300`, Tailwind default easing | Tailwind |
+| Button body | Press | Shrinks slightly | `active:scale-[0.98]` | Tailwind |
+| Arrow (`arrow` prop) | Hover on button | The arrow slides out right while a copy slides in from the left | Arrow 1: `translateX 0 → 100%`. Arrow 2: `translateX -100% → 0`. `duration-300`. | Tailwind (`group-hover`) |
+| Disabled state | `disabled` | Faded | `opacity-40`, no pointer events | Tailwind |
+
+### `Reveal`: [src/components/ui/index.jsx](src/components/ui/index.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Wrapped block | Scrolls into view (once) | Fades and slides up | `opacity 0 → 1`, `y 28px → 0` (the `y` prop overrides it), `0.9s`, `ease`. `delay` comes from props. `viewport: { once: true, margin: '0px 0px -10% 0px' }` | framer-motion `whileInView` |
+
+### `SplitText`: [src/components/ui/index.jsx](src/components/ui/index.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Each word of a heading | Scrolls into view (once) | Word rises out of a mask (`overflow-hidden` wrapper) | `y 110% → 0`, `0.9s`, `ease`. Stagger `0.06s` per word. `delayChildren` = `delay` prop | framer-motion variants (`hidden` / `show`) |
+
+### `AnimatedNumber` (prices): [src/components/ui/index.jsx](src/components/ui/index.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Number | `value` changes | The old value rolls up and out while the new value rolls up in | Enter: `y 100% → 0`, `opacity 0 → 1`. Exit: `y → -100%`, `opacity → 0`. `0.35s`, `ease`. `mode="popLayout"`, `initial={false}` (no animation on first render) | framer-motion `AnimatePresence` |
+
+### `Accordion`: [src/components/ui/index.jsx](src/components/ui/index.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Plus icon | Open / close | Rotates and fades out | `rotate 0 → 90°`, `opacity 1 → 0`. framer default transition | framer-motion |
+| Minus icon | Open / close | Fades in | `opacity 0 ↔ 1`, Tailwind default | Tailwind |
+| Answer panel | Open / close | Expands and fades in | `height 0 → auto`, `opacity 0 → 1`, `0.4s`, `ease`. Exit reverses it. `initial={false}` | framer-motion `AnimatePresence` |
+
+### `Field` (text input): [src/components/ui/index.jsx](src/components/ui/index.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Input | Focus | Border darkens and a soft ring appears | `border → type-0`, `ring-4 ring-black/5`, Tailwind default | Tailwind |
+
+### `BottomSheet` and `Select`: [src/components/ui/Select.jsx](src/components/ui/Select.jsx)
+
+`Select` is a native `<select>` on screens 768px and wider (no animation). On phones it opens a `BottomSheet`.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Backdrop | Open / close | Fade | `opacity 0 → 1`, `0.25s`, framer default easing | framer-motion |
+| Sheet | Open / close | Slides up from the bottom | `y 100% → 0`, `0.35s`, `ease`. Exit `y → 100%` | framer-motion |
+| Sheet | Drag down | Follows the finger, closes past a threshold | `drag="y"`, `dragConstraints {top:0,bottom:0}`, `dragElastic {top:0,bottom:0.6}`. Closes if offset > `80px` or velocity > `500px/s`, otherwise springs back | framer-motion drag |
+| Option row | Hover | Background | Tailwind default | Tailwind |
+
+Esc and backdrop tap also close the sheet. Body scroll is locked while it's open.
+
+### `ProductCard`: [src/components/ProductCard.jsx](src/components/ProductCard.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Product mockup | Card hover | Zooms in | `scale 1 → 1.05`, `900ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Arrow badge (bottom right) | Card hover | Rises and fades in | `translateY 12px → 0`, `opacity 0 → 1`, `transition-all duration-500` | Tailwind |
+
+### `PackageCard`: [src/components/PackageCard.jsx](src/components/PackageCard.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Card | Hover | Light card: a shadow appears. Dark card: the background brightens. | Shadow `0 20px 50px -20px rgba(0,0,0,.18)`, or bg `white/6% → white/10%`. `transition-all duration-500` | Tailwind |
+| Collage | Card hover | Zooms in | `scale 1 → 1.04`, `900ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Arrow circle | Card hover | Rotates | `rotate 0 → 45°`, `500ms` | Tailwind |
+
+### `OptionGroup` (swatches, sizes, cards): [src/components/OptionGroup.jsx](src/components/OptionGroup.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Swatch | Hover / select | Ring changes | Hover `ring-1 → type-3`. Selected `ring-2 ring-type-0 ring-offset-2`. Tailwind default | Tailwind |
+| Size / segmented / card option | Hover / select | Border and outline | Hover `border → type-3`. Selected `border-type-0` + `0 0 0 1px` shadow. Tailwind default | Tailwind |
+
+### `ProductMockup`: [src/components/ProductMockup.jsx](src/components/ProductMockup.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Scene | `zoom` prop changes (Product page "Detail" view) | Zooms into the piece | `scale → zoom` (1 or 2.1), `0.8s`, `ease`, `transformOrigin: 30% 30%` | framer-motion |
+| Piece | Size, frame or photo changes | Resizes smoothly to its new width and aspect | `layout`, `0.6s`, `ease` | framer-motion `layout` |
+
+### `CroppedImage`: [src/components/CroppedImage.jsx](src/components/CroppedImage.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Image | Finishes loading | Fades in over a grey placeholder | `opacity 0 → 1`, `duration-500` | Tailwind |
+
+### `CropEditor`: [src/components/CropEditor.jsx](src/components/CropEditor.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Print frame | Photo or aspect changes (keyed on `photo.id + aspect`) | Fades and scales in | `opacity 0 → 1`, `scale 0.97 → 1`, `0.45s`, `ease` | framer-motion |
+| Photo pan / zoom | Pointer drag, two-finger pinch, mouse wheel | Moves directly with input. There is no tween: each move commits a new crop, clamped by `clampCrop` | Wheel: `zoom × (1 − deltaY × 0.0015)`. Pinch: zoom × distance ratio. Pan: pointer delta ÷ frame size | Pointer events (custom) |
+| Rule-of-thirds grid | While dragging | Fades in | `opacity 0 → 1`, `duration-300` | Tailwind |
+| Cursor | Drag start / end | `grab` ↔ `grabbing` | Instant | CSS |
+
+The zoom slider beside the editor (`.range` in `src/index.css`) has no animation. Its filled track follows the `--p` CSS variable.
+
+### `CartDrawer`: [src/components/CartDrawer.jsx](src/components/CartDrawer.jsx)
+
+The drawer opens from the header cart button on every store screen. It also opens on its own 350ms after Builder's "Add to cart".
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Overlay | Open / close | Fade (with a static `backdrop-blur-[2px]`) | `opacity 0 → 1`, framer default | framer-motion + Radix `forceMount` |
+| Panel | Open / close | Slides in from the right | `x 100% → 0`, `0.55s`, `ease`. Exit `x → 100%` | framer-motion + Radix |
+| Cart line | Added | Fades and rises | `opacity 0 → 1`, `y 12 → 0`, `0.4s`, `ease`. `initial={false}` on the list, so lines already there don't animate when the drawer opens | framer-motion |
+| Cart line | Removed | Slides right and fades | `opacity → 0`, `x → 40`, `0.4s`, `ease` | framer-motion |
+| Cart line | Another line is removed or duplicated | Moves to its new position | `layout` | framer-motion |
+| Cart line | Hover | Background | `→ surface-2`, Tailwind default | Tailwind |
+| Edit / Duplicate / Remove links | Hover | Text colour. Remove turns red. | Tailwind default | Tailwind |
+| Close button | Hover | Background | Tailwind default | Tailwind |
+
+---
+
+## Gallery (`/`)
+
+### Cover: [src/gallery/components/Cover.jsx](src/gallery/components/Cover.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Cover photo | Page load | Settles in from a slight zoom | `scale 1.08 → 1`, `opacity 0 → 1`, `1.6s`, `ease` | framer-motion |
+| Cover photo | Page scroll | Parallax: moves down more slowly than the page | `y 0% → 18%` across `scrollYProgress 0 → 1`. Offset `['start start', 'end start']` | framer-motion `useScroll` + `useTransform` |
+| Text block (date, name, CTAs) | Page scroll | Fades out as the cover leaves | `opacity 1 → 0` across `scrollYProgress 0 → 0.6` | framer-motion `useTransform` |
+| Date · photo count | Page load | Fade up | `opacity 0 → 1`, `y 12 → 0`, `0.9s`, `ease`, delay `0.3s` | framer-motion |
+| Client name (H1) | Page load | Fade up | `y 24 → 0`, `1s`, `ease`, delay `0.4s` | framer-motion |
+| "Photographed by" | Page load | Fade up | `y 16 → 0`, `0.9s`, `ease`, delay `0.55s` | framer-motion |
+| CTA row | Page load | Fade up | `y 16 → 0`, `0.9s`, `ease`, delay `0.7s` | framer-motion |
+| "View gallery" button | Click | Smooth-scrolls to the grid. Also has the [Button](#button-srccomponentsuiindexjsx) press and hover effects | `scrollIntoView({ behavior: 'smooth' })` | Browser native |
+| "Shop prints" button | Hover | [Button](#button-srccomponentsuiindexjsx) arrow slide | n/a | Tailwind |
+| "Print store" link (top right) | Hover | Background `→ white/10` | Tailwind default | Tailwind |
+
+### Nav bar: [src/gallery/components/NavBar.jsx](src/gallery/components/NavBar.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Collection tab underline | Active collection changes (tap or scroll-spy) | The underline slides to the new tab | `layoutId="collection-underline"`, `0.4s`, `ease` | framer-motion |
+| Collection tab text | Hover / active | Colour `type-2 → type-0` | Tailwind default | Tailwind |
+| Collection tab row | Active tab changes | The row scrolls sideways to centre the active tab | `row.scrollTo({ behavior: 'smooth' })` | Browser native |
+| Collection tab | Tap | The page scrolls so the section heading sits under the nav. Scroll-spy is locked until `scrollend`, wheel or touch (1.5s fallback) | `window.scrollTo({ behavior: 'smooth' })` | Browser native |
+| Layout / Favourites buttons | Hover / pressed | Background `→ surface-2` | Tailwind default | Tailwind |
+| Favourites toggle | Click | Jumps back to the top of the grid if scrolled past it | `scrollTo({ behavior: 'instant' })` | Browser native |
+| Layout popover (tablet and desktop) | Open / close | Drops down from the top right | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it. `origin-top-right` | framer-motion |
+| Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
+| Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides to the selected option | `layoutId="seg-{label}"`, `0.35s`, `ease` | framer-motion |
+
+### Photo grid and tile: [GalleryGrid.jsx](src/gallery/components/GalleryGrid.jsx), [Photo.jsx](src/gallery/components/Photo.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Tile image | Finishes loading | Fade in | `opacity 0 → 1`, `700ms`, `ease-out` | Tailwind |
+| Tile image | Hover | Slight zoom | `scale 1 → 1.02`, `700ms`, `ease-out` | Tailwind |
+| Bottom gradient | Hover (hidden on touch screens) | Fades in | `opacity 0 → 1`, `duration-300` | Tailwind |
+| Action buttons (heart, download, share, buy) | Hover or keyboard focus (hidden on touch) | Fade in | `opacity 0 → 1`, `duration-300` | Tailwind |
+| Each action button | Hover | Background `surface-1/90 → surface-1` | Tailwind default | Tailwind |
+| Favourite heart badge (top left) | Tile hover | Hides so it doesn't double up with the action row | Instant `opacity 0` | Tailwind |
+| Infinite-scroll spinner | Next batch loading (350ms simulated delay) | Spins | `animate-spin` (1s linear infinite) | Tailwind keyframes |
+
+### Lightbox / loupe: [src/gallery/components/Lightbox.jsx](src/gallery/components/Lightbox.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Viewer | Open / close | Fade | `opacity 0 → 1`, `0.25s`. Exit reverses it | framer-motion |
+| Photo | Next / previous (arrows, keys, film strip, swipe) | Slides in the direction of travel | Enter `x dir×80 → 0`, `opacity 0 → 1`. Exit `x → dir×−80`, `opacity → 0`. `0.25s`, `easeOut`. `mode="popLayout"`, `initial={false}`, `custom={dir}` | framer-motion variants |
+| Photo | Swipe (coarse pointer only) | Rubber-bands under the finger and snaps back. A swipe moves to the next photo | `drag="x"`, `dragElastic 0.7`, `dragSnapToOrigin`. Counts as a swipe at > `60px` offset or > `400px/s` | framer-motion drag |
+| Header icons, prev / next | Hover | Background `→ white/10`, text `white/80 → white` | Tailwind default | Tailwind |
+| Heart | Toggle | Icon switches between outline and red fill | Instant | n/a |
+| Film-strip thumb | Current / hover | Current: `opacity 100%` + white ring. Others `50%`, hover `80%` | Tailwind default | Tailwind |
+| Film strip | Index changes | Scrolls to centre the current thumb | `scrollIntoView({ behavior: 'smooth', inline: 'center' })` | Browser native |
+
+### Toast: [src/gallery/components/Toaster.jsx](src/gallery/components/Toaster.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Toast pill | Download / share / favourite feedback | Rises in, drops out | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`, `y → 8`. `0.2s` | framer-motion |
+
+### Quick buy panel: [src/gallery/components/QuickBuy.jsx](src/gallery/components/QuickBuy.jsx)
+
+The panel opens from "Buy print" on a tile or in the lightbox.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Overlay | Open / close | Fade (with a static `backdrop-blur-[2px]`) | `opacity 0 → 1`, framer default | framer-motion + Radix |
+| Panel | Open / close | Slides in from the right | `x 100% → 0`, `0.55s`, `ease` | framer-motion + Radix |
+| Step progress bars (3) | Step changes | Each bar fills when reached | `width 0% → 100%`, `0.45s`, `ease`, `initial={false}` | framer-motion |
+| Step body | Step changes | Slides in the direction of travel. The body scrolls to the top once the old step has left | Enter `x dir×24 → 0`, `opacity 0 → 1`. Exit `x → dir×−24`. `0.3s`, `ease`. `mode="wait"` | framer-motion variants |
+| Product row (step 1) | Hover | Border `→ type-3`. The caret nudges right and darkens | Caret `translateX 0 → 2px`, Tailwind default | Tailwind |
+| Mockup preview (step 2) | Option change | See [ProductMockup](#productmockup-srccomponentsproductmockupjsx) and [OptionGroup](#optiongroup-swatches-sizes-cards-srccomponentsoptiongroupjsx) | n/a | framer-motion + Tailwind |
+| Unit price and total | Option or quantity change | [AnimatedNumber](#animatednumber-prices-srccomponentsuiindexjsx) roll | n/a | framer-motion |
+| Quantity − / + | Hover | Background | Tailwind default | Tailwind |
+| Crop editor (step 3) | Drag, pinch, wheel | See [CropEditor](#cropeditor-srccomponentscropeditorjsx) | n/a | n/a |
+| Orientation pill (step 3) | Toggle | The pill slides | `layoutId="qb-orient"`, `0.35s`, `ease` | framer-motion |
+| "In your cart" badge (done step) | Step appears | Pops in | `scale 0.6 → 1`, `opacity 0 → 1`, `0.4s`, `ease`, delay `0.15s` | framer-motion |
+
+---
+
+## Store shell: [src/components/Layout.jsx](src/components/Layout.jsx)
+
+Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `/cart`.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Header | Scroll down past 240px / scroll up | Hides upward, shows again on scroll up. Stays visible while the mobile menu is open | `y 0 ↔ -100%`, `0.45s`, `ease` | framer-motion `useScroll` + `useMotionValueEvent` |
+| Header bar | Scroll past 12px | A frosted background and border appear | `bg transparent → surface-0/85` + `backdrop-blur-xl`, border `transparent → border`, `transition-all duration-500` | Tailwind |
+| Nav underline (desktop) | Route changes | Slides to the active link | `layoutId="nav-underline"`, `0.4s`, `ease` | framer-motion |
+| Nav links, "Back to gallery", footer links | Hover | Colour / background | Tailwind default | Tailwind |
+| Cart button count | Item count changes | The old number slides up and out, the new one slides up in | Enter `y 12 → 0`. Exit `y → -12`. `0.3s`, `ease`. `mode="popLayout"`, `initial={false}` | framer-motion |
+| Cart button | Hover | Background `→ #2c2c2c` | Tailwind default | Tailwind |
+| Mobile menu | Open / close | Wipes down from the top | `clipPath inset(0 0 100% 0) → inset(0 0 0% 0)`, `0.6s`, `ease`. Exit reverses it | framer-motion |
+| Mobile menu links | Menu opens | Staggered fade up | `opacity 0 → 1`, `y 24 → 0`, `0.6s`, `ease`, delay `0.15 + i × 0.05s` | framer-motion |
+| Page content (`<main>`) | Route changes | The old page fades out, then the new one fades up | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`. `0.5s`, `ease`. `mode="wait"`. The window jumps to the top instantly on each path change | framer-motion |
+| Cart drawer | Cart button | See [CartDrawer](#cartdrawer-srccomponentscartdrawerjsx) | n/a | n/a |
+
+---
+
+## Store home (`/store`): [src/pages/Home.jsx](src/pages/Home.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| "N photos from…" pill | Page load | Fade up | `opacity 0 → 1`, `y 10 → 0`, `0.8s`, `ease` | framer-motion |
+| Hero headline | In view | [SplitText](#splittext-srccomponentsuiindexjsx), delay `0.1s` | n/a | framer-motion |
+| Hero paragraph | Page load | Fade up | `y 16 → 0`, `0.9s`, `ease`, delay `0.5s` | framer-motion |
+| Hero CTAs | Page load | Fade up | `y 16 → 0`, `0.9s`, `ease`, delay `0.62s` | framer-motion |
+| Hero image 1 (portrait photo) | Page load | Scale in | `scale 0.94 → 1`, `opacity 0 → 1`, `1.2s`, `ease`, delay `0.2s` | framer-motion |
+| Hero image 1 | Scroll | Parallax up | `y 0 → -120px` across hero `scrollYProgress 0 → 1` | framer-motion `useScroll` + `useTransform` |
+| Hero image 2 (framed-print mockup) | Page load / scroll | Scale in, then parallax | `scale 0.94 → 1`, `1.2s`, delay `0.35s`. Scroll `y 0 → -40px` | framer-motion |
+| Hero image 3 (album mockup) | Page load / scroll | Rise in, then parallax | `y 40 → 0`, `opacity 0 → 1`, `1.2s`, delay `0.5s`. Scroll `y 0 → -200px`. Both drive `y` on the same element | framer-motion |
+| "Packages from" price card | Page load | Pop in | `scale 0.8 → 1`, `opacity 0 → 1`, `0.8s`, `ease`, delay `0.9s` | framer-motion |
+| Section headings | In view | [SplitText](#splittext-srccomponentsuiindexjsx) | n/a | framer-motion |
+| Category cards | In view | [Reveal](#reveal-srccomponentsuiindexjsx), delay `(i % 2) × 0.1s` | n/a | framer-motion |
+| Category card mockup | Hover | Zoom | `scale 1 → 1.04`, `1100ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Category arrow circle | Hover | Rotate | `rotate 0 → 45°`, `500ms` | Tailwind |
+| Bestsellers row (desktop, fine pointer, ≥768px) | Drag | Drag carousel with a little overscroll | `drag="x"`, `dragConstraints` = wrapper, `dragElastic 0.08`. Cursor `grab` / `grabbing` | framer-motion drag |
+| Bestsellers row (touch / below 768px) | Swipe | Native horizontal scroll that snaps to each card | `snap-x snap-mandatory`, `snap-start` | CSS scroll-snap |
+| Product cards | Hover | See [ProductCard](#productcard-srccomponentsproductcardjsx) | n/a | Tailwind |
+| Package cards (dark section) | In view / hover | [Reveal](#reveal-srccomponentsuiindexjsx) delay `i × 0.08s`, plus [PackageCard](#packagecard-srccomponentspackagecardjsx) hover | n/a | framer-motion + Tailwind |
+| Quality items | In view | [Reveal](#reveal-srccomponentsuiindexjsx), delay `i × 0.08s` | n/a | framer-motion |
+| FAQ | Click | [Accordion](#accordion-srccomponentsuiindexjsx). The first item is open by default | n/a | framer-motion |
+
+**Built but not rendered** (commented out in `Home()`):
+
+| Element | Animation | Values | Library |
+|---|---|---|---|
+| `Marquee` strip | Infinite horizontal scroll, pauses on hover | `translateX 0 → -50%`, `40s linear infinite`. Images `grayscale 30% → 0` on hover, `500ms` | CSS `@keyframes marquee` + Tailwind |
+| `HowItWorks` steps | Reveal; card bg on hover; icon tilt | Bg `→ surface-2` `500ms`. Icon `rotate 0 → -12°` `500ms` | framer-motion + Tailwind |
+
+---
+
+## Shop (`/shop`, `/shop/:categoryId`): [src/pages/Shop.jsx](src/pages/Shop.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Page title | Load / category change | [SplitText](#splittext-srccomponentsuiindexjsx). It is keyed on the category, so it replays on every switch | n/a | framer-motion |
+| Sort dropdown | Open | Native `<select>` on ≥768px. [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx) on phones | n/a | framer-motion (phone) |
+| Category tab underline | Category changes | The underline slides | `layoutId="shop-tab"`, `0.4s`, `ease` | framer-motion |
+| Product grid item | Enters | Staggered fade up | `opacity 0 → 1`, `y 30 → 0`, `0.7s`, `ease`, delay `i × 0.05s` | framer-motion |
+| Product grid item | Leaves (category filter) | Fade and shrink | `opacity → 0`, `scale → 0.96`. `mode="popLayout"` | framer-motion |
+| Product grid item | Sort changes | Cards glide to their new positions | `layout` on both the grid and the items | framer-motion |
+| Product card | Hover | See [ProductCard](#productcard-srccomponentsproductcardjsx) | n/a | Tailwind |
+| "Buying more than one piece?" banner | Hover | Background `→ #efefef`. The arrow nudges right | Arrow `translateX 0 → 4px`, Tailwind default | Tailwind |
+
+---
+
+## Product detail (`/product/:id`): [src/pages/Product.jsx](src/pages/Product.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Preview | View switch (In room / Detail / Photo) | Crossfade | `opacity 0 → 1`, exit `→ 0`, `0.4s`. `mode="wait"`, `initial={false}` | framer-motion |
+| Preview, "Detail" view | Switch to Detail | Zooms into the piece | `scale 1 → 2.1`, `0.8s`, `ease`, origin `30% 30%` ([ProductMockup](#productmockup-srccomponentsproductmockupjsx)) | framer-motion |
+| View switcher pill | View changes | The dark pill slides | `layoutId="view-pill"`, `0.4s`, `ease`. Text colour uses the Tailwind default | framer-motion |
+| Price | Option change | [AnimatedNumber](#animatednumber-prices-srccomponentsuiindexjsx) | n/a | framer-motion |
+| Options | Hover / select | [OptionGroup](#optiongroup-swatches-sizes-cards-srccomponentsoptiongroupjsx). The mockup resizes with `layout` `0.6s` | n/a | Tailwind + framer-motion |
+| "Choose photos" CTA | Hover / press | [Button](#button-srccomponentsuiindexjsx) with arrow | n/a | Tailwind |
+| "Save more in a package" rows | Hover | Background `→ surface-2`. The arrow nudges right `4px` | Tailwind default | Tailwind |
+| Details / Shipping / Care | Click | [Accordion](#accordion-srccomponentsuiindexjsx). The first item is open by default | n/a | framer-motion |
+| Related products | Hover | [ProductCard](#productcard-srccomponentsproductcardjsx) | n/a | Tailwind |
+
+---
+
+## Packages (`/packages`): [src/pages/Packages.jsx](src/pages/Packages.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Title | In view | [SplitText](#splittext-srccomponentsuiindexjsx) | n/a | framer-motion |
+| Package cards | In view / hover | [Reveal](#reveal-srccomponentsuiindexjsx) delay `(i % 2) × 0.1s`, plus [PackageCard](#packagecard-srccomponentspackagecardjsx) hover | n/a | framer-motion + Tailwind |
+
+## Package detail (`/packages/:id`): [src/pages/PackageDetail.jsx](src/pages/PackageDetail.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Product mockup tiles (left) | Page load | Staggered fade up | `opacity 0 → 1`, `y 24 → 0`, `0.8s`, `ease`, delay `i × 0.1s` | framer-motion |
+| "What's included" rows | In view | [Reveal](#reveal-srccomponentsuiindexjsx), delay `i × 0.06s` | n/a | framer-motion |
+| CTA | Hover / press | [Button](#button-srccomponentsuiindexjsx) with arrow | n/a | Tailwind |
+| Other packages | Hover | [PackageCard](#packagecard-srccomponentspackagecardjsx) | n/a | Tailwind |
+
+---
+
+## Builder (`/build/:kind/:id`): [src/pages/Builder.jsx](src/pages/Builder.jsx)
+
+### Frame (all steps)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Step pill (top bar) | Step changes | The dark pill slides to the active step | `layoutId="step-pill"`, `0.45s`, `ease` | framer-motion |
+| Step connector lines | Step reached | Colour `border → type-0` | `transition-colors`, Tailwind default | Tailwind |
+| Total (top bar) | Selection or variant change | [AnimatedNumber](#animatednumber-prices-srccomponentsuiindexjsx) | n/a | framer-motion |
+| Step content | Step changes | Old step slides out left, new step slides in from the right | Enter `opacity 0 → 1`, `x 24 → 0`. Exit `x → -24`. `0.45s`, `ease`. `mode="wait"`. The window jumps to the top on each step change | framer-motion |
+| Flash message (top centre) | Validation or variant-switch message | Drops in, fades out after 2.2s | Enter `opacity 0 → 1`, `y -8 → 0`. Exit `opacity → 0`. framer default | framer-motion |
+| Close button | Hover | Background | Tailwind default | Tailwind |
+| Back / Continue buttons | Hover / press | [Button](#button-srccomponentsuiindexjsx) | n/a | Tailwind |
+| Add to cart | Click | Goes to the product or package page, then opens the [CartDrawer](#cartdrawer-srccomponentscartdrawerjsx) after `350ms` | `setTimeout` | n/a |
+
+### Step 1: Photos
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Collection tab underline | Collection changes | The underline slides | `layoutId="col-underline"`, `0.4s`, `ease` | framer-motion |
+| Photo tile | Enters (first load / collection change) | Staggered fade up | `opacity 0 → 1`, `y 20 → 0`, `0.6s`, `ease`, delay `min(i, 12) × 0.03s` (capped at 0.36s) | framer-motion |
+| Photo grid | Collection changes | Reflows | `layout` on the masonry container | framer-motion |
+| Photo tile frame | Select / deselect | A dark frame grows around the photo | Padding `0 → 6px` (`p-1.5`), bg `transparent → type-0`, `transition-all duration-300` | Tailwind |
+| Photo image | Hover (unselected only) | Zoom | `scale 1 → 1.03`, `duration-700` | Tailwind |
+| Selection badge (top right) | Hover / select | Unselected: a hollow ring scales up on hover. Selected: a white disc with the order number | `scale 0.9 → 1`, bg `black/25 → white`. `transition-all duration-300` | Tailwind |
+| Preview button (top left) | Tile hover | Fades in | `opacity 0 → 1`, Tailwind default | Tailwind |
+| Slot pill (package or multi-item) | Hover / active | Border and outline | Tailwind default | Tailwind |
+| Builder lightbox photo | Next / previous / arrow keys | Crossfade with a slight scale | Enter `opacity 0 → 1`, `scale 0.98 → 1`. Exit `opacity → 0`. `0.3s`. `mode="wait"`. The Radix overlay itself does not animate | framer-motion + Radix |
+| Selected-photo chips (bottom bar, ≥768px) | Select / deselect | Pop in / out, and the others shift over | `opacity 0 → 1`, `scale 0.6 → 1`. Exit reverses it. `layout`, framer default | framer-motion |
+| Selected-photo chip | Hover | A dark overlay with ✕ fades in | `opacity 0 → 1`, Tailwind default | Tailwind |
+
+### Step 2: Crop
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Crop stage | Drag, pinch, wheel; photo change | See [CropEditor](#cropeditor-srccomponentscropeditorjsx) | n/a | framer-motion + pointer events |
+| Film-strip thumbs | Current / hover | Current: `ring-2 ring-offset-2`. Others `opacity 70%`, hover `100%` | Tailwind default | Tailwind |
+| Print options panel ("Switch") | Open / close | Expands | `height 0 → auto`, `opacity 0 → 1`, `0.4s`, `ease`. `initial={false}` | framer-motion |
+| Apply buttons | A draft option changes | The side panel scrolls to keep them visible | `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` | Browser native |
+| Orientation pill | Toggle | The pill slides | `layoutId="orient"`, `0.35s`, `ease` | framer-motion |
+
+### Step 3: Review
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Item cards | Step appears | Staggered fade up | `opacity 0 → 1`, `y 16 → 0`, `0.6s`, `ease`, delay `si × 0.08s` | framer-motion |
+| "Edit crops" | Click | Jumps back to step 2 at that item, using the step slide above | n/a | framer-motion |
+
+---
+
+## Cart (`/cart`): [src/pages/Cart.jsx](src/pages/Cart.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Title | In view | [SplitText](#splittext-srccomponentsuiindexjsx) | n/a | framer-motion |
+| Cart line | Added (for example by Duplicate) | Fade up | `opacity 0 → 1`, `y 16 → 0`, `0.5s`, `ease`. `initial={false}` on the list | framer-motion |
+| Cart line | Removed | Slides left and fades | `opacity → 0`, `x → -40`, `0.3s` (the exit sets its own duration) | framer-motion |
+| Cart line | Neighbour added or removed | Moves to its new position | `layout` | framer-motion |
+| Edit / Duplicate / Remove | Hover | Ghost [Button](#button-srccomponentsuiindexjsx). Remove text turns red | Tailwind `duration-300` | Tailwind |
+| Promo code, totals, empty state | n/a | No animation | n/a | n/a |
+
+---
+
+## Checkout (`/checkout`): [src/pages/Checkout.jsx](src/pages/Checkout.jsx), [CheckoutShell.jsx](src/components/CheckoutShell.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Form column (shared with Payment) | Page load | Fade up | `opacity 0 → 1`, `y 14 → 0`, `0.6s`, `ease` | framer-motion |
+| Text fields | Focus | See [Field](#field-text-input-srccomponentsuiindexjsx) | n/a | Tailwind |
+| Delivery method card | Hover / select | Border and outline | Tailwind default | Tailwind |
+| Radio dot | Select | Fills dark | `transition`, Tailwind default | Tailwind |
+| Radio check icon | Select | Pops in | `scale 0 → 1`, framer default (spring) | framer-motion |
+| "Continue to payment" | Hover / press | [Button](#button-srccomponentsuiindexjsx) with arrow | n/a | Tailwind |
+
+## Payment (`/payment`): [src/pages/Payment.jsx](src/pages/Payment.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Form column | Page load | Same fade up as Checkout (`CheckoutShell`) | n/a | framer-motion |
+| Payment method tab pill | Method changes | The white pill slides. The icon switches to its filled weight | `layoutId="pay-tab"`, `0.35s`, `ease` | framer-motion |
+| Method panel (card form / redirect note) | Method changes | Crossfade with a small rise | Enter `opacity 0 → 1`, `y 8 → 0`. Exit `opacity → 0`. `0.3s`. `mode="wait"` | framer-motion |
+| Card preview | Typing | Text updates live. No motion | n/a | n/a |
+| "Prototype ends here" note | "Make payment" click | Drops in | `opacity 0 → 1`, `y -6 → 0`, framer default | framer-motion |
+
+---
+
+## Gaps and inconsistencies
+
+These are observations, not changes. They are useful when tidying up motion.
+
+1. **No reduced-motion support.** Nothing checks `prefers-reduced-motion`: there is no `MotionConfig reducedMotion="user"`, no `useReducedMotion`, and no `motion-safe:` classes. The parallax, the 1.6s cover zoom and the 40s marquee would be the first to tone down.
+2. **Hover timing differs from DesignSystem.md.** That doc says 0.3s for hover changes. Most hovers use bare `transition`, which is Tailwind's 150ms. Only `Button` and a few tiles use `duration-300`.
+3. **`ease` is redeclared in about 15 files.** A single export (for example from `src/lib/utils.js`) would keep it in one place.
+4. **Two different lightboxes.** The gallery loupe slides horizontally (`0.25s`, `easeOut`, swipe support). The Builder lightbox crossfades with a scale (`0.3s`, no swipe) and has no overlay animation.
+5. **Some animations use framer defaults.** The cart and Quick buy overlays, the Builder flash, the bottom-bar photo chips, the checkout radio check, the Accordion plus icon and the Payment "prototype ends" note set no `transition`. They use framer's spring/tween defaults instead of the shared `ease`.
+6. **The Home hero image 3** has both an entrance `y` (`40 → 0`) and a scroll-linked `y` (`0 → -200px`) on the same element.

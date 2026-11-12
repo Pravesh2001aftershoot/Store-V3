@@ -21,6 +21,7 @@ In dev, Locator is enabled: alt-click any element to open its source file.
 | [PRD.md](PRD.md) | Problem, goals, users, requirements for each screen (with build status), business rules, open questions |
 | [Architecture.md](Architecture.md) | Routes, state, data model, pricing and crop maths, how the gallery and Builder work, mocked boundaries, tech debt |
 | [DesignSystem.md](DesignSystem.md) | Colour, type, radius and motion tokens, components, patterns, accessibility checklist |
+| [Interaction.md](Interaction.md) | Every animation and interaction, screen by screen: trigger, values, library, source file |
 
 ## Flow
 

@@ -271,14 +271,15 @@ function PhotosStep({ slot, toggle, selectMany, clear }) {
   return (
     <div>
       <div className="sticky top-16 z-20 -mx-3 flex flex-wrap items-center justify-between gap-3 bg-surface-0/90 px-3 py-3 backdrop-blur-xl md:-mx-6 md:px-6">
-        <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
+        <div className="no-scrollbar flex gap-6 overflow-x-auto">
           {gallery.collections.map((c) => (
             <button
               key={c}
               onClick={() => setCol(c)}
-              className={cn('relative shrink-0 rounded-full px-3.5 py-1.5 text-13-r transition', col === c ? 'text-white' : 'text-type-1 hover:bg-surface-2')}
+              aria-current={col === c}
+              className={cn('relative shrink-0 pt-1.5 pb-2.5 text-14-r transition', col === c ? 'text-type-0' : 'text-type-2 hover:text-type-0')}
             >
-              {col === c && <motion.span layoutId="col-pill" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.4, ease }} />}
+              {col === c && <motion.span layoutId="col-underline" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />}
               <span className="relative">{c}</span>
             </button>
           ))}
@@ -311,14 +312,14 @@ function PhotosStep({ slot, toggle, selectMany, clear }) {
             >
               <button
                 onClick={() => toggle(p)}
-                className={cn('relative block w-full overflow-hidden rounded-xl transition-all duration-300', sel ? 'bg-type-0 p-1.5' : 'bg-transparent p-0')}
+                className={cn('relative block w-full overflow-hidden transition-all duration-300', sel ? 'bg-type-0 p-1.5' : 'bg-transparent p-0')}
                 aria-pressed={sel}
               >
                 <img
                   src={p.thumb}
                   alt={p.name}
                   loading="lazy"
-                  className={cn('block w-full rounded-[10px] transition-transform duration-700', !sel && 'group-hover:scale-[1.03]')}
+                  className={cn('block w-full transition-transform duration-700', !sel && 'group-hover:scale-[1.03]')}
                   style={{ aspectRatio: p.w / p.h }}
                 />
                 <span
@@ -911,7 +912,7 @@ export default function Builder() {
 
       {/* bottom action bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-1/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-3 py-3 md:px-6">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-3 py-3 max-sm:flex-wrap md:px-6">
           {step === 0 && slot.photos.length > 0 && (
             <div className="no-scrollbar hidden max-w-[40%] items-center gap-1.5 overflow-x-auto md:flex">
               <AnimatePresence initial={false}>
@@ -934,7 +935,7 @@ export default function Builder() {
               </AnimatePresence>
             </div>
           )}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 max-sm:basis-full">
             <p className="truncate text-14-m">{summary}</p>
             <p className={cn('truncate text-12-r', step === 0 && !v.ok && slot.photos.length ? 'text-amber-700' : 'text-type-2')}>
               {step === 0 && !v.ok && slot.photos.length
@@ -951,7 +952,7 @@ export default function Builder() {
               <ArrowLeft size={16} /> <span className="max-sm:hidden">Back</span>
             </Button>
           )}
-          <Button size="lg" onClick={next} disabled={step === 0 && slots.every((s) => !s.photos.length)}>
+          <Button size="lg" onClick={next} disabled={step === 0 && slots.every((s) => !s.photos.length)} className="max-sm:flex-1">
             {step === 0 ? 'Continue to crop' : step === 1 ? 'Review' : state.editId ? 'Update cart' : !pkg && slots.length > 1 ? `Add ${slots.length} items to cart` : 'Add to cart'}
             <ArrowRight size={16} />
           </Button>

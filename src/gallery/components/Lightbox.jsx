@@ -1,19 +1,57 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretLeft, CaretRight, DownloadSimple, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 
-/** Full-screen photo viewer. Arrow keys / Esc supported. */
+const SWIPE_DISTANCE = 60 // px dragged before release counts as a swipe
+const SWIPE_VELOCITY = 400 // px/s flick counts as a swipe even if short
+
+const slide = {
+  enter: (dir) => ({ x: dir * 80, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir) => ({ x: dir * -80, opacity: 0 }),
+}
+
+/** Touch devices get swipe-to-navigate on the photo; mouse users keep the arrow buttons. */
+function useCoarsePointer() {
+  const [coarse, setCoarse] = useState(() => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)')
+    const onChange = () => setCoarse(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return coarse
+}
+
+/** Full-screen photo viewer. Arrow keys / Esc, and swipe on touch devices. */
 export default function Lightbox({ photos, index, onIndex, onClose, favorites, onFavorite, onBuy }) {
   const open = index != null && photos[index]
   const photo = open ? photos[index] : null
+  const dir = useRef(1) // 1 = moving forward, -1 = backward; drives slide direction
+  const swipeable = useCoarsePointer()
+
+  const go = (delta) => {
+    dir.current = delta
+    onIndex((index + delta + photos.length) % photos.length)
+  }
+  const jump = (i) => {
+    if (i === index) return
+    dir.current = i > index ? 1 : -1
+    onIndex(i)
+  }
+  const onDragEnd = (_, { offset, velocity }) => {
+    if (Math.abs(offset.x) > SWIPE_DISTANCE || Math.abs(velocity.x) > SWIPE_VELOCITY) {
+      go(offset.x < 0 ? 1 : -1)
+    }
+  }
 
   useEffect(() => {
     if (!open) return
     const key = (e) => {
       if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowRight') onIndex((index + 1) % photos.length)
-      if (e.key === 'ArrowLeft') onIndex((index - 1 + photos.length) % photos.length)
+      if (e.key === 'ArrowRight') go(1)
+      if (e.key === 'ArrowLeft') go(-1)
     }
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -64,27 +102,34 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
 
           <div className="flex min-h-0 flex-1 flex-col">
           <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-2 pb-4 md:px-20">
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false} custom={dir.current}>
               <motion.img
                 key={photo.id}
                 src={photo.src}
                 alt={photo.name}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                custom={dir.current}
+                variants={slide}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                drag={swipeable ? 'x' : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.7}
+                dragSnapToOrigin
+                onDragEnd={onDragEnd}
                 className="max-h-full max-w-full select-none object-contain"
                 draggable={false}
               />
             </AnimatePresence>
-            <button onClick={() => onIndex((index - 1 + photos.length) % photos.length)} className={`${btn} absolute left-2 top-1/2 -translate-y-1/2 md:left-6`} aria-label="Previous photo">
+            <button onClick={() => go(-1)} className={`${btn} absolute left-2 top-1/2 -translate-y-1/2 md:left-6`} aria-label="Previous photo">
               <CaretLeft size={22} />
             </button>
-            <button onClick={() => onIndex((index + 1) % photos.length)} className={`${btn} absolute right-2 top-1/2 -translate-y-1/2 md:right-6`} aria-label="Next photo">
+            <button onClick={() => go(1)} className={`${btn} absolute right-2 top-1/2 -translate-y-1/2 md:right-6`} aria-label="Next photo">
               <CaretRight size={22} />
             </button>
           </div>
-          <FilmStrip photos={photos} index={index} onIndex={onIndex} />
+          <FilmStrip photos={photos} index={index} onIndex={jump} />
           </div>
         </motion.div>
       )}

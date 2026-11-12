@@ -125,14 +125,14 @@ export default function CartDrawer() {
                       )}
                       <div className="flex items-center justify-between text-16-r">
                         <span className="text-type-1">Subtotal</span>
-                        <span className="font-medium">{money(totals.subtotal)}</span>
+                        <span className="text-20-m">{money(totals.subtotal)}</span>
                       </div>
                       <p className="text-12-r text-type-3">Shipping and taxes calculated at checkout.</p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid gap-2 sm:grid-cols-2">
                         <Button variant="outline" size="lg" onClick={() => go('/cart')}>
                           View cart
                         </Button>
-                        <Button size="lg" onClick={() => go('/checkout')} arrow>
+                        <Button size="lg" onClick={() => go('/checkout')} arrow className="max-sm:order-first">
                           Checkout
                         </Button>
                       </div>
