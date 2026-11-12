@@ -176,6 +176,7 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
   - `masonry` places each photo in the shortest column, so appending photos never moves ones already placed.
   - `justifiedRows` makes rows of `perRow` photos with equal heights and pads the last row with spacers.
   Column counts and gaps per breakpoint are tables in `settings.js` (`COLUMNS`, `GAP`, `MARGIN`).
+- **Quick buy** (`components/QuickBuy.jsx`). The bag button on a tile, and "Buy print" in the lightbox, open a side panel that runs a short version of the store flow for that one photo: Product (framed print, canvas, metal, fine art print) → Size & finish → Crop → Added. It adds a normal product cart line, then offers Checkout, View cart or Keep browsing. Gallery photos are bridged into the store with `registerPhoto()` in `data/gallery.js`, persisted to `localStorage['lumen-store-v3:photos']` so cart lines resolve after a reload.
 - **Actions** (`lib/actions.js`).
   - Download fetches the image as a blob and saves it, falling back to opening it in a new tab.
   - Share uses the Web Share API, with a file where `canShare` supports it, and falls back to copying a link to the clipboard.
@@ -208,7 +209,6 @@ These are the places that would be swapped out for real services:
 ## Known gaps / tech debt
 
 - **Two photo sets.** The store builder picks from the 28 photos in `data/gallery.js`, while the gallery page shows up to 200, or the local images. Photos dropped into `gallery/assets/photos/` do not appear in the builder.
-- **"Buy a print" isn't wired to the photo.** The gallery tile's buy button links to `/store` without passing the photo, so it is not preselected in the builder.
 - **No tests, linting config or TypeScript.**
 - **`Builder.jsx` is large (~960 lines).** It holds the step components, the variant-switch logic and the page. Splitting the step components into their own files would help.
 - **The `.playwright-mcp/` logs are committed.** They should probably be added to `.gitignore`.

@@ -7,6 +7,8 @@ import NavBar from './components/NavBar'
 import GalleryGrid, { sectionId } from './components/GalleryGrid'
 import Lightbox from './components/Lightbox'
 import Toaster from './components/Toaster'
+import QuickBuy from './components/QuickBuy'
+import { registerPhoto } from '../data/gallery'
 import { useFavorites } from './lib/actions'
 
 // Every collection is a section of one continuous scroll, so there's no "All" tab.
@@ -23,6 +25,7 @@ export default function GalleryPage() {
   const [favorites, toggleFav, clearFavs] = useFavorites(gallery.client)
   const [showFavs, setShowFavs] = useState(false)
   const [lightbox, setLightbox] = useState(null)
+  const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
   const [minCount, setMinCount] = useState(0)
   const [jump, setJump] = useState(null)
   const gridRef = useRef(null)
@@ -49,6 +52,12 @@ export default function GalleryPage() {
 
   const favPhotos = useMemo(() => ordered.filter((p) => favorites.has(p.id)), [ordered, favorites])
   const visible = showFavs ? favPhotos : ordered
+
+  // Quick buy works on store photos, so register this gallery photo with the store first.
+  const buy = (photo) => {
+    setLightbox(null)
+    setBuying(registerPhoto(photo))
+  }
 
   const navBottom = () => navRef.current?.getBoundingClientRect().bottom ?? 0
 
@@ -148,6 +157,7 @@ export default function GalleryPage() {
           favorites={favorites}
           onFavorite={toggleFav}
           onOpen={setLightbox}
+          onBuy={buy}
           resetKey={String(showFavs)}
           minCount={showFavs ? 0 : minCount}
           emptyMessage={showFavs ? 'No favourites yet. Tap the heart on any photo to add it here.' : undefined}
@@ -166,7 +176,9 @@ export default function GalleryPage() {
         onClose={() => setLightbox(null)}
         favorites={favorites}
         onFavorite={toggleFav}
+        onBuy={buy}
       />
+      <QuickBuy photo={buying} onClose={() => setBuying(null)} />
       <Toaster />
     </div>
   )

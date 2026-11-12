@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretLeft, Handbag, Heart, SlidersHorizontal, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../lib/settings'
+import { useBreakpoint } from '../lib/hooks'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -41,13 +43,80 @@ function Segmented({ label, options, value, onChange }) {
   )
 }
 
-/** Popover with the three grid properties. */
+function LayoutControls({ settings, onChange }) {
+  return (
+    <>
+      <Segmented label="Orientation" options={ORIENTATION} value={settings.orientation} onChange={(v) => onChange('orientation', v)} />
+      <Segmented label="Thumbnail size" options={SIZE} value={settings.size} onChange={(v) => onChange('size', v)} />
+      <Segmented label="Spacing" options={SPACING} value={settings.spacing} onChange={(v) => onChange('spacing', v)} />
+    </>
+  )
+}
+
+/** Phone: the layout controls slide up from the bottom. Drag down, tap the backdrop or press Esc to close. */
+function LayoutSheet({ open, onClose, settings, onChange }) {
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [open])
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[60]">
+          <motion.div
+            className="absolute inset-0 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={onClose}
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Grid layout"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ duration: 0.35, ease }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.6 }}
+            onDragEnd={(_, info) => (info.offset.y > 80 || info.velocity.y > 500) && onClose()}
+            className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-surface-1 px-4 pb-[calc(24px+env(safe-area-inset-bottom))] shadow-[0_-20px_50px_-20px_rgba(0,0,0,.25)]"
+          >
+            <div className="flex justify-center pb-2 pt-3">
+              <span className="h-1 w-10 rounded-full bg-border" />
+            </div>
+            <div className="mb-5 flex items-center justify-between">
+              <p className="text-16-sb text-type-0">Grid layout</p>
+              <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full text-type-2 hover:bg-surface-2">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-5">
+              <LayoutControls settings={settings} onChange={onChange} />
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
+  )
+}
+
+/** Grid properties: a popover on tablet/desktop, a bottom sheet on phones. */
 function LayoutMenu({ settings, onChange }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const isPhone = useBreakpoint() === 'mobile'
   useEffect(() => {
     if (!open) return
-    const close = (e) => !ref.current?.contains(e.target) && setOpen(false)
+    // The sheet is portalled outside `ref`, so it handles its own outside taps via the backdrop.
+    const close = (e) => !isPhone && !ref.current?.contains(e.target) && setOpen(false)
     const esc = (e) => e.key === 'Escape' && setOpen(false)
     document.addEventListener('pointerdown', close)
     document.addEventListener('keydown', esc)
@@ -55,7 +124,7 @@ function LayoutMenu({ settings, onChange }) {
       document.removeEventListener('pointerdown', close)
       document.removeEventListener('keydown', esc)
     }
-  }, [open])
+  }, [open, isPhone])
 
   return (
     <div ref={ref} className="relative">
@@ -71,27 +140,29 @@ function LayoutMenu({ settings, onChange }) {
         <SlidersHorizontal size={18} />
         <span className="hidden md:inline">Layout</span>
       </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.2, ease }}
-            className="absolute right-0 top-12 z-50 w-[min(320px,calc(100vw-32px))] origin-top-right space-y-5 rounded-lg border border-border bg-surface-1 p-4 shadow-[0_20px_50px_-20px_rgba(0,0,0,.25)]"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-14-sb text-type-0">Grid layout</p>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="grid h-7 w-7 place-items-center rounded-full text-type-2 hover:bg-surface-2">
-                <X size={14} />
-              </button>
-            </div>
-            <Segmented label="Orientation" options={ORIENTATION} value={settings.orientation} onChange={(v) => onChange('orientation', v)} />
-            <Segmented label="Thumbnail size" options={SIZE} value={settings.size} onChange={(v) => onChange('size', v)} />
-            <Segmented label="Spacing" options={SPACING} value={settings.spacing} onChange={(v) => onChange('spacing', v)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isPhone ? (
+        <LayoutSheet open={open} onClose={() => setOpen(false)} settings={settings} onChange={onChange} />
+      ) : (
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.2, ease }}
+              className="absolute right-0 top-12 z-50 w-[min(320px,calc(100vw-32px))] origin-top-right space-y-5 rounded-lg border border-border bg-surface-1 p-4 shadow-[0_20px_50px_-20px_rgba(0,0,0,.25)]"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-14-sb text-type-0">Grid layout</p>
+                <button onClick={() => setOpen(false)} aria-label="Close" className="grid h-7 w-7 place-items-center rounded-full text-type-2 hover:bg-surface-2">
+                  <X size={14} />
+                </button>
+              </div>
+              <LayoutControls settings={settings} onChange={onChange} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   )
 }

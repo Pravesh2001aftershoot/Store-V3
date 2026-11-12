@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Heart, Handbag, DownloadSimple, ShareNetwork } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 import { cn } from '../../lib/utils'
 
 /** One gallery tile. Keeps its aspect ratio; the parent decides its width. */
-export default function Photo({ photo, rounded, favorite, onFavorite, onOpen, style, className }) {
+export default function Photo({ photo, rounded, favorite, onFavorite, onOpen, onBuy, style, className }) {
   const [loaded, setLoaded] = useState(false)
   return (
     <figure
@@ -55,13 +54,14 @@ export default function Photo({ photo, rounded, favorite, onFavorite, onOpen, st
         >
           <ShareNetwork size={15} />
         </button>
-        <Link
-          to="/store"
+        <button
+          onClick={onBuy}
           aria-label="Buy a print of this photo"
+          title="Buy a print"
           className="grid h-8 w-8 place-items-center rounded-full bg-surface-1/90 text-type-0 backdrop-blur transition hover:bg-surface-1"
         >
           <Handbag size={15} />
-        </Link>
+        </button>
       </div>
       {favorite && (
         <Heart size={14} weight="fill" className="pointer-events-none absolute left-2 top-2 text-white drop-shadow group-hover:opacity-0" />

@@ -1,11 +1,10 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretLeft, CaretRight, DownloadSimple, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 
 /** Full-screen photo viewer. Arrow keys / Esc supported. */
-export default function Lightbox({ photos, index, onIndex, onClose, favorites, onFavorite }) {
+export default function Lightbox({ photos, index, onIndex, onClose, favorites, onFavorite, onBuy }) {
   const open = index != null && photos[index]
   const photo = open ? photos[index] : null
 
@@ -54,9 +53,9 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
               <button onClick={() => sharePhoto(photo)} className={btn} aria-label="Share photo" title="Share">
                 <ShareNetwork size={20} />
               </button>
-              <Link to="/store" className="mx-1 flex h-10 items-center gap-2 rounded-full bg-white px-4 text-14-m text-type-0 transition hover:bg-white/90">
+              <button onClick={() => onBuy(photo)} className="mx-1 flex h-10 items-center gap-2 rounded-full bg-white px-4 text-14-m text-type-0 transition hover:bg-white/90">
                 <Handbag size={16} /> <span className="max-sm:hidden">Buy print</span>
-              </Link>
+              </button>
               <button onClick={onClose} className={btn} aria-label="Close">
                 <X size={20} />
               </button>

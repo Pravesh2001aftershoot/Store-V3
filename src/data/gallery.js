@@ -60,4 +60,30 @@ export const photos = raw.map(([pid, [w, h], collection], i) => ({
 }))
 
 export const photoById = Object.fromEntries(photos.map((p) => [p.id, p]))
-export const getPhoto = (id) => photoById[id] || photos[0]
+
+// Photos bought straight from the client gallery (local uploads, placeholders) aren't in the list
+// above. They're registered when a quick buy starts so cart lines can resolve them, and persisted
+// so the cart still shows the right photo after a reload.
+const EXTRA_KEY = 'lumen-store-v3:photos'
+const extraPhotos = (() => {
+  try {
+    return JSON.parse(localStorage.getItem(EXTRA_KEY)) || {}
+  } catch {
+    return {}
+  }
+})()
+
+export const registerPhoto = (p) => {
+  if (photoById[p.id]) return photoById[p.id]
+  // Same convention as the store photos: originals are simulated as display dims × 4.
+  const entry = { id: p.id, name: p.name, src: p.src, thumb: p.thumb, w: p.w, h: p.h, ow: p.ow || p.w * 4, oh: p.oh || p.h * 4, collection: p.collection }
+  extraPhotos[p.id] = entry
+  try {
+    localStorage.setItem(EXTRA_KEY, JSON.stringify(extraPhotos))
+  } catch {
+    /* storage full or blocked: the photo still resolves for this session */
+  }
+  return entry
+}
+
+export const getPhoto = (id) => photoById[id] || extraPhotos[id] || photos[0]
