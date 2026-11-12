@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { X, Handbag, Trash, Tag } from '@phosphor-icons/react'
+import { X, Handbag, Trash, Tag, PencilSimple, Copy } from '@phosphor-icons/react'
 import { useStore } from '../state/store'
 import { lineSubtotal, lineCompareAt } from '../lib/pricing'
 import { money } from '../lib/utils'
@@ -89,12 +89,26 @@ export default function CartDrawer() {
                                   </p>
                                 ))}
                               </div>
-                              <button
-                                onClick={() => dispatch({ type: 'remove', id: line.id })}
-                                className="mt-1.5 inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-destructive"
-                              >
-                                <Trash size={12} /> Remove
-                              </button>
+                              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <button
+                                  onClick={() => go(`/build/edit/${line.id}`)}
+                                  className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
+                                >
+                                  <PencilSimple size={12} /> Edit
+                                </button>
+                                <button
+                                  onClick={() => dispatch({ type: 'duplicate', id: line.id })}
+                                  className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
+                                >
+                                  <Copy size={12} /> Duplicate
+                                </button>
+                                <button
+                                  onClick={() => dispatch({ type: 'remove', id: line.id })}
+                                  className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-destructive"
+                                >
+                                  <Trash size={12} /> Remove
+                                </button>
+                              </div>
                             </div>
                           </motion.div>
                         ))}

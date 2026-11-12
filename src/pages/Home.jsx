@@ -302,9 +302,9 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Marquee />
+      {/* <Marquee /> */}
       <Categories />
-      <HowItWorks />
+      {/* <HowItWorks /> */}
       <Bestsellers />
       <PackagesTeaser />
       <Quality />

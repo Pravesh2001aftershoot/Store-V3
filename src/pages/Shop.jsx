@@ -52,16 +52,16 @@ export default function Shop() {
         </label>
       </div>
 
-      <div className="no-scrollbar -mx-4 mt-10 flex gap-2 overflow-x-auto border-b border-border px-4 pb-4 md:mx-0 md:px-0">
+      <div className="no-scrollbar -mx-4 mt-10 flex gap-6 overflow-x-auto border-b border-border px-4 md:mx-0 md:px-0">
         {tabs.map((t) => {
           const active = t.id === cat?.id
           return (
             <Link
               key={t.name}
               to={t.id ? `/shop/${t.id}` : '/shop'}
-              className={cn('relative shrink-0 rounded-full px-4 py-2 text-14-r transition', active ? 'text-white' : 'text-type-1 hover:bg-surface-2')}
+              className={cn('relative shrink-0 pt-2 pb-3 text-14-r transition', active ? 'text-type-0' : 'text-type-2 hover:text-type-0')}
             >
-              {active && <motion.span layoutId="shop-tab" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.45, ease }} />}
+              {active && <motion.span layoutId="shop-tab" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />}
               <span className="relative">{t.name}</span>
             </Link>
           )

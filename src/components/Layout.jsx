@@ -83,9 +83,9 @@ function Header() {
           )}
         >
           <div className="mx-auto flex h-16 max-w-[1360px] items-center justify-between gap-4 px-4 md:px-8">
-            <div className="flex items-center gap-8">
+            <div className="flex h-full items-center gap-8">
               <Wordmark />
-              <nav className="hidden items-center gap-1 lg:flex">
+              <nav className="hidden items-center gap-6 lg:flex">
                 {links.map((l) => (
                   <NavLink
                     key={l.to}
@@ -93,7 +93,7 @@ function Header() {
                     end={l.to === '/shop'}
                     className={({ isActive }) =>
                       cn(
-                        'relative rounded-full px-3 py-1.5 text-14-r text-type-1 transition hover:text-type-0',
+                        'relative py-1.5 text-14-r text-type-2 transition hover:text-type-0',
                         isActive && 'text-type-0'
                       )
                     }
@@ -101,7 +101,7 @@ function Header() {
                     {({ isActive }) => (
                       <>
                         {isActive && (
-                          <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-surface-2" transition={{ duration: 0.4, ease }} />
+                          <motion.span layoutId="nav-underline" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />
                         )}
                         <span className="relative">{l.label}</span>
                       </>

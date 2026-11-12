@@ -4,6 +4,7 @@ import { useBreakpoint, useInfinite } from '../lib/hooks'
 import { justifiedRows, masonry } from '../lib/layout'
 import Photo from './Photo'
 import { cn } from '../../lib/utils'
+import { Eyebrow } from '../../components/ui'
 
 /** DOM id of a collection's section heading (used for jumping and scroll-spy). */
 export const sectionId = (name) => `collection-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
@@ -49,9 +50,9 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       {blocks.map((b, i) => (
         <div key={b.title ?? 'all'}>
           {b.title && (
-            <header id={sectionId(b.title)} className={cn('flex items-baseline gap-2 px-1 pb-4 md:pb-5', i === 0 ? 'pt-2 md:pt-4' : 'pt-10 md:pt-14')}>
-              <h2 className="text-24-m text-type-0">{b.title}</h2>
-              <span className="text-14-r text-type-3">{b.end - b.start}</span>
+            <header id={sectionId(b.title)} className={cn('px-1 pb-10 md:pb-14', i === 0 ? 'pt-8 md:pt-14' : 'pt-20 md:pt-28')}>
+              <Eyebrow>{b.end - b.start} photos</Eyebrow>
+              <h2 className="mt-4 text-48-sb text-type-0 md:text-72-sb">{b.title}</h2>
             </header>
           )}
           {settings.orientation === 'vertical' ? (
