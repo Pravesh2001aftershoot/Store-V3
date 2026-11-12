@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useReducer, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -77,36 +77,69 @@ export default function QuickBuy({ photo, onClose }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Flow state machine
+//
+//   PRODUCT ──pick──▶ OPTIONS ──next──▶ CROP ──added──▶ ADDED
+//      ▲                 │  ◀──back──     │                │
+//      └──────back───────┘                │                │
+//      └───────────────────restart────────────────────────┘
+//
+// `product`, `variant` and `entry` are set together by `pick`, the only way out of PRODUCT,
+// so every later step can rely on them. Events that don't apply to the current step are ignored.
+
+const QB ={ PRODUCT: 0, OPTIONS: 1, CROP: 2, ADDED: 3 }
+const FLOW_START = { step: QB.PRODUCT, dir: 1, product: null, variant: null, qty: 1, entry: null }
+const resolve = (next, prev) => (typeof next === 'function' ? next(prev) : next)
+
+function flowReducer(s, a) {
+  switch (a.type) {
+    case 'pick':
+      if (s.step !== QB.PRODUCT) return s
+      return {
+        step: QB.OPTIONS,
+        dir: 1,
+        product: a.product,
+        variant: defaultVariant(a.product),
+        qty: 1,
+        entry: { photoId: a.photo.id, crop: DEFAULT_CROP, orientation: defaultOrientation(a.product, a.photo) },
+      }
+    case 'next':
+      return s.step === QB.OPTIONS ? { ...s, step: QB.CROP, dir: 1 } : s
+    case 'back':
+      return s.step === QB.OPTIONS || s.step === QB.CROP ? { ...s, step: s.step - 1, dir: -1 } : s
+    case 'added':
+      return s.step === QB.CROP ? { ...s, step: QB.ADDED, dir: 1 } : s
+    case 'restart':
+      return s.step === QB.ADDED ? { ...FLOW_START, dir: -1 } : s
+    case 'option':
+      return { ...s, variant: { ...s.variant, [a.id]: a.value } }
+    case 'qty':
+      return { ...s, qty: resolve(a.qty, s.qty) }
+    case 'entry':
+      return { ...s, entry: resolve(a.entry, s.entry) }
+    default:
+      return s
+  }
+}
+
 function Flow({ photo, onClose }) {
   const { dispatch, totals } = useStore()
   const nav = useNavigate()
-  const [step, setStep] = useState(0) // 0 product · 1 options · 2 crop · 3 added
-  const [dir, setDir] = useState(1)
   const bodyRef = useRef(null)
-  const [product, setProduct] = useState(null)
-  const [variant, setVariant] = useState(null)
-  const [qty, setQty] = useState(1)
-  const [entry, setEntry] = useState(null) // { photoId, crop, orientation }
+  const [flow, send] = useReducer(flowReducer, FLOW_START)
+  const { step, dir, product, variant, qty, entry } = flow
 
-  const go = (to) => {
-    setDir(to > step ? 1 : -1)
-    setStep(to)
-  }
-
-  const pick = (p) => {
-    setProduct(p)
-    setVariant(defaultVariant(p))
-    setEntry({ photoId: photo.id, crop: DEFAULT_CROP, orientation: defaultOrientation(p, photo) })
-    setQty(1)
-    go(1)
-  }
+  const pick = (p) => send({ type: 'pick', product: p, photo })
+  const setQty = (q) => send({ type: 'qty', qty: q })
+  const setEntry = (e) => send({ type: 'entry', entry: e })
 
   const addToCart = () => {
     dispatch({
       type: 'add',
       line: { kind: 'product', productId: product.id, variant, photos: Array.from({ length: qty }, () => ({ ...entry })) },
     })
-    go(3)
+    send({ type: 'added' })
   }
 
   const leave = (to) => {
@@ -122,9 +155,9 @@ function Flow({ photo, onClose }) {
       {/* header */}
       <div className="border-b border-border px-5 pb-3 pt-4">
         <div className="flex items-center gap-2">
-          {step === 1 || step === 2 ? (
+          {step === QB.OPTIONS || step === QB.CROP ? (
             <button
-              onClick={() => go(step - 1)}
+              onClick={() => send({ type: 'back' })}
               aria-label="Back"
               className="-ml-1.5 grid h-9 w-9 place-items-center rounded-full transition hover:bg-surface-2"
             >
@@ -132,13 +165,13 @@ function Flow({ photo, onClose }) {
             </button>
           ) : null}
           <Dialog.Title className="min-w-0 flex-1 truncate text-16-sb">
-            {step === 3 ? 'Added to cart' : step === 0 ? 'Buy a print' : product.name}
+            {step === QB.ADDED ? 'Added to cart' : step === QB.PRODUCT ? 'Buy a print' : product.name}
           </Dialog.Title>
           <Dialog.Close className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]" aria-label="Close">
             <X size={16} />
           </Dialog.Close>
         </div>
-        {step < 3 && (
+        {step !== QB.ADDED && (
           <div className="mt-3 grid grid-cols-3 gap-1.5" aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}>
             {STEPS.map((s, i) => (
               <div key={s}>
@@ -176,19 +209,19 @@ function Flow({ photo, onClose }) {
             transition={{ duration: 0.3, ease }}
             className="p-5"
           >
-            {step === 0 && <ProductStep photo={photo} onPick={pick} onStore={() => leave('/store')} />}
-            {step === 1 && (
+            {step === QB.PRODUCT && <ProductStep photo={photo} onPick={pick} onStore={() => leave('/store')} />}
+            {step === QB.OPTIONS && (
               <OptionsStep
                 product={product}
                 variant={variant}
                 entry={entry}
                 qty={qty}
                 setQty={setQty}
-                onOption={(id, val) => setVariant((v) => ({ ...v, [id]: val }))}
+                onOption={(id, value) => send({ type: 'option', id, value })}
               />
             )}
-            {step === 2 && <CropStep photo={photo} product={product} variant={variant} entry={entry} setEntry={setEntry} />}
-            {step === 3 && (
+            {step === QB.CROP && <CropStep photo={photo} product={product} variant={variant} entry={entry} setEntry={setEntry} />}
+            {step === QB.ADDED && (
               <AddedStep
                 product={product}
                 variant={variant}
@@ -198,7 +231,7 @@ function Flow({ photo, onClose }) {
                 itemCount={totals.itemCount}
                 onCheckout={() => leave('/checkout')}
                 onCart={() => leave('/cart')}
-                onAnother={() => go(0)}
+                onAnother={() => send({ type: 'restart' })}
               />
             )}
           </motion.div>
@@ -206,7 +239,7 @@ function Flow({ photo, onClose }) {
       </div>
 
       {/* action bar */}
-      {(step === 1 || step === 2) && (
+      {(step === QB.OPTIONS || step === QB.CROP) && (
         <div className="flex items-center gap-3 border-t border-border px-5 py-4">
           <div className="min-w-0 flex-1">
             <p className="truncate text-12-r text-type-2">
@@ -216,8 +249,8 @@ function Flow({ photo, onClose }) {
               <AnimatedNumber value={total} format={money} />
             </p>
           </div>
-          {step === 1 ? (
-            <Button size="lg" onClick={() => go(2)}>
+          {step === QB.OPTIONS ? (
+            <Button size="lg" onClick={() => send({ type: 'next' })}>
               Continue<span className="max-sm:hidden"> to crop</span> <ArrowRight size={16} />
             </Button>
           ) : (

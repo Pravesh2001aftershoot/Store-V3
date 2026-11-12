@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
@@ -23,6 +23,31 @@ import { cn, money, plural } from '../lib/utils'
 
 const ease = [0.22, 1, 0.36, 1]
 const STEPS = ['Photos', 'Crop', 'Review']
+
+// ---------------------------------------------------------------------------
+// Wizard state machine
+//
+//   PHOTOS ⇄ CROP ⇄ REVIEW        (plus pills: jump to any earlier step, or later once every item is valid)
+//
+// `step`, the item being filled (`active`) and the photo being cropped (`cropIndex`) live in one reducer.
+// Every step change goes through `goTo` in Builder, which holds the single guard (`firstInvalid`).
+
+const STEP = { PHOTOS: 0, CROP: 1, REVIEW: 2 }
+
+function wizardReducer(s, a) {
+  switch (a.type) {
+    case 'goto':
+      return { ...s, step: a.step, cropIndex: a.cropIndex ?? s.cropIndex }
+    case 'slot':
+      return { ...s, active: a.index }
+    case 'crop':
+      return { ...s, cropIndex: typeof a.index === 'function' ? a.index(s.cropIndex) : a.index }
+    case 'restructured': // slots were split/merged by a variant switch
+      return { ...s, cropIndex: a.cropIndex, active: Math.min(s.active, a.slotCount - 1) }
+    default:
+      return s
+  }
+}
 
 // ---------------------------------------------------------------------------
 // setup
@@ -128,7 +153,7 @@ function switchSlotVariant(slots, si, pi, variant) {
 
 // ---------------------------------------------------------------------------
 
-function TopBar({ title, step, setStep, canGo, total, compareAt, onClose }) {
+function TopBar({ title, step, goTo, canGo, total, compareAt, onClose }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface-0/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-3 px-3 md:px-6">
@@ -146,7 +171,7 @@ function TopBar({ title, step, setStep, canGo, total, compareAt, onClose }) {
               <div key={s} className="flex items-center gap-1">
                 {i > 0 && <span className={cn('h-px w-4 transition-colors sm:w-8', done || active ? 'bg-type-0' : 'bg-border')} />}
                 <button
-                  onClick={() => canGo(i) && setStep(i)}
+                  onClick={() => goTo(i)}
                   disabled={!canGo(i)}
                   className={cn(
                     'relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-13-r transition disabled:cursor-not-allowed',
@@ -709,16 +734,20 @@ export default function Builder() {
   const nav = useNavigate()
   const { lines, dispatch, setDrawer } = useStore()
   const [state, setState] = useState(() => initFrom(kind, id, Object.fromEntries(params), lines))
-  const [step, setStep] = useState(kind === 'edit' ? 1 : 0)
-  const [active, setActive] = useState(0)
-  const [cropIndex, setCropIndex] = useState(0)
-  const [flash, setFlash] = useState(null)
+  const [wizard, send] = useReducer(wizardReducer, { step: kind === 'edit' ? STEP.CROP : STEP.PHOTOS, active: 0, cropIndex: 0 })
+  const { step, active, cropIndex } = wizard
+  const setActive = (index) => send({ type: 'slot', index })
+  const setCropIndex = (index) => send({ type: 'crop', index })
+  // Each message is a new object, so repeating the same text restarts its timer.
+  const [notice, setNotice] = useState(null)
+  const flash = notice?.text
+  const setFlash = (text) => setNotice(text ? { text } : null)
 
   useEffect(() => {
-    if (!flash) return
-    const t = setTimeout(() => setFlash(null), 2200)
+    if (!notice) return
+    const t = setTimeout(() => setNotice(null), 2200)
     return () => clearTimeout(t)
-  }, [flash])
+  }, [notice])
   useEffect(() => { window.scrollTo({ top: 0 }) }, [step])
 
   const slots = state?.slots || []
@@ -765,8 +794,7 @@ export default function Builder() {
     const src = slots[cur.si]
     const r = (scope === 'photo' ? switchPhotoVariant : switchSlotVariant)(slots, cur.si, cur.pi, variant)
     setState((st) => ({ ...st, slots: r.slots }))
-    setCropIndex(r.index)
-    setActive((a) => Math.min(a, r.slots.length - 1))
+    send({ type: 'restructured', cropIndex: r.index, slotCount: r.slots.length })
     const name = `${src.product.name} ${sizeOf(src.product, variant).label}`
     setFlash(
       {
@@ -778,22 +806,29 @@ export default function Builder() {
     )
   }
 
-  const canGo = (i) => i <= step || allValid
   const close = () => nav(-1)
 
-  const next = () => {
-    if (step === 0) {
-      const bad = slots.findIndex((s) => !validate(s.product, s.photos.length, s.qty).ok)
+  // The one guard: you can always go back; going past PHOTOS needs every item filled correctly.
+  const firstInvalid = () => slots.findIndex((s) => !validate(s.product, s.photos.length, s.qty).ok)
+  const canGo = (to) => to <= step || allValid
+
+  /** The only way to change step. `cropIndex` picks the photo to open when landing on CROP. */
+  const goTo = (to, cropIndex) => {
+    if (to === step || to < STEP.PHOTOS || to > STEP.REVIEW) return
+    if (to > step) {
+      const bad = firstInvalid()
       if (bad > -1) {
         setActive(bad)
         setFlash(validate(slots[bad].product, slots[bad].photos.length, slots[bad].qty).message)
         return
       }
-      setCropIndex(0)
-      setStep(1)
-    } else if (step === 1) setStep(2)
-    else addToCart()
+    }
+    // Coming from PHOTOS, cropping always starts at the first photo, whichever control got us here.
+    const start = cropIndex ?? (to === STEP.CROP && step === STEP.PHOTOS ? 0 : undefined)
+    send({ type: 'goto', step: to, cropIndex: start })
   }
+
+  const next = () => (step === STEP.REVIEW ? addToCart() : goTo(step + 1))
 
   const addToCart = () => {
     // a product build becomes one cart line per variant (switched photos are their own item)
@@ -811,10 +846,7 @@ export default function Builder() {
     setTimeout(() => setDrawer(true), 350)
   }
 
-  const goCrop = (si) => {
-    setCropIndex(items.findIndex((it) => it.si === si))
-    setStep(1)
-  }
+  const goCrop = (si) => goTo(STEP.CROP, items.findIndex((it) => it.si === si))
 
   const title = pkg
     ? `${pkg.name} Package`
@@ -826,11 +858,11 @@ export default function Builder() {
   const v = validate(slot.product, slot.photos.length, slot.qty)
   const qty = lineQty(slot.product, slot.photos.length)
   let summary
-  if (step === 0) {
+  if (step === STEP.PHOTOS) {
     if (!slot.photos.length) summary = requirementText(slot.product, slot.qty)
     else if (slot.product.mode === 'book') summary = `${plural(slot.photos.length, 'photo')} → 1 × ${slot.product.name} ${sizeOf(slot.product, slot.variant).label}`
     else summary = `${plural(slot.photos.length, 'photo')} → ${qty} × ${slot.product.name} ${sizeOf(slot.product, slot.variant).label}`
-  } else if (step === 1) summary = 'Adjust each crop, then review your order'
+  } else if (step === STEP.CROP) summary = 'Adjust each crop, then review your order'
   else summary = 'Everything look right?'
 
   return (
@@ -848,7 +880,7 @@ export default function Builder() {
         )}
       </AnimatePresence>
 
-      <TopBar title={title} step={step} setStep={setStep} canGo={canGo} total={total} compareAt={compareAt} onClose={close} />
+      <TopBar title={title} step={step} goTo={goTo} canGo={canGo} total={total} compareAt={compareAt} onClose={close} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -859,7 +891,7 @@ export default function Builder() {
           transition={{ duration: 0.45, ease }}
           className="mx-auto max-w-[1600px] px-3 md:px-6"
         >
-          {step === 0 && (
+          {step === STEP.PHOTOS && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
               <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start lg:pt-4">
                 {!multi && (
@@ -901,19 +933,19 @@ export default function Builder() {
               </div>
             </div>
           )}
-          {step === 1 && (
+          {step === STEP.CROP && (
             <div className="pt-4">
               <CropStep slots={slots} items={items} index={Math.min(cropIndex, items.length - 1)} setIndex={setCropIndex} updatePhoto={updatePhoto} removePhoto={removePhoto} locked={pkg ? pkg.name : null} onSwitch={switchVariant} />
             </div>
           )}
-          {step === 2 && <ReviewStep state={state} slots={slots} goCrop={goCrop} total={total} compareAt={compareAt} />}
+          {step === STEP.REVIEW && <ReviewStep state={state} slots={slots} goCrop={goCrop} total={total} compareAt={compareAt} />}
         </motion.div>
       </AnimatePresence>
 
       {/* bottom action bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-1/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-3 py-3 max-sm:flex-wrap md:px-6">
-          {step === 0 && slot.photos.length > 0 && (
+          {step === STEP.PHOTOS && slot.photos.length > 0 && (
             <div className="no-scrollbar hidden max-w-[40%] items-center gap-1.5 overflow-x-auto md:flex">
               <AnimatePresence initial={false}>
                 {slot.photos.map((e) => (
@@ -937,8 +969,8 @@ export default function Builder() {
           )}
           <div className="min-w-0 flex-1 max-sm:basis-full">
             <p className="truncate text-14-m">{summary}</p>
-            <p className={cn('truncate text-12-r', step === 0 && !v.ok && slot.photos.length ? 'text-amber-700' : 'text-type-2')}>
-              {step === 0 && !v.ok && slot.photos.length
+            <p className={cn('truncate text-12-r', step === STEP.PHOTOS && !v.ok && slot.photos.length ? 'text-amber-700' : 'text-type-2')}>
+              {step === STEP.PHOTOS && !v.ok && slot.photos.length
                 ? v.message
                 : pkg
                   ? `${money(total)} package price${extras ? ` incl. ${money(extras)} extra photos` : ''}`
@@ -947,13 +979,13 @@ export default function Builder() {
                     : `From ${money(unitPrice(slot.product, slot.variant, slot.product.mode === 'book' ? slot.product.book.min : 0))}`}
             </p>
           </div>
-          {step > 0 && (
-            <Button variant="outline" size="lg" onClick={() => setStep(step - 1)} className="max-sm:px-4">
+          {step > STEP.PHOTOS && (
+            <Button variant="outline" size="lg" onClick={() => goTo(step - 1)} className="max-sm:px-4">
               <ArrowLeft size={16} /> <span className="max-sm:hidden">Back</span>
             </Button>
           )}
-          <Button size="lg" onClick={next} disabled={step === 0 && slots.every((s) => !s.photos.length)} className="max-sm:flex-1">
-            {step === 0 ? 'Continue to crop' : step === 1 ? 'Review' : state.editId ? 'Update cart' : !pkg && slots.length > 1 ? `Add ${slots.length} items to cart` : 'Add to cart'}
+          <Button size="lg" onClick={next} disabled={step === STEP.PHOTOS && slots.every((s) => !s.photos.length)} className="max-sm:flex-1">
+            {step === STEP.PHOTOS ? 'Continue to crop' : step === STEP.CROP ? 'Review' : state.editId ? 'Update cart' : !pkg && slots.length > 1 ? `Add ${slots.length} items to cart` : 'Add to cart'}
             <ArrowRight size={16} />
           </Button>
         </div>
