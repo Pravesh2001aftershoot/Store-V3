@@ -9,12 +9,15 @@ import Builder from './pages/Builder'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Payment from './pages/Payment'
+import GalleryPage from './gallery/GalleryPage'
 
 export default function App() {
   return (
     <Routes>
+      {/* Client gallery is the entry page; the print store opens from it. */}
+      <Route index element={<GalleryPage />} />
       <Route element={<Layout />}>
-        <Route index element={<Home />} />
+        <Route path="store" element={<Home />} />
         <Route path="shop" element={<Shop />} />
         <Route path="shop/:categoryId" element={<Shop />} />
         <Route path="product/:productId" element={<Product />} />

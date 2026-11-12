@@ -13,7 +13,7 @@ const ease = [0.22, 1, 0.36, 1]
 /** Photographer branding — swap `gallery.logo` for the photographer's own logo. */
 export function Wordmark({ className, inverted = false }) {
   return (
-    <Link to="/" className={cn('flex shrink-0 items-center', className)} aria-label={`${gallery.studio} home`}>
+    <Link to="/store" className={cn('flex shrink-0 items-center', className)} aria-label={`${gallery.studio} home`}>
       <img
         src={gallery.logo}
         alt={gallery.studio}
@@ -111,13 +111,12 @@ function Header() {
               </nav>
             </div>
             <div className="flex items-center gap-2">
-              <a
-                href="#gallery"
-                onClick={(e) => e.preventDefault()}
+              <Link
+                to="/"
                 className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0 md:flex"
               >
                 <ArrowLeft size={15} /> Back to gallery
-              </a>
+              </Link>
               <CartButton />
               <button
                 onClick={() => setMenu((m) => !m)}
@@ -155,9 +154,9 @@ function Header() {
                 </motion.div>
               ))}
             </nav>
-            <div className="mt-auto flex items-center gap-2 text-14-r text-type-2">
+            <Link to="/" className="mt-auto flex items-center gap-2 text-14-r text-type-2">
               <Images size={16} /> Back to {gallery.client} gallery
-            </div>
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
@@ -182,7 +181,7 @@ function Footer() {
           {[
             ['Shop', categories.map((c) => [c.name, `/shop/${c.id}`])],
             ['Help', [['Shipping', '#'], ['Returns', '#'], ['Print quality', '#']]],
-            ['Studio', [['Gallery', '#'], ['Contact', '#'], ['Instagram', '#']]],
+            ['Studio', [['Gallery', '/'], ['Contact', '#'], ['Instagram', '#']]],
           ].map(([h, ls]) => (
             <div key={h}>
               <p className="mb-4 text-12-sb uppercase text-white/40">{h}</p>

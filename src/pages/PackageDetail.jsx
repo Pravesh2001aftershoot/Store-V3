@@ -23,7 +23,7 @@ export default function PackageDetail() {
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-6 md:px-8 md:pt-10">
       <nav className="text-13-r text-type-3">
-        <Link to="/" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
+        <Link to="/store" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
         <Link to="/packages" className="hover:text-type-0">Packages</Link> <span className="mx-1.5">/</span>
         <span className="text-type-1">{pkg.name}</span>
       </nav>

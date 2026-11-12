@@ -70,7 +70,7 @@ export default function Product() {
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-6 md:px-8 md:pt-10">
       <nav className="text-13-r text-type-3">
-        <Link to="/" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
+        <Link to="/store" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
         <Link to={`/shop/${cat.id}`} className="hover:text-type-0">{cat.name}</Link> <span className="mx-1.5">/</span>
         <span className="text-type-1">{product.name}</span>
       </nav>
