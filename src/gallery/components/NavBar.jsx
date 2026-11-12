@@ -111,7 +111,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
   }, [collection, showFavs])
 
   return (
-    <div ref={navRef} className="sticky top-0 z-40 border-b border-border bg-surface-0/85 backdrop-blur-xl">
+    <div ref={navRef} className="sticky top-0 z-40 border-b border-border bg-surface-0">
       <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between gap-3 px-4 md:px-8">
         <div className="min-w-0">
           <p className="truncate text-16-sb text-type-0">{gallery.client}</p>

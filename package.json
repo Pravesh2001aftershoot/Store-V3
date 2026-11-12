@@ -21,6 +21,10 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.13",
+    "@locator/babel-jsx": "^2.0.0",
+    "@locator/runtime": "^2.0.0",
+    "@rolldown/plugin-babel": "^0.3.1",
     "@tailwindcss/vite": "^4.3.5",
     "@vitejs/plugin-react": "^6.3.0",
     "tailwindcss": "^4.3.5",
