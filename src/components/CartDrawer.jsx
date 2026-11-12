@@ -129,8 +129,8 @@ export default function CartDrawer() {
                       </div>
                       <p className="text-12-r text-type-3">Shipping and taxes calculated at checkout.</p>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        <Button variant="outline" size="lg" onClick={() => go('/cart')}>
-                          View cart
+                        <Button variant="outline" size="lg" onClick={() => go('/shop')}>
+                          Continue shopping
                         </Button>
                         <Button size="lg" onClick={() => go('/checkout')} arrow className="max-sm:order-first">
                           Checkout
