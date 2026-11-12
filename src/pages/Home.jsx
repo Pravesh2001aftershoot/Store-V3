@@ -21,7 +21,7 @@ function Hero() {
   const pics = [getPhoto('p1027'), getPhoto('p1011'), getPhoto('p64')]
 
   return (
-    <section ref={ref} className="mx-auto max-w-[1360px] px-4 pb-16 pt-10 md:px-8 md:pt-16">
+    <section ref={ref} className="mx-auto max-w-[1360px] px-4 pb-5 pt-10 md:px-8 md:pb-16 md:pt-16">
       <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
@@ -54,10 +54,10 @@ function Hero() {
             transition={{ duration: 0.9, ease, delay: 0.62 }}
             className="mt-8 flex flex-wrap gap-3"
           >
-            <Button as={Link} to="/shop" size="lg" arrow>
+            <Button as={Link} to="/shop" size="lg" arrow className="w-full sm:w-auto">
               Shop the collection
             </Button>
-            <Button as={Link} to="/packages" size="lg" variant="outline">
+            <Button as={Link} to="/packages" size="lg" variant="outline" className="w-full sm:w-auto">
               View packages
             </Button>
           </motion.div>
@@ -111,7 +111,7 @@ function Marquee() {
   const picks = photos.slice(0, 30)
   const row = [...picks, ...picks]
   return (
-    <section className="overflow-hidden py-6">
+    <section className="overflow-hidden py-5 md:py-6">
       <div className="flex w-max animate-marquee gap-3 hover:[animation-play-state:paused]">
         {row.map((p, i) => (
           <img
@@ -130,7 +130,7 @@ function Marquee() {
 
 function Categories() {
   return (
-    <section className="mx-auto max-w-[1360px] px-4 py-20 md:px-8">
+    <section className="mx-auto max-w-[1360px] px-4 py-5 md:px-8 md:py-20">
       <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <Eyebrow>Shop by category</Eyebrow>
@@ -178,7 +178,7 @@ function HowItWorks() {
     { icon: Crop, t: 'Perfect every crop', d: 'Drag and zoom each photo so it fits exactly how you want it printed.' },
   ]
   return (
-    <section className="bg-surface-1 py-24">
+    <section className="bg-surface-1 py-5 md:py-24">
       <div className="mx-auto grid max-w-[1360px] gap-12 px-4 md:px-8 lg:grid-cols-[1fr_1.3fr]">
         <div className="lg:sticky lg:top-32 lg:self-start">
           <Eyebrow>How it works</Eyebrow>
@@ -222,11 +222,11 @@ function Bestsellers() {
   const ref = useRef(null)
   const isDesktop = useIsDesktop()
   return (
-    <section className="pb-24">
+    <section className="pb-5 md:pb-24">
       <div className="mx-auto max-w-[1360px] px-4 md:px-8">
         <div className="border-t-[0.5px] border-border" />
       </div>
-      <div className="mx-auto mb-10 mt-24 flex max-w-[1360px] items-end justify-between gap-4 px-4 md:px-8">
+      <div className="mx-auto mb-10 mt-5 flex md:mt-24 max-w-[1360px] items-end justify-between gap-4 px-4 md:px-8">
         <div>
           <Eyebrow>Client favourites</Eyebrow>
           <SplitText as="h2" text="Most ordered this season" className="mt-4 text-36-sb md:text-48-sb" />
@@ -263,14 +263,11 @@ function Bestsellers() {
 function PackagesTeaser() {
   const maxSave = Math.max(...packages.map((p) => Math.round((1 - packagePrice(p) / packageValue(p)) * 100)))
   return (
-    <section className="mx-2 rounded-[28px] bg-type-0 py-20 text-white md:mx-4">
+    <section className="mx-2 rounded-[28px] bg-type-0 py-4 text-white md:py-20 md:mx-4">
       <div className="mx-auto max-w-[1360px] px-4 md:px-8">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <p className="flex items-center gap-2 text-12-sb uppercase text-white/50">
-              <span className="h-1.5 w-1.5 rounded-full bg-white" /> Packages
-            </p>
-            <SplitText as="h2" text={`Bundle your favourites and save up to ${maxSave}%.`} className="mt-4 max-w-[640px] text-36-sb md:text-48-sb" />
+            <SplitText as="h2" text={`Bundle your favourites and save up to ${maxSave}%.`} className="max-w-[640px] text-36-sb md:text-48-sb" />
           </div>
           <Button as={Link} to="/packages" variant="light" arrow>
             All packages
@@ -296,7 +293,7 @@ function Quality() {
     { icon: Truck, t: 'Insured shipping', d: 'Tracked, insured and carefully packed.' },
   ]
   return (
-    <section className="mx-auto grid max-w-[1360px] gap-px overflow-hidden px-4 py-24 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
+    <section className="mx-auto grid max-w-[1360px] gap-px overflow-hidden px-4 py-5 sm:grid-cols-2 md:py-24 md:px-8 lg:grid-cols-4">
       {items.map((it, i) => (
         <Reveal key={it.t} delay={i * 0.08} className="border-t border-border py-6 pr-6">
           <it.icon size={24} weight="light" />

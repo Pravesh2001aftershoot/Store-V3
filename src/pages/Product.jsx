@@ -180,7 +180,7 @@ export default function Product() {
         </div>
       </div>
 
-      <section className="mt-28">
+      <section className="mt-5 md:mt-28">
         <h2 className="mb-8 text-30-m">You may also like</h2>
         <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {related.map((p) => (

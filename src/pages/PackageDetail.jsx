@@ -96,7 +96,7 @@ export default function PackageDetail() {
         </div>
       </div>
 
-      <section className="mt-28">
+      <section className="mt-5 md:mt-28">
         <h2 className="mb-8 text-30-m">Other packages</h2>
         <div className="grid gap-5 md:grid-cols-2">
           {others.map((p) => (

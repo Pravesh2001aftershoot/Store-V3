@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretDown, Package as PackageIcon, ArrowRight } from '@phosphor-icons/react'
+import { Package as PackageIcon, ArrowRight } from '@phosphor-icons/react'
 import { categories, products } from '../data/catalog'
 import { fromPrice } from '../lib/pricing'
-import { Eyebrow, SplitText } from '../components/ui'
+import { Eyebrow, SplitText, Select } from '../components/ui'
 import ProductCard from '../components/ProductCard'
 import { cn } from '../lib/utils'
 
@@ -38,18 +38,16 @@ export default function Shop() {
             {cat ? cat.blurb : 'Everything your photographer offers, made from the photos in your gallery.'}
           </p>
         </div>
-        <label className="relative inline-flex items-center self-start md:self-auto">
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="h-10 appearance-none rounded-full border border-border bg-surface-1 pl-4 pr-10 text-14-r outline-none"
-          >
-            <option value="featured">Featured</option>
-            <option value="low">Price: low to high</option>
-            <option value="high">Price: high to low</option>
-          </select>
-          <CaretDown size={14} className="pointer-events-none absolute right-4" />
-        </label>
+        <Select
+          title="Sort by"
+          value={sort}
+          onChange={setSort}
+          options={[
+            { value: 'featured', label: 'Featured' },
+            { value: 'low', label: 'Price: low to high' },
+            { value: 'high', label: 'Price: high to low' },
+          ]}
+        />
       </div>
 
       <div className="no-scrollbar -mx-4 mt-10 flex gap-6 overflow-x-auto border-b border-border px-4 md:mx-0 md:px-0">

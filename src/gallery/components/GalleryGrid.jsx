@@ -49,7 +49,7 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       {blocks.map((b, i) => (
         <div key={b.title ?? 'all'}>
           {b.title && (
-            <header id={sectionId(b.title)} className="px-1 py-10 md:py-16">
+            <header id={sectionId(b.title)} className="px-1 py-5 md:py-16">
               <Eyebrow>{b.end - b.start} photos</Eyebrow>
               <h2 className="mt-4 text-48-sb text-type-0 md:text-72-sb">{b.title}</h2>
             </header>
