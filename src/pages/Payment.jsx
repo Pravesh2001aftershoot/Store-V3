@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CreditCard, PaypalLogo, AppleLogo, Lock, Info } from '@phosphor-icons/react'
 import { useStore, SHIPPING } from '../state/store'
 import CheckoutShell from '../components/CheckoutShell'
-import { Section } from './Checkout'
+import { Section, checkoutErrors } from './Checkout'
 import { Button, Field } from '../components/ui'
 import { cn, money } from '../lib/utils'
 
@@ -44,7 +44,7 @@ export default function Payment() {
   const [ended, setEnded] = useState(false)
 
   if (!lines.length) return <Navigate to="/cart" replace />
-  if (!checkout.email) return <Navigate to="/checkout" replace />
+  if (Object.keys(checkoutErrors(checkout)).length) return <Navigate to="/checkout" replace />
   const ship = SHIPPING.find((s) => s.id === shipping)
 
   const methods = [

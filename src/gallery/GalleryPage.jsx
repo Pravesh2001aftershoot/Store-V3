@@ -24,7 +24,7 @@ export default function GalleryPage() {
   const [collection, setCollection] = useState(COLLECTIONS[0])
   const [favorites, toggleFav, clearFavs] = useFavorites(gallery.client)
   const [showFavs, setShowFavs] = useState(false)
-  const [lightbox, setLightbox] = useState(null)
+  const [lightboxId, setLightboxId] = useState(null) // id of the photo open in the lightbox
   const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
   const [minCount, setMinCount] = useState(0)
   const [jump, setJump] = useState(null)
@@ -53,9 +53,17 @@ export default function GalleryPage() {
   const favPhotos = useMemo(() => ordered.filter((p) => favorites.has(p.id)), [ordered, favorites])
   const visible = showFavs ? favPhotos : ordered
 
+  // The lightbox tracks a photo id, not a position, so it can't drift onto another photo when `visible` changes.
+  const lightboxIndex = lightboxId == null ? -1 : visible.findIndex((p) => p.id === lightboxId)
+  const openAt = (i) => setLightboxId(visible[i]?.id ?? null)
+  // The open photo left the view (e.g. unfavourited while browsing favourites): close for good.
+  useEffect(() => {
+    if (lightboxId != null && lightboxIndex === -1) setLightboxId(null)
+  }, [lightboxId, lightboxIndex])
+
   // Quick buy works on store photos, so register this gallery photo with the store first.
   const buy = (photo) => {
-    setLightbox(null)
+    setLightboxId(null)
     setBuying(registerPhoto(photo))
   }
 
@@ -156,7 +164,7 @@ export default function GalleryPage() {
           settings={settings}
           favorites={favorites}
           onFavorite={toggleFav}
-          onOpen={setLightbox}
+          onOpen={openAt}
           onBuy={buy}
           resetKey={String(showFavs)}
           minCount={showFavs ? 0 : minCount}
@@ -171,9 +179,9 @@ export default function GalleryPage() {
 
       <Lightbox
         photos={visible}
-        index={lightbox}
-        onIndex={setLightbox}
-        onClose={() => setLightbox(null)}
+        index={lightboxIndex === -1 ? null : lightboxIndex}
+        onIndex={openAt}
+        onClose={() => setLightboxId(null)}
         favorites={favorites}
         onFavorite={toggleFav}
         onBuy={buy}

@@ -9,6 +9,13 @@ import { cn, money } from '../lib/utils'
 
 const REQUIRED = ['email', 'firstName', 'lastName', 'address', 'city', 'state', 'zip']
 
+/** Field → message for everything wrong with the details. Empty object means they're complete. */
+export function checkoutErrors(form) {
+  const errs = Object.fromEntries(REQUIRED.filter((k) => !form[k]?.trim()).map((k) => [k, 'Required']))
+  if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Enter a valid email'
+  return errs
+}
+
 export const Section = ({ n, title, children }) => (
   <section className="rounded-2xl border border-border bg-surface-1 p-5 md:p-6">
     <p className="mb-5 flex items-center gap-3 text-16-sb">
@@ -34,10 +41,9 @@ export default function Checkout() {
 
   const submit = (e) => {
     e.preventDefault()
-    const errs = Object.fromEntries(REQUIRED.filter((k) => !form[k]?.trim()).map((k) => [k, 'Required']))
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Enter a valid email'
+    const errs = checkoutErrors(form)
     setErrors(errs)
-    dispatch({ type: 'checkout', data: form })
+    dispatch({ type: 'checkout', data: form }) // keep the draft even if incomplete; Payment re-checks it
     if (!Object.keys(errs).length) nav('/payment')
   }
 
