@@ -26,9 +26,9 @@ export default function Photo({ photo, rounded, favorite, onFavorite, onOpen, on
         />
       </button>
 
-      {/* Hover actions. Always visible on touch screens, which have no hover. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 [@media(hover:none)]:opacity-0" />
-      <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+      {/* Hover actions. Hidden on touch screens: tapping opens the loupe, which carries the same actions. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 [@media(hover:none)]:hidden" />
+      <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:hidden">
         <button
           onClick={onFavorite}
           aria-label={favorite ? 'Remove from favourites' : 'Add to favourites'}

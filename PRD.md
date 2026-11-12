@@ -31,7 +31,7 @@ This prototype covers the full client journey, **Gallery → Store → Product �
 | **Client** (couple, family, event guest) | Relive the photos, save favourites, share and download, and order prints and albums without friction |
 | **Photographer** (indirect) | Branded store, configurable catalogue and packages, higher order value, approval before charge |
 
-The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Monika Frias*, Aftershoot.
+The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Esteban Gill*, Aftershoot.
 
 ## 5. Scope and requirements
 
@@ -47,9 +47,9 @@ The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Monika Fria
 | G6 | Grid layout options: **orientation** (vertical masonry / horizontal justified rows), **size** (small 4 / medium 3 / large 2 per row on desktop, fewer on tablet and mobile) and **spacing** (airy / thin / none). Option names match the Live Canvas editor. | ✅ |
 | G7 | Layout settings are stored in the URL, so a layout can be shared by link | ✅ |
 | G8 | Favourite a photo from its tile or the lightbox. Favourites persist on the device for each gallery. Favourites view shows a flat grid, with an empty state and an option to clear. | ✅ |
-| G9 | Lightbox with previous/next, keyboard support (arrows, Esc), favourite, download and share | ✅ |
+| G9 | Lightbox (loupe) with previous/next, keyboard support (arrows, Esc), favourite, download and share, plus a horizontal film strip of thumbnails below the photo on all screen sizes. The current photo is highlighted and kept in view, and tapping a thumbnail jumps to it. | ✅ |
 | G10 | Download saves the full-size file. Share uses the native share sheet where available and otherwise copies a link. Both confirm with a toast. | ✅ |
-| G11 | Hover actions on each tile: favourite, download, share and buy | ✅ (buy goes to the store without preselecting the photo) |
+| G11 | Hover actions on each tile: favourite, download, share and buy. Hidden on touch screens, where tapping a tile opens the lightbox, which has the same actions. | ✅ (buy goes to the store without preselecting the photo) |
 | G12 | Real photos can be dropped into a folder to replace the placeholders | ✅ |
 
 ### 5.2 Store home and browsing (`/store`, `/shop`, `/packages`)

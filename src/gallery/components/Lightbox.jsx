@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretLeft, CaretRight, DownloadSimple, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
@@ -62,7 +62,8 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
             </div>
           </div>
 
-          <div className="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-6 md:px-20">
+          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-2 pb-4 md:px-20">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.img
                 key={photo.id}
@@ -83,8 +84,52 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
               <CaretRight size={22} />
             </button>
           </div>
+          <FilmStrip photos={photos} index={index} onIndex={onIndex} />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
+  )
+}
+
+/** Thumbnail rail: vertical on the right on desktop (lg+), horizontal along the bottom on tablet / mobile. */
+function FilmStrip({ photos, index, onIndex }) {
+  const active = useRef(null)
+
+  useEffect(() => {
+    active.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [index])
+
+  return (
+    <nav
+      aria-label="Film strip"
+      className="no-scrollbar shrink-0 overflow-x-auto px-3 pb-3 md:px-6 md:pb-5"
+    >
+      <div className="mx-auto flex w-max gap-2 p-1">
+      {photos.map((p, i) => {
+        const current = i === index
+        return (
+          <button
+            key={p.id}
+            ref={current ? active : undefined}
+            onClick={() => onIndex(i)}
+            aria-label={`View ${p.name}`}
+            aria-current={current ? 'true' : undefined}
+            className={`shrink-0 overflow-hidden rounded-none ring-2 ring-offset-2 ring-offset-type-0 transition ${
+              current ? 'opacity-100 ring-white' : 'opacity-50 ring-transparent hover:opacity-80'
+            }`}
+          >
+            <img
+              src={p.thumb || p.src}
+              alt=""
+              loading="lazy"
+              draggable={false}
+              className="block h-14 w-auto max-w-none select-none object-cover md:h-20"
+            />
+          </button>
+        )
+      })}
+      </div>
+    </nav>
   )
 }

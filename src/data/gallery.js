@@ -4,7 +4,7 @@
 export const gallery = {
   studio: 'Aftershoot',
   logo: '/aftershoot-logo.png',
-  photographer: 'Monika Frias',
+  photographer: 'Esteban Gill',
   client: 'Lexie & Taylor',
   title: 'Lexie & Taylor — Engagement',
   date: 'September 2026',

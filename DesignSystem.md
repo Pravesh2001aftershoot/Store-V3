@@ -224,6 +224,8 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 - **Selected state.**
   - Pills: `ring-2 ring-type-0 ring-offset-2`.
   - Tabs and toggles: `bg-surface-2 text-type-0`, with `aria-pressed` or `aria-selected` set.
+- **Lightbox film strip.** A horizontal row of thumbnails below the photo at every breakpoint (56px tall on mobile, 80px from `md`), with an 8px gap, centred when it fits and scrolling sideways otherwise. Inactive thumbnails sit at 50% opacity (80% on hover). The current one is fully opaque with `ring-2 ring-white ring-offset-2 ring-offset-type-0`. Keep padding inside the scroll container so the ring isn't clipped.
+- **Tile hover actions.** Shown on hover or focus only. Hidden on touch devices (`[@media(hover:none)]:hidden`); the lightbox is the touch path to the same actions.
 - **Quality tones.** `good` uses success colours, `ok` is neutral, and `low` uses amber. Low resolution is a warning and never blocks the order.
 - **Prices.** Format with `money()`, which drops the decimals for whole dollars. Strike-through compare-at prices use `type-3`, and savings use `success`.
 - **Empty states.** Title in `20-M` or `30-M`, a one-line `type-2` explanation, and one or two calls to action.
@@ -238,6 +240,7 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 - [ ] Focus is visible: buttons use `focus-visible:ring-2 ring-ring` and fields use `focus:ring-4 ring-black/5`.
 - [ ] Dialogs and sheets use Radix Dialog for focus trapping and Esc handling.
 - [ ] The lightbox supports the arrow keys and Esc.
+- [ ] Film strip thumbnails are buttons with `aria-label="View <name>"`; the current one has `aria-current`, and the strip is a `<nav aria-label="Film strip">`.
 - [ ] Text contrast: `type-2` and `type-3` are for secondary text only. Don't use `type-3` for anything essential.
 
 ## Backlog
