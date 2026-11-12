@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@config '../tailwind.config.js'; /* typography tokens: src/tokens/typography.js */
 
 /* shadcn-style tokens mapped to the Store surface/type palette */
 :root {

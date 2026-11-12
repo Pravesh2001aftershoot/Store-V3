@@ -20,10 +20,10 @@ export default function ProductCard({ product }) {
       </div>
       <div className="mt-3.5 flex items-start justify-between gap-3 px-0.5">
         <div>
-          <p className="text-[15px] font-medium text-type-0">{product.name}</p>
-          <p className="mt-0.5 text-[13px] text-type-2">{product.tagline}</p>
+          <p className="text-16-m text-type-0">{product.name}</p>
+          <p className="mt-0.5 text-13-r text-type-2">{product.tagline}</p>
         </div>
-        <p className="shrink-0 text-[14px] text-type-1">
+        <p className="shrink-0 text-14-r text-type-1">
           <span className="text-type-3">from </span>
           {money(fromPrice(product))}
         </p>
@@ -33,7 +33,7 @@ export default function ProductCard({ product }) {
           {swatch.values.map((v) => (
             <span key={v.id} className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10" style={{ background: v.hex }} title={v.label} />
           ))}
-          <span className="ml-1 text-[12px] text-type-3">{getOption(product, 'size').values.length} sizes</span>
+          <span className="ml-1 text-12-r text-type-3">{getOption(product, 'size').values.length} sizes</span>
         </div>
       )}
     </Link>

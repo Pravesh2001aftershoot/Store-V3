@@ -11,8 +11,8 @@ const REQUIRED = ['email', 'firstName', 'lastName', 'address', 'city', 'state', 
 
 export const Section = ({ n, title, children }) => (
   <section className="rounded-2xl border border-border bg-surface-1 p-5 md:p-6">
-    <p className="mb-5 flex items-center gap-3 text-[16px] font-medium">
-      <span className="grid h-6 w-6 place-items-center rounded-full bg-type-0 text-[12px] text-white">{n}</span>
+    <p className="mb-5 flex items-center gap-3 text-16-sb">
+      <span className="grid h-6 w-6 place-items-center rounded-full bg-type-0 text-12-r text-white">{n}</span>
       {title}
     </p>
     {children}
@@ -48,8 +48,8 @@ export default function Checkout() {
     <CheckoutShell step={1}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <div className="flex items-end justify-between gap-4">
-          <h1 className="text-[32px] font-medium tracking-[-0.03em] md:text-[40px]">Checkout</h1>
-          <button type="button" onClick={fillDemo} className="text-[13px] text-type-2 underline-offset-4 hover:text-type-0 hover:underline">
+          <h1 className="text-36-sb">Checkout</h1>
+          <button type="button" onClick={fillDemo} className="text-13-r text-type-2 underline-offset-4 hover:text-type-0 hover:underline">
             Fill demo details
           </button>
         </div>
@@ -98,17 +98,17 @@ export default function Checkout() {
                     )}
                   </span>
                   <span className="flex-1">
-                    <span className="block text-[14px] font-medium">{s.label}</span>
-                    <span className="block text-[12px] text-type-2">{s.eta}</span>
+                    <span className="block text-14-m">{s.label}</span>
+                    <span className="block text-12-r text-type-2">{s.eta}</span>
                   </span>
-                  <span className="text-[14px] font-medium">{s.price ? money(s.price) : 'Free'}</span>
+                  <span className="text-14-m">{s.price ? money(s.price) : 'Free'}</span>
                 </button>
               )
             })}
           </div>
         </Section>
 
-        <Button type="submit" size="lg" className="h-14 w-full text-[15px]" arrow>
+        <Button type="submit" size="lg" className="h-14 w-full" arrow>
           Continue to payment
         </Button>
       </form>

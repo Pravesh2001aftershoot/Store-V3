@@ -40,7 +40,7 @@ export default function CartDrawer() {
                 className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[440px] flex-col bg-surface-1 shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-2xl"
               >
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                  <Dialog.Title className="text-[16px] font-medium">
+                  <Dialog.Title className="text-16-sb">
                     Your cart <span className="text-type-3">({totals.itemCount})</span>
                   </Dialog.Title>
                   <Dialog.Close className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]">
@@ -53,8 +53,8 @@ export default function CartDrawer() {
                     <div className="grid h-14 w-14 place-items-center rounded-full bg-surface-2">
                       <Handbag size={22} />
                     </div>
-                    <p className="font-medium">Your cart is empty</p>
-                    <p className="text-sm text-type-2">Turn your favourite photos into something you can hold.</p>
+                    <p className="text-14-m">Your cart is empty</p>
+                    <p className="text-14-r text-type-2">Turn your favourite photos into something you can hold.</p>
                     <Button className="mt-2" onClick={() => go('/shop')} arrow>
                       Start shopping
                     </Button>
@@ -76,13 +76,13 @@ export default function CartDrawer() {
                             <LineThumb line={line} className="w-20 shrink-0 overflow-hidden rounded-lg" />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
-                                <p className="text-[14px] font-medium leading-tight">{lineTitle(line)}</p>
+                                <p className="text-14-sb">{lineTitle(line)}</p>
                                 <div className="text-right">
-                                  <p className="text-[14px] font-medium">{money(lineSubtotal(line))}</p>
-                                  {lineCompareAt(line) && <p className="text-[12px] text-type-3 line-through">{money(lineCompareAt(line))}</p>}
+                                  <p className="text-14-m">{money(lineSubtotal(line))}</p>
+                                  {lineCompareAt(line) && <p className="text-12-r text-type-3 line-through">{money(lineCompareAt(line))}</p>}
                                 </div>
                               </div>
-                              <div className="mt-1 space-y-0.5 text-[12px] text-type-2">
+                              <div className="mt-1 space-y-0.5 text-12-r text-type-2">
                                 {lineParts(line).map((p, i) => (
                                   <p key={i}>
                                     <PartSummary part={p} />
@@ -91,7 +91,7 @@ export default function CartDrawer() {
                               </div>
                               <button
                                 onClick={() => dispatch({ type: 'remove', id: line.id })}
-                                className="mt-1.5 inline-flex items-center gap-1 text-[12px] text-type-3 transition hover:text-destructive"
+                                className="mt-1.5 inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-destructive"
                               >
                                 <Trash size={12} /> Remove
                               </button>
@@ -102,18 +102,18 @@ export default function CartDrawer() {
                     </div>
                     <div className="space-y-3 border-t border-border p-5">
                       {totals.savings > 0 && (
-                        <div className="flex items-center justify-between rounded-lg bg-success-bg px-3 py-2 text-[13px] text-success">
+                        <div className="flex items-center justify-between rounded-lg bg-success-bg px-3 py-2 text-13-r text-success">
                           <span className="flex items-center gap-1.5">
                             <Tag size={14} /> Package savings
                           </span>
                           <span className="font-medium">−{money(totals.savings)}</span>
                         </div>
                       )}
-                      <div className="flex items-center justify-between text-[15px]">
+                      <div className="flex items-center justify-between text-16-r">
                         <span className="text-type-1">Subtotal</span>
                         <span className="font-medium">{money(totals.subtotal)}</span>
                       </div>
-                      <p className="text-[12px] text-type-3">Shipping and taxes calculated at checkout.</p>
+                      <p className="text-12-r text-type-3">Shipping and taxes calculated at checkout.</p>
                       <div className="grid grid-cols-2 gap-2">
                         <Button variant="outline" size="lg" onClick={() => go('/cart')}>
                           View cart

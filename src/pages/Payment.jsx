@@ -26,8 +26,8 @@ function CardPreview({ number, name, exp }) {
           <div className="h-7 w-10 rounded-md bg-gradient-to-br from-[#e8d9a8] to-[#b89b52]" />
           <CreditCard size={22} className="text-white/60" />
         </div>
-        <p className="font-mono text-[17px] tracking-[0.12em]">{number || '•••• •••• •••• ••••'}</p>
-        <div className="flex justify-between text-[11px] uppercase tracking-wider">
+        <p className="font-mono text-16-r tracking-[0.12em]">{number || '•••• •••• •••• ••••'}</p>
+        <div className="flex justify-between text-11-sb uppercase">
           <span className="truncate text-white/80">{name || 'Name on card'}</span>
           <span className="text-white/80">{exp || 'MM / YY'}</span>
         </div>
@@ -56,9 +56,9 @@ export default function Payment() {
   return (
     <CheckoutShell step={2}>
       <div className="space-y-4">
-        <h1 className="text-[32px] font-medium tracking-[-0.03em] md:text-[40px]">Payment</h1>
+        <h1 className="text-36-sb">Payment</h1>
 
-        <div className="divide-y divide-border rounded-2xl border border-border bg-surface-1 text-[14px]">
+        <div className="divide-y divide-border rounded-2xl border border-border bg-surface-1 text-14-r">
           {[
             ['Contact', checkout.email],
             ['Ship to', [checkout.address, checkout.apt, checkout.city, `${checkout.state} ${checkout.zip}`].filter(Boolean).join(', ')],
@@ -67,7 +67,7 @@ export default function Payment() {
             <div key={k} className="flex items-center gap-4 px-5 py-3.5">
               <span className="w-20 shrink-0 text-type-2">{k}</span>
               <span className="min-w-0 flex-1 truncate">{v}</span>
-              <Link to="/checkout" className="text-[13px] font-medium underline-offset-4 hover:underline">
+              <Link to="/checkout" className="text-13-m underline-offset-4 hover:underline">
                 Change
               </Link>
             </div>
@@ -80,7 +80,7 @@ export default function Payment() {
               <button
                 key={m.id}
                 onClick={() => setMethod(m.id)}
-                className={cn('relative flex items-center justify-center gap-2 rounded-lg py-2.5 text-[13px] transition', method === m.id ? 'text-type-0' : 'text-type-2')}
+                className={cn('relative flex items-center justify-center gap-2 rounded-lg py-2.5 text-13-r transition', method === m.id ? 'text-type-0' : 'text-type-2')}
               >
                 {method === m.id && <motion.span layoutId="pay-tab" className="absolute inset-0 rounded-lg bg-surface-1 shadow-sm" transition={{ duration: 0.35, ease }} />}
                 <m.icon size={16} className="relative" weight={method === m.id ? 'fill' : 'regular'} />
@@ -104,20 +104,20 @@ export default function Payment() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-input p-6 text-center text-[14px] text-type-2">
+                <div className="rounded-xl border border-dashed border-input p-6 text-center text-14-r text-type-2">
                   You’ll be redirected to {method === 'paypal' ? 'PayPal' : 'Apple Pay'} to complete your purchase securely.
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
 
-          <label className="mt-5 flex cursor-pointer items-center gap-3 text-[14px]">
+          <label className="mt-5 flex cursor-pointer items-center gap-3 text-14-r">
             <input type="checkbox" checked={billingSame} onChange={(e) => setBillingSame(e.target.checked)} className="h-4 w-4 accent-[#181818]" />
             Billing address same as shipping
           </label>
         </Section>
 
-        <Button size="lg" className="h-14 w-full text-[15px]" onClick={() => setEnded(true)}>
+        <Button size="lg" className="h-14 w-full" onClick={() => setEnded(true)}>
           <Lock size={16} /> Make payment · {money(totals.total)}
         </Button>
         <AnimatePresence>
@@ -126,13 +126,13 @@ export default function Payment() {
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-center gap-2 rounded-xl bg-surface-2 p-3 text-[13px] text-type-1"
+              className="flex items-center justify-center gap-2 rounded-xl bg-surface-2 p-3 text-13-r text-type-1"
             >
               <Info size={16} /> Prototype ends here. No payment was processed.
             </motion.p>
           )}
         </AnimatePresence>
-        <p className="text-center text-[12px] text-type-3">Payments are encrypted and processed securely. You won’t be charged until your photographer approves the order.</p>
+        <p className="text-center text-12-r text-type-3">Payments are encrypted and processed securely. You won’t be charged until your photographer approves the order.</p>
       </div>
     </CheckoutShell>
   )

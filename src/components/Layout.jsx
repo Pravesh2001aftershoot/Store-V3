@@ -29,12 +29,12 @@ function CartButton() {
   return (
     <button
       onClick={() => setDrawer(true)}
-      className="relative flex h-10 items-center gap-2 rounded-full bg-type-0 pl-3.5 pr-4 text-sm font-medium text-white transition hover:bg-[#2c2c2c]"
+      className="relative flex h-10 items-center gap-2 rounded-full bg-type-0 pl-3.5 pr-4 text-14-m text-white transition hover:bg-[#2c2c2c]"
       aria-label="Open cart"
     >
       <Handbag size={18} weight="regular" />
       <span className="hidden sm:inline">Cart</span>
-      <span className="grid h-5 min-w-5 place-items-center overflow-hidden rounded-full bg-white px-1.5 text-[11px] font-semibold text-type-0">
+      <span className="grid h-5 min-w-5 place-items-center overflow-hidden rounded-full bg-white px-1.5 text-11-sb text-type-0">
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span key={totals.itemCount} initial={{ y: 12 }} animate={{ y: 0 }} exit={{ y: -12 }} transition={{ duration: 0.3, ease }}>
             {totals.itemCount}
@@ -72,7 +72,7 @@ function Header() {
         transition={{ duration: 0.45, ease }}
         className="fixed inset-x-0 top-0 z-40"
       >
-        <div className="truncate bg-type-0 px-4 py-2 text-center text-[12px] text-white/80">
+        <div className="truncate bg-type-0 px-4 py-2 text-center text-12-r text-white/80">
           <span className="max-sm:hidden">Ordering from <span className="font-medium text-white">{gallery.title}</span> · </span>Use code{' '}
           <span className="font-mono font-medium text-white">LEXIE10</span> for 10% off
         </div>
@@ -93,7 +93,7 @@ function Header() {
                     end={l.to === '/shop'}
                     className={({ isActive }) =>
                       cn(
-                        'relative rounded-full px-3 py-1.5 text-[14px] text-type-1 transition hover:text-type-0',
+                        'relative rounded-full px-3 py-1.5 text-14-r text-type-1 transition hover:text-type-0',
                         isActive && 'text-type-0'
                       )
                     }
@@ -114,7 +114,7 @@ function Header() {
               <a
                 href="#gallery"
                 onClick={(e) => e.preventDefault()}
-                className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-[14px] text-type-1 transition hover:bg-surface-2 hover:text-type-0 md:flex"
+                className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0 md:flex"
               >
                 <ArrowLeft size={15} /> Back to gallery
               </a>
@@ -148,14 +148,14 @@ function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 + i * 0.05, duration: 0.6, ease }}
                 >
-                  <Link to={l.to} className="flex items-center justify-between border-b border-border py-4 text-[28px] font-medium tracking-tight">
+                  <Link to={l.to} className="flex items-center justify-between border-b border-border py-4 text-30-m">
                     {l.label}
                     <ArrowUpRight size={22} className="text-type-3" />
                   </Link>
                 </motion.div>
               ))}
             </nav>
-            <div className="mt-auto flex items-center gap-2 text-sm text-type-2">
+            <div className="mt-auto flex items-center gap-2 text-14-r text-type-2">
               <Images size={16} /> Back to {gallery.client} gallery
             </div>
           </motion.div>
@@ -172,10 +172,10 @@ function Footer() {
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Wordmark inverted className="mb-6" />
-            <p className="max-w-sm text-[22px] leading-snug tracking-tight text-white/90">
+            <p className="max-w-sm text-24-m text-white/90">
               Printed with care for the people in the photographs.
             </p>
-            <p className="mt-4 text-sm text-white/50">
+            <p className="mt-4 text-14-r text-white/50">
               {gallery.studio} · {gallery.photographer}
             </p>
           </div>
@@ -185,11 +185,11 @@ function Footer() {
             ['Studio', [['Gallery', '#'], ['Contact', '#'], ['Instagram', '#']]],
           ].map(([h, ls]) => (
             <div key={h}>
-              <p className="mb-4 text-[12px] uppercase tracking-[0.14em] text-white/40">{h}</p>
+              <p className="mb-4 text-12-sb uppercase text-white/40">{h}</p>
               <ul className="space-y-2.5">
                 {ls.map(([t, to]) => (
                   <li key={t}>
-                    <Link to={to} className="text-[14px] text-white/75 transition hover:text-white">
+                    <Link to={to} className="text-14-r text-white/75 transition hover:text-white">
                       {t}
                     </Link>
                   </li>
@@ -203,7 +203,7 @@ function Footer() {
             {gallery.studio.toLowerCase()}
           </p>
         </div>
-        <div className="mt-6 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-[12px] text-white/40 sm:flex-row">
+        <div className="mt-6 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-12-r text-white/40 sm:flex-row">
           <span>© 2026 {gallery.studio}. Prototype store.</span>
           <span>Powered by your photographer’s gallery</span>
         </div>

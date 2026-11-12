@@ -8,78 +8,10 @@ import { defaultVariant, sizeOf, unitPrice, packagePrice, packageValue } from '.
 import { Accordion, AnimatedNumber, Badge, Button } from '../components/ui'
 import ProductMockup from '../components/ProductMockup'
 import ProductCard from '../components/ProductCard'
+import OptionGroup from '../components/OptionGroup'
 import { cn, money } from '../lib/utils'
 
 const ease = [0.22, 1, 0.36, 1]
-
-function OptionGroup({ option, value, onChange }) {
-  const current = option.values.find((v) => v.id === value)
-  return (
-    <div>
-      <div className="mb-2.5 flex items-baseline justify-between">
-        <p className="text-[13px] font-medium text-type-0">
-          {option.label}
-          {option.type === 'swatch' && <span className="ml-2 font-normal text-type-2">{current?.label}</span>}
-        </p>
-        {current?.delta > 0 && <span className="text-[12px] text-type-2">+{money(current.delta)}</span>}
-      </div>
-
-      {option.type === 'swatch' && (
-        <div className="flex flex-wrap gap-2.5">
-          {option.values.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => onChange(v.id)}
-              title={v.label}
-              className={cn('relative grid h-10 w-10 place-items-center rounded-full transition', value === v.id ? 'ring-2 ring-type-0 ring-offset-2' : 'ring-1 ring-border hover:ring-type-3')}
-            >
-              <span className="h-8 w-8 rounded-full ring-1 ring-inset ring-black/10" style={{ background: v.hex }} />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {(option.type === 'size' || option.type === 'segmented') && (
-        <div className={cn('grid gap-2', option.type === 'size' ? 'grid-cols-3 sm:grid-cols-4' : 'grid-cols-2')}>
-          {option.values.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => onChange(v.id)}
-              className={cn(
-                'relative rounded-xl border px-3 py-2.5 text-left transition',
-                value === v.id ? 'border-type-0 bg-surface-1 shadow-[0_0_0_1px_var(--type-0)]' : 'border-border bg-surface-1 hover:border-type-3'
-              )}
-            >
-              <span className="block text-[14px] font-medium text-type-0">{v.label}</span>
-              {option.type === 'size' && <span className="block text-[12px] text-type-2">{money(v.price)}</span>}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {option.type === 'card' && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {option.values.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => onChange(v.id)}
-              className={cn(
-                'flex items-start justify-between gap-2 rounded-xl border bg-surface-1 px-3.5 py-3 text-left transition',
-                value === v.id ? 'border-type-0 shadow-[0_0_0_1px_var(--type-0)]' : 'border-border hover:border-type-3'
-              )}
-            >
-              <span>
-                <span className="block text-[14px] font-medium">{v.label}</span>
-                <span className="block text-[12px] text-type-2">{v.note}</span>
-              </span>
-              <span className="text-[12px] text-type-2">{v.delta ? `+${money(v.delta)}` : 'Incl.'}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 function HowManyNote({ product, variant }) {
   const size = sizeOf(product, variant)
@@ -104,7 +36,7 @@ function HowManyNote({ product, variant }) {
       </>
     )
   return (
-    <div className="flex gap-3 rounded-xl bg-surface-2 p-3.5 text-[13px] leading-relaxed text-type-1">
+    <div className="flex gap-3 rounded-xl bg-surface-2 p-3.5 text-13-r-p text-type-1">
       <Info size={18} className="mt-0.5 shrink-0 text-type-2" />
       <p>{text}</p>
     </div>
@@ -137,7 +69,7 @@ export default function Product() {
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-6 md:px-8 md:pt-10">
-      <nav className="text-[13px] text-type-3">
+      <nav className="text-13-r text-type-3">
         <Link to="/" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
         <Link to={`/shop/${cat.id}`} className="hover:text-type-0">{cat.name}</Link> <span className="mx-1.5">/</span>
         <span className="text-type-1">{product.name}</span>
@@ -164,7 +96,7 @@ export default function Product() {
                 <button
                   key={v.id}
                   onClick={() => setView(v.id)}
-                  className={cn('relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] transition', view === v.id ? 'text-white' : 'text-type-1 hover:text-type-0')}
+                  className={cn('relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-12-r transition', view === v.id ? 'text-white' : 'text-type-1 hover:text-type-0')}
                 >
                   {view === v.id && <motion.span layoutId="view-pill" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.4, ease }} />}
                   <v.icon size={14} className="relative" />
@@ -173,18 +105,18 @@ export default function Product() {
               ))}
             </div>
           </div>
-          <p className="mt-3 text-center text-[12px] text-type-3">Preview updates as you change options. You’ll pick your own photos next.</p>
+          <p className="mt-3 text-center text-12-r text-type-3">Preview updates as you change options. You’ll pick your own photos next.</p>
         </div>
 
         {/* Configurator */}
         <div>
-          <h1 className="text-[36px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[48px]">{product.name}</h1>
-          <p className="mt-2 text-[16px] text-type-2">{product.tagline}</p>
+          <h1 className="text-36-sb md:text-48-sb">{product.name}</h1>
+          <p className="mt-2 text-16-r text-type-2">{product.tagline}</p>
           <div className="mt-5 flex items-baseline gap-2">
-            <span className="text-[28px] font-medium tracking-tight">
+            <span className="text-30-m">
               <AnimatedNumber value={price} format={money} />
             </span>
-            <span className="text-[14px] text-type-2">{product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? 'per set of 3' : `incl. ${product.book.min} photos`}</span>
+            <span className="text-14-r text-type-2">{product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? 'per set of 3' : `incl. ${product.book.min} photos`}</span>
           </div>
 
           <div className="mt-8 space-y-7 border-t border-border pt-7">
@@ -195,22 +127,22 @@ export default function Product() {
 
           <div className="mt-8 space-y-3">
             <HowManyNote product={product} variant={variant} />
-            <Button size="lg" className="h-14 w-full text-[15px]" onClick={start} arrow>
+            <Button size="lg" className="h-14 w-full" onClick={start} arrow>
               <ImagesSquare size={18} /> Choose photos from gallery
             </Button>
-            <p className="flex items-center justify-center gap-1.5 text-[12px] text-type-3">
+            <p className="flex items-center justify-center gap-1.5 text-12-r text-type-3">
               <Truck size={14} /> Ships in 5–7 business days · Free returns on damaged items
             </p>
           </div>
 
           {inPackages.length > 0 && (
             <div className="mt-8 rounded-2xl border border-border bg-surface-1 p-4">
-              <p className="flex items-center gap-2 text-[13px] font-medium">
+              <p className="flex items-center gap-2 text-13-sb">
                 <PackageIcon size={16} /> Save more in a package
               </p>
               <div className="mt-3 space-y-1">
                 {inPackages.map((p) => (
-                  <Link key={p.id} to={`/packages/${p.id}`} className="group flex items-center justify-between rounded-lg px-2 py-2 text-[14px] transition hover:bg-surface-2">
+                  <Link key={p.id} to={`/packages/${p.id}`} className="group flex items-center justify-between rounded-lg px-2 py-2 text-14-r transition hover:bg-surface-2">
                     <span>{p.name}</span>
                     <span className="flex items-center gap-2 text-type-2">
                       <Badge tone="success">Save {Math.round((1 - packagePrice(p) / packageValue(p)) * 100)}%</Badge>
@@ -249,7 +181,7 @@ export default function Product() {
       </div>
 
       <section className="mt-28">
-        <h2 className="mb-8 text-[28px] font-medium tracking-[-0.03em] md:text-[36px]">You may also like</h2>
+        <h2 className="mb-8 text-30-m">You may also like</h2>
         <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {related.map((p) => (
             <ProductCard key={p.id} product={p} />

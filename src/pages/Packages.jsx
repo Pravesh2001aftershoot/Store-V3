@@ -6,16 +6,16 @@ import PackageCard from '../components/PackageCard'
 export default function Packages() {
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-10 md:px-8 md:pt-14">
-      <nav className="text-[13px] text-type-3">
+      <nav className="text-13-r text-type-3">
         <Link to="/" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
         <span className="text-type-1">Packages</span>
       </nav>
       <div className="mt-6 grid gap-6 md:grid-cols-2 md:items-end">
         <div>
           <Eyebrow>{packages.length} curated bundles</Eyebrow>
-          <SplitText text="Packages" className="mt-4 text-[44px] font-medium leading-none tracking-[-0.04em] md:text-[72px]" />
+          <SplitText text="Packages" className="mt-4 text-48-sb md:text-72-sb" />
         </div>
-        <p className="max-w-[440px] text-[16px] text-type-2 md:justify-self-end">
+        <p className="max-w-[440px] text-16-r text-type-2 md:justify-self-end">
           Curated combinations of albums, wall art and prints at a lower price than buying separately. You choose the photos for every piece.
         </p>
       </div>

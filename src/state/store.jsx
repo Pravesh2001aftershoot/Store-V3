@@ -21,6 +21,16 @@ function reducer(state, action) {
       return { ...state, lines: [...state.lines, { ...action.line, id: uid() }] }
     case 'update':
       return { ...state, lines: state.lines.map((l) => (l.id === action.id ? { ...action.line, id: l.id } : l)) }
+    case 'replace': {
+      // one line → several (e.g. a photo switched to another variant became its own item).
+      // The first keeps the original id/position, the rest are inserted right after it.
+      const i = state.lines.findIndex((l) => l.id === action.id)
+      if (i < 0 || !action.lines.length) return state
+      const [first, ...rest] = action.lines
+      const lines = [...state.lines]
+      lines.splice(i, 1, { ...first, id: action.id }, ...rest.map((l) => ({ ...l, id: uid() })))
+      return { ...state, lines }
+    }
     case 'remove':
       return { ...state, lines: state.lines.filter((l) => l.id !== action.id) }
     case 'duplicate': {

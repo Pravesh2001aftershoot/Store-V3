@@ -21,3 +21,9 @@ Store → Category → Product (variants) → **Builder** (`/build/:kind/:id`): 
 - `src/pages/Builder.jsx` + `src/components/CropEditor.jsx` — photo selection and cropping
 
 Product modes: `unit` (1 photo = 1 item, so N photos = qty N), `set` (e.g. triptych, 3 photos per item), `book` (one item holding min–max photos, extra photos charged).
+
+## Design tokens
+- `src/tokens/typography.js` — **type tokens** (source of truth), wired into Tailwind via `tailwind.config.js` (`@config` in `src/index.css`) and into `cn()`/tailwind-merge.
+- One class per token sets size + weight + line height + tracking: `48-SB` → `text-48-sb`, `14-R` → `text-14-r`, `12-SB` → `text-12-sb uppercase`.
+- Don't add `font-*` / `leading-*` / `tracking-*` next to a token, since they override it. Raw `text-[Npx]` sizes shouldn't be used.
+- Tokens marked `status: 'proposed'` aren't in the Figma DS yet.

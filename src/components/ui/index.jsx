@@ -5,7 +5,7 @@ import { ArrowRight, Plus, Minus } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 
 const buttonVariants = cva(
-  'group relative inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium transition-all duration-300 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  'group relative inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full transition-all duration-300 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
@@ -17,9 +17,9 @@ const buttonVariants = cva(
         link: 'text-type-0 underline-offset-4 hover:underline px-0 h-auto',
       },
       size: {
-        sm: 'h-8 px-3.5 text-[13px]',
-        md: 'h-10 px-5 text-sm',
-        lg: 'h-12 px-6 text-[15px]',
+        sm: 'h-8 px-3.5 text-13-m',
+        md: 'h-10 px-5 text-14-m',
+        lg: 'h-12 px-6 text-16-m',
         icon: 'h-10 w-10',
         'icon-sm': 'h-8 w-8',
       },
@@ -50,14 +50,14 @@ export function Badge({ className, tone = 'default', children }) {
     muted: 'bg-surface-2 text-type-1',
   }
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-wide', tones[tone], className)}>
+    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-11-m', tones[tone], className)}>
       {children}
     </span>
   )
 }
 
 export const Eyebrow = ({ children, className }) => (
-  <p className={cn('flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em] text-type-2', className)}>
+  <p className={cn('flex items-center gap-2 text-12-sb uppercase text-type-2', className)}>
     <span className="h-1.5 w-1.5 rounded-full bg-type-0" />
     {children}
   </p>
@@ -129,7 +129,7 @@ export function Accordion({ items, className, defaultOpen = -1 }) {
         <div key={it.q}>
           <button
             onClick={() => setOpen(open === i ? -1 : i)}
-            className="flex w-full items-center justify-between gap-4 py-5 text-left text-[15px] font-medium text-type-0"
+            className="flex w-full items-center justify-between gap-4 py-5 text-left text-16-m text-type-0"
             aria-expanded={open === i}
           >
             {it.q}
@@ -149,7 +149,7 @@ export function Accordion({ items, className, defaultOpen = -1 }) {
                 transition={{ duration: 0.4, ease }}
                 className="overflow-hidden"
               >
-                <div className="pb-5 pr-10 text-[14px] leading-relaxed text-type-2">{it.a}</div>
+                <div className="pb-5 pr-10 text-14-r-p text-type-2">{it.a}</div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -162,15 +162,15 @@ export function Accordion({ items, className, defaultOpen = -1 }) {
 export function Field({ label, error, className, ...props }) {
   return (
     <label className={cn('block', className)}>
-      <span className="mb-1.5 block text-[13px] font-medium text-type-1">{label}</span>
+      <span className="mb-1.5 block text-13-m text-type-1">{label}</span>
       <input
         {...props}
         className={cn(
-          'h-11 w-full rounded-lg border border-input bg-surface-1 px-3.5 text-[14px] text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0 focus:ring-4 focus:ring-black/5',
+          'h-11 w-full rounded-lg border border-input bg-surface-1 px-3.5 text-14-r text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0 focus:ring-4 focus:ring-black/5',
           error && 'border-destructive'
         )}
       />
-      {error && <span className="mt-1 block text-[12px] text-destructive">{error}</span>}
+      {error && <span className="mt-1 block text-12-r text-destructive">{error}</span>}
     </label>
   )
 }

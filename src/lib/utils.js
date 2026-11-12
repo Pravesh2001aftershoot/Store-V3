@@ -1,5 +1,10 @@
 import { clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { extendTailwindMerge } from 'tailwind-merge'
+import { fontSizeKeys } from '../tokens/typography.js'
+
+// Register type tokens as font sizes. Without this, tailwind-merge reads
+// `text-14-r` as a text *color* and drops it when merged with e.g. `text-type-2`.
+const twMerge = extendTailwindMerge({ extend: { theme: { text: fontSizeKeys } } })
 
 export const cn = (...inputs) => twMerge(clsx(inputs))
 

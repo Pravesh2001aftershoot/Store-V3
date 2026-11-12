@@ -50,8 +50,8 @@ export default function PackageCard({ pkg, dark = false }) {
       <div className="flex flex-1 flex-col p-3 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className={cn('text-[18px] font-medium tracking-tight', dark ? 'text-white' : 'text-type-0')}>{pkg.name}</p>
-            <p className={cn('mt-0.5 text-[13px]', dark ? 'text-white/55' : 'text-type-2')}>{pkg.tagline}</p>
+            <p className={cn('text-20-m', dark ? 'text-white' : 'text-type-0')}>{pkg.name}</p>
+            <p className={cn('mt-0.5 text-13-r', dark ? 'text-white/55' : 'text-type-2')}>{pkg.tagline}</p>
           </div>
           <span
             className={cn(
@@ -62,7 +62,7 @@ export default function PackageCard({ pkg, dark = false }) {
             <ArrowUpRight size={15} weight="bold" />
           </span>
         </div>
-        <ul className={cn('mt-4 space-y-1.5 text-[13px]', dark ? 'text-white/70' : 'text-type-1')}>
+        <ul className={cn('mt-4 space-y-1.5 text-13-r', dark ? 'text-white/70' : 'text-type-1')}>
           {pkg.slots.map((s) => {
             const p = productById[s.productId]
             return (
@@ -74,8 +74,8 @@ export default function PackageCard({ pkg, dark = false }) {
           })}
         </ul>
         <div className="mt-auto flex items-baseline gap-2 pt-5">
-          <span className={cn('text-[22px] font-medium tracking-tight', dark ? 'text-white' : 'text-type-0')}>{money(price)}</span>
-          <span className={cn('text-[14px] line-through', dark ? 'text-white/35' : 'text-type-3')}>{money(value)}</span>
+          <span className={cn('text-24-m', dark ? 'text-white' : 'text-type-0')}>{money(price)}</span>
+          <span className={cn('text-14-r line-through', dark ? 'text-white/35' : 'text-type-3')}>{money(value)}</span>
         </div>
       </div>
     </Link>

@@ -48,7 +48,7 @@ export function PhotoStrip({ part, max = 8, size = 'h-9' }) {
           className={`${size} rounded-[3px] ring-1 ring-black/5`}
         />
       ))}
-      {more > 0 && <span className="ml-1 text-[12px] text-type-2">+{more}</span>}
+      {more > 0 && <span className="ml-1 text-12-r text-type-2">+{more}</span>}
     </div>
   )
 }

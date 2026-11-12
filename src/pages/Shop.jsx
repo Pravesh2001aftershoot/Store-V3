@@ -26,15 +26,15 @@ export default function Shop() {
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-10 md:px-8 md:pt-14">
-      <nav className="text-[13px] text-type-3">
+      <nav className="text-13-r text-type-3">
         <Link to="/" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
         <span className="text-type-1">{cat ? cat.name : 'Shop all'}</span>
       </nav>
       <div className="mt-6 flex flex-col justify-between gap-6 md:flex-row md:items-end">
         <div>
           <Eyebrow>{list.length} products</Eyebrow>
-          <SplitText key={cat?.id || 'all'} text={cat ? cat.name : 'Shop all'} className="mt-4 text-[44px] font-medium leading-none tracking-[-0.04em] md:text-[72px]" />
-          <p className="mt-4 max-w-[480px] text-[16px] text-type-2">
+          <SplitText key={cat?.id || 'all'} text={cat ? cat.name : 'Shop all'} className="mt-4 text-48-sb md:text-72-sb" />
+          <p className="mt-4 max-w-[480px] text-16-r text-type-2">
             {cat ? cat.blurb : 'Everything your photographer offers, made from the photos in your gallery.'}
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function Shop() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="h-10 appearance-none rounded-full border border-border bg-surface-1 pl-4 pr-10 text-[14px] outline-none"
+            className="h-10 appearance-none rounded-full border border-border bg-surface-1 pl-4 pr-10 text-14-r outline-none"
           >
             <option value="featured">Featured</option>
             <option value="low">Price: low to high</option>
@@ -59,7 +59,7 @@ export default function Shop() {
             <Link
               key={t.name}
               to={t.id ? `/shop/${t.id}` : '/shop'}
-              className={cn('relative shrink-0 rounded-full px-4 py-2 text-[14px] transition', active ? 'text-white' : 'text-type-1 hover:bg-surface-2')}
+              className={cn('relative shrink-0 rounded-full px-4 py-2 text-14-r transition', active ? 'text-white' : 'text-type-1 hover:bg-surface-2')}
             >
               {active && <motion.span layoutId="shop-tab" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.45, ease }} />}
               <span className="relative">{t.name}</span>
@@ -94,11 +94,11 @@ export default function Shop() {
             <PackageIcon size={20} />
           </span>
           <div>
-            <p className="text-[18px] font-medium tracking-tight">Buying more than one piece?</p>
-            <p className="text-[14px] text-type-2">Packages bundle albums, wall art and prints for up to 22% less.</p>
+            <p className="text-20-m">Buying more than one piece?</p>
+            <p className="text-14-r text-type-2">Packages bundle albums, wall art and prints for up to 22% less.</p>
           </div>
         </div>
-        <span className="inline-flex items-center gap-2 text-[14px] font-medium">
+        <span className="inline-flex items-center gap-2 text-14-m">
           Explore packages <ArrowRight size={14} className="transition group-hover:translate-x-1" />
         </span>
       </Link>

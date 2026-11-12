@@ -22,7 +22,7 @@ export default function PackageDetail() {
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-6 md:px-8 md:pt-10">
-      <nav className="text-[13px] text-type-3">
+      <nav className="text-13-r text-type-3">
         <Link to="/" className="hover:text-type-0">Store</Link> <span className="mx-1.5">/</span>
         <Link to="/packages" className="hover:text-type-0">Packages</Link> <span className="mx-1.5">/</span>
         <span className="text-type-1">{pkg.name}</span>
@@ -51,18 +51,18 @@ export default function PackageDetail() {
 
         <div>
           {pkg.popular && <Badge tone="dark" className="mb-4">Most loved</Badge>}
-          <h1 className="text-[36px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[52px]">{pkg.name}</h1>
-          <p className="mt-2 text-[16px] text-type-2">{pkg.tagline}</p>
+          <h1 className="text-36-sb md:text-48-sb">{pkg.name}</h1>
+          <p className="mt-2 text-16-r text-type-2">{pkg.tagline}</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="text-[32px] font-medium tracking-tight">{money(price)}</span>
-            <span className="text-[18px] text-type-3 line-through">{money(value)}</span>
-            <Badge tone="success" className="text-[12px]">
+            <span className="text-30-m">{money(price)}</span>
+            <span className="text-16-r text-type-3 line-through">{money(value)}</span>
+            <Badge tone="success" className="text-12-m">
               <Tag size={12} /> Save {money(value - price)} ({pct}%)
             </Badge>
           </div>
 
           <div className="mt-8 border-t border-border pt-6">
-            <p className="mb-4 text-[13px] font-medium">What’s included</p>
+            <p className="mb-4 text-13-sb">What’s included</p>
             <div className="space-y-2">
               {pkg.slots.map((s, i) => {
                 const product = productById[s.productId]
@@ -73,31 +73,31 @@ export default function PackageDetail() {
                       <ProductMockup product={product} variant={v} className="aspect-square" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-medium">
+                      <p className="text-14-sb">
                         {s.qty} × {product.name}
                       </p>
-                      <p className="truncate text-[12px] text-type-2">{variantLabel(product, v)}</p>
-                      <p className="text-[12px] text-type-3">{requirementText(product, product.mode === 'book' ? undefined : s.qty)}</p>
+                      <p className="truncate text-12-r text-type-2">{variantLabel(product, v)}</p>
+                      <p className="text-12-r text-type-3">{requirementText(product, product.mode === 'book' ? undefined : s.qty)}</p>
                     </div>
-                    <span className="text-[13px] text-type-3 line-through">{money(slotValue(s))}</span>
+                    <span className="text-13-r text-type-3 line-through">{money(slotValue(s))}</span>
                   </Reveal>
                 )
               })}
             </div>
           </div>
 
-          <div className="mt-6 flex gap-3 rounded-xl bg-surface-2 p-3.5 text-[13px] leading-relaxed text-type-1">
+          <div className="mt-6 flex gap-3 rounded-xl bg-surface-2 p-3.5 text-13-r-p text-type-1">
             <Info size={18} className="mt-0.5 shrink-0 text-type-2" />
             <p>Next you’ll choose photos for each piece, then fine-tune every crop. Albums can hold extra photos for a small fee.</p>
           </div>
-          <Button size="lg" className="mt-4 h-14 w-full text-[15px]" onClick={() => nav(`/build/package/${pkg.id}`)} arrow>
+          <Button size="lg" className="mt-4 h-14 w-full" onClick={() => nav(`/build/package/${pkg.id}`)} arrow>
             <ImagesSquare size={18} /> Choose photos for this package
           </Button>
         </div>
       </div>
 
       <section className="mt-28">
-        <h2 className="mb-8 text-[28px] font-medium tracking-[-0.03em] md:text-[36px]">Other packages</h2>
+        <h2 className="mb-8 text-30-m">Other packages</h2>
         <div className="grid gap-5 md:grid-cols-2">
           {others.map((p) => (
             <PackageCard key={p.id} pkg={p} />

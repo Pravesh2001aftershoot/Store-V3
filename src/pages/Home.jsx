@@ -25,7 +25,7 @@ function Hero() {
       <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 py-1 pl-1 pr-3 text-[12px] text-type-1">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 py-1 pl-1 pr-3 text-12-r text-type-1">
               <span className="flex -space-x-1.5">
                 {pics.map((p) => (
                   <img key={p.id} src={p.thumb} alt="" className="h-6 w-6 rounded-full object-cover ring-2 ring-white" />
@@ -36,14 +36,14 @@ function Hero() {
           </motion.div>
           <SplitText
             text="Your favourite moments, made to hold."
-            className="mt-6 max-w-[640px] text-[44px] font-medium leading-[1.02] tracking-[-0.035em] text-type-0 sm:text-[60px] lg:text-[76px]"
+            className="mt-6 max-w-[640px] text-48-sb text-type-0 sm:text-60-sb lg:text-72-sb"
             delay={0.1}
           />
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease, delay: 0.5 }}
-            className="mt-6 max-w-[460px] text-[17px] leading-relaxed text-type-2"
+            className="mt-6 max-w-[460px] text-18-r text-type-2"
           >
             Archival prints, hand-bound albums and wall art — curated by {gallery.photographer} and made from the photos in your
             gallery.
@@ -97,9 +97,9 @@ function Hero() {
             transition={{ duration: 0.8, ease, delay: 0.9 }}
             className="absolute bottom-16 left-2 rounded-2xl border border-border bg-surface-1/90 p-3 pr-5 shadow-xl backdrop-blur sm:left-6"
           >
-            <p className="text-[11px] uppercase tracking-[0.14em] text-type-3">Packages from</p>
-            <p className="text-[22px] font-medium tracking-tight">${Math.min(...packages.map(packagePrice))}</p>
-            <p className="text-[12px] text-success">Save up to 22%</p>
+            <p className="text-11-sb uppercase text-type-3">Packages from</p>
+            <p className="text-24-m">${Math.min(...packages.map(packagePrice))}</p>
+            <p className="text-12-r text-success">Save up to 22%</p>
           </motion.div>
         </div>
       </div>
@@ -133,7 +133,7 @@ function Categories() {
       <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <Eyebrow>Shop by category</Eyebrow>
-          <SplitText as="h2" text="Something for every wall, shelf and story." className="mt-4 max-w-[620px] text-[34px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[48px]" />
+          <SplitText as="h2" text="Something for every wall, shelf and story." className="mt-4 max-w-[620px] text-36-sb md:text-48-sb" />
         </div>
         <Button as={Link} to="/shop" variant="outline" arrow>
           Shop all
@@ -150,14 +150,14 @@ function Categories() {
                 </div>
                 <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 md:p-7">
                   <div className="rounded-xl bg-surface-1/85 px-4 py-3 backdrop-blur-md">
-                    <p className="text-[20px] font-medium tracking-tight md:text-[24px]">{c.name}</p>
-                    <p className="mt-0.5 max-w-[320px] text-[13px] text-type-2">{c.blurb}</p>
+                    <p className="text-20-m md:text-24-m">{c.name}</p>
+                    <p className="mt-0.5 max-w-[320px] text-13-r text-type-2">{c.blurb}</p>
                   </div>
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-type-0 text-white transition-transform duration-500 group-hover:rotate-45">
                     <ArrowUpRight size={18} weight="bold" />
                   </span>
                 </div>
-                <span className="absolute left-5 top-5 rounded-full bg-surface-1/85 px-3 py-1 text-[12px] text-type-1 backdrop-blur md:left-7 md:top-7">
+                <span className="absolute left-5 top-5 rounded-full bg-surface-1/85 px-3 py-1 text-12-r text-type-1 backdrop-blur md:left-7 md:top-7">
                   0{i + 1} · {items.length} products
                 </span>
               </Link>
@@ -181,18 +181,18 @@ function HowItWorks() {
       <div className="mx-auto grid max-w-[1360px] gap-12 px-4 md:px-8 lg:grid-cols-[1fr_1.3fr]">
         <div className="lg:sticky lg:top-32 lg:self-start">
           <Eyebrow>How it works</Eyebrow>
-          <SplitText as="h2" text="From gallery to your hands in four steps." className="mt-4 max-w-[480px] text-[34px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[48px]" />
-          <p className="mt-5 max-w-[420px] text-[15px] leading-relaxed text-type-2">
+          <SplitText as="h2" text="From gallery to your hands in four steps." className="mt-4 max-w-[480px] text-36-sb md:text-48-sb" />
+          <p className="mt-5 max-w-[420px] text-16-r-p text-type-2">
             Every order is reviewed by {gallery.photographer} before it goes to print, so colour and crop are exactly right.
           </p>
         </div>
         <div className="space-y-4">
           {steps.map((s, i) => (
             <Reveal key={s.t} className="group flex gap-5 rounded-2xl border border-border bg-surface-0 p-6 transition duration-500 hover:bg-surface-2 md:p-8">
-              <span className="text-[13px] font-medium tabular-nums text-type-3">0{i + 1}</span>
+              <span className="text-13-m tabular-nums text-type-3">0{i + 1}</span>
               <div className="flex-1">
-                <p className="text-[20px] font-medium tracking-tight md:text-[24px]">{s.t}</p>
-                <p className="mt-2 max-w-[440px] text-[14px] leading-relaxed text-type-2">{s.d}</p>
+                <p className="text-20-m md:text-24-m">{s.t}</p>
+                <p className="mt-2 max-w-[440px] text-14-r-p text-type-2">{s.d}</p>
               </div>
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface-1 shadow-sm ring-1 ring-border transition-transform duration-500 group-hover:-rotate-12">
                 <s.icon size={20} />
@@ -212,9 +212,9 @@ function Bestsellers() {
       <div className="mx-auto mb-10 flex max-w-[1360px] items-end justify-between gap-4 px-4 md:px-8">
         <div>
           <Eyebrow>Client favourites</Eyebrow>
-          <SplitText as="h2" text="Most ordered this season" className="mt-4 text-[34px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[48px]" />
+          <SplitText as="h2" text="Most ordered this season" className="mt-4 text-36-sb md:text-48-sb" />
         </div>
-        <p className="hidden text-[13px] text-type-3 md:block">Drag to explore →</p>
+        <p className="hidden text-13-r text-type-3 md:block">Drag to explore →</p>
       </div>
       <div ref={ref} className="overflow-hidden px-4 md:px-8">
         <motion.div drag="x" dragConstraints={ref} dragElastic={0.08} className="mx-auto flex max-w-[1360px] cursor-grab gap-5 active:cursor-grabbing">
@@ -236,10 +236,10 @@ function PackagesTeaser() {
       <div className="mx-auto max-w-[1360px] px-4 md:px-8">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <p className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em] text-white/50">
+            <p className="flex items-center gap-2 text-12-sb uppercase text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-white" /> Packages
             </p>
-            <SplitText as="h2" text={`Bundle your favourites and save up to ${maxSave}%.`} className="mt-4 max-w-[640px] text-[34px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[48px]" />
+            <SplitText as="h2" text={`Bundle your favourites and save up to ${maxSave}%.`} className="mt-4 max-w-[640px] text-36-sb md:text-48-sb" />
           </div>
           <Button as={Link} to="/packages" variant="light" arrow>
             All packages
@@ -269,8 +269,8 @@ function Quality() {
       {items.map((it, i) => (
         <Reveal key={it.t} delay={i * 0.08} className="border-t border-border py-6 pr-6">
           <it.icon size={24} weight="light" />
-          <p className="mt-6 text-[17px] font-medium tracking-tight">{it.t}</p>
-          <p className="mt-1.5 text-[14px] text-type-2">{it.d}</p>
+          <p className="mt-6 text-16-sb">{it.t}</p>
+          <p className="mt-1.5 text-14-r text-type-2">{it.d}</p>
         </Reveal>
       ))}
     </section>
@@ -282,7 +282,7 @@ function Faq() {
     <section className="mx-auto grid max-w-[1360px] gap-10 px-4 md:px-8 lg:grid-cols-[1fr_1.4fr]">
       <div>
         <Eyebrow>FAQ</Eyebrow>
-        <h2 className="mt-4 text-[34px] font-medium leading-[1.05] tracking-[-0.03em] md:text-[48px]">Good to know</h2>
+        <h2 className="mt-4 text-36-sb md:text-48-sb">Good to know</h2>
       </div>
       <Accordion
         defaultOpen={0}

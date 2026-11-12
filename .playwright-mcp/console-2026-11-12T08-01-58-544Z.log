@@ -1,1 +1,129 @@
 [     547ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:15802
+[  742864ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:15802
+[ 1831662ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/index.css?t=1794472349788:1
+[ 1831697ms] [ERROR] [vite] Failed to reload /src/index.css. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831853ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1831857ms] [ERROR] [vite] Failed to reload /src/components/ui/index.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831857ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831858ms] [ERROR] [vite] Failed to reload /src/components/PackageCard.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831858ms] [ERROR] [vite] Failed to reload /src/pages/Checkout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831858ms] [ERROR] [vite] Failed to reload /src/components/CropEditor.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831859ms] [ERROR] [vite] Failed to reload /src/components/Layout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/components/CartBits.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/components/ProductCard.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/state/store.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/components/CartDrawer.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/components/ProductMockup.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/components/CroppedImage.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/pages/Home.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831860ms] [ERROR] [vite] Failed to reload /src/pages/Cart.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/pages/Payment.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/pages/Shop.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/components/OptionGroup.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/components/CheckoutShell.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/components/OrderSummary.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/pages/Product.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1831861ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855641ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855650ms] [ERROR] [vite] Failed to reload /src/components/Layout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855717ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855720ms] [ERROR] [vite] Failed to reload /src/pages/Shop.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855764ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855764ms] [ERROR] [vite] Failed to reload /src/components/CartBits.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855898ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855898ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855903ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855903ms] [ERROR] [vite] Failed to reload /src/components/OptionGroup.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855963ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855963ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855972ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855972ms] [ERROR] [vite] Failed to reload /src/components/CartDrawer.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1855993ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1855993ms] [ERROR] [vite] Failed to reload /src/pages/Product.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856144ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856147ms] [ERROR] [vite] Failed to reload /src/pages/Home.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856159ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856159ms] [ERROR] [vite] Failed to reload /src/components/PackageCard.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856182ms] [ERROR] [vite] Failed to reload /src/components/CheckoutShell.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856204ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856204ms] [ERROR] [vite] Failed to reload /src/pages/Payment.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856211ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856211ms] [ERROR] [vite] Failed to reload /src/pages/Checkout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856217ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856217ms] [ERROR] [vite] Failed to reload /src/components/OrderSummary.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856220ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856220ms] [ERROR] [vite] Failed to reload /src/components/ui/index.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856224ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856224ms] [ERROR] [vite] Failed to reload /src/components/ProductCard.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856245ms] [ERROR] [vite] Failed to reload /src/pages/Packages.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1856263ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1856263ms] [ERROR] [vite] Failed to reload /src/pages/Cart.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870693ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870693ms] [ERROR] [vite] Failed to reload /src/pages/Product.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870718ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870718ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870732ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870732ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870745ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870745ms] [ERROR] [vite] Failed to reload /src/pages/Checkout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870755ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870755ms] [ERROR] [vite] Failed to reload /src/pages/Shop.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870764ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870764ms] [ERROR] [vite] Failed to reload /src/pages/Packages.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870774ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870774ms] [ERROR] [vite] Failed to reload /src/pages/Payment.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870785ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870785ms] [ERROR] [vite] Failed to reload /src/pages/Cart.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870787ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870787ms] [ERROR] [vite] Failed to reload /src/components/Layout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1870800ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1870800ms] [ERROR] [vite] Failed to reload /src/pages/Home.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890234ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890234ms] [ERROR] [vite] Failed to reload /src/components/ui/index.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890284ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890284ms] [ERROR] [vite] Failed to reload /src/components/OptionGroup.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890304ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890304ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890308ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890308ms] [ERROR] [vite] Failed to reload /src/components/ui/index.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890380ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890380ms] [ERROR] [vite] Failed to reload /src/pages/Cart.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890390ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890390ms] [ERROR] [vite] Failed to reload /src/pages/Product.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890397ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890398ms] [ERROR] [vite] Failed to reload /src/pages/Packages.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890402ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890402ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890412ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890412ms] [ERROR] [vite] Failed to reload /src/pages/Home.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890417ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890417ms] [ERROR] [vite] Failed to reload /src/pages/Shop.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890426ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890426ms] [ERROR] [vite] Failed to reload /src/pages/Payment.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890428ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890428ms] [ERROR] [vite] Failed to reload /src/pages/Checkout.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1890441ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1890442ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1897960ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1897960ms] [ERROR] [vite] Failed to reload /src/components/OrderSummary.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1897988ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1897988ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1898011ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1898011ms] [ERROR] [vite] Failed to reload /src/components/CartDrawer.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1904518ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1904518ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1904532ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1904532ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1904538ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1904538ms] [ERROR] [vite] Failed to reload /src/components/CartDrawer.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1909698ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1909698ms] [ERROR] [vite] Failed to reload /src/components/OrderSummary.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1909727ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1909727ms] [ERROR] [vite] Failed to reload /src/pages/Builder.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1909744ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1909744ms] [ERROR] [vite] Failed to reload /src/pages/Product.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1909756ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/tokens/typography.js:1
+[ 1909756ms] [ERROR] [vite] Failed to reload /src/pages/PackageDetail.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5180/@vite/client:364
+[ 1931229ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5180/node_modules/.vite/deps/react-dom_client.js?v=1b55f761:15802

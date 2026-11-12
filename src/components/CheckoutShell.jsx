@@ -16,7 +16,7 @@ export default function CheckoutShell({ step, children }) {
       <header className="border-b border-border bg-surface-1">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Wordmark />
-          <nav className="hidden items-center gap-2 text-[13px] sm:flex">
+          <nav className="hidden items-center gap-2 text-13-r sm:flex">
             {steps.map(([l, to], i) => (
               <span key={l} className="flex items-center gap-2">
                 {i > 0 && <CaretRight size={12} className="text-type-3" />}
@@ -28,7 +28,7 @@ export default function CheckoutShell({ step, children }) {
               </span>
             ))}
           </nav>
-          <span className="flex items-center gap-1.5 text-[12px] text-type-2">
+          <span className="flex items-center gap-1.5 text-12-r text-type-2">
             <Lock size={14} /> Secure checkout
           </span>
         </div>

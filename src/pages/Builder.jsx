@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import {
   X, Check, CheckCircle, ArrowLeft, ArrowRight, ArrowsOut, CaretLeft, CaretRight, MagnifyingGlassMinus, MagnifyingGlassPlus,
-  ArrowCounterClockwise, Rectangle, Warning, Hand, Trash, PencilSimple, Tag, ShieldCheck, Info,
+  ArrowCounterClockwise, Rectangle, Warning, Hand, Trash, PencilSimple, Tag, ShieldCheck, Info, Swap, PlusCircle,
 } from '@phosphor-icons/react'
 import { productById, packageById } from '../data/catalog'
 import { gallery, photos, getPhoto } from '../data/gallery'
@@ -16,6 +16,7 @@ import { DEFAULT_CROP, printDpi, quality } from '../lib/crop'
 import { useStore } from '../state/store'
 import { AnimatedNumber, Badge, Button } from '../components/ui'
 import CropEditor from '../components/CropEditor'
+import OptionGroup from '../components/OptionGroup'
 import CroppedImage from '../components/CroppedImage'
 import ProductMockup from '../components/ProductMockup'
 import { cn, money, plural } from '../lib/utils'
@@ -63,6 +64,69 @@ function initFrom(kind, id, params, lines) {
 const slotTotal = (s) => lineTotal(s.product, s.variant, s.photos.length)
 
 // ---------------------------------------------------------------------------
+// variant switching (product builds only — package variants are fixed)
+
+const sameVariant = (a, b) => Object.keys({ ...a, ...b }).every((k) => a[k] === b[k])
+
+const findTwin = (slots, si, product, variant) =>
+  slots.findIndex((s, i) => i !== si && s.product.id === product.id && sameVariant(s.variant, variant))
+
+/** Position of a photo in the flattened crop list. */
+const flatIndex = (slots, key, pi) => {
+  let n = 0
+  for (const s of slots) {
+    if (s.key === key) return n + pi
+    n += s.photos.length
+  }
+  return 0
+}
+
+/**
+ * Move a single photo to another variant of the same product.
+ * Joins an existing item with that exact variant, otherwise becomes a new item
+ * placed right after its source. A lone photo just switches its item in place.
+ */
+function switchPhotoVariant(slots, si, pi, variant) {
+  const src = slots[si]
+  const entry = src.photos[pi]
+  const next = slots.map((s) => ({ ...s, photos: [...s.photos] }))
+  const ti = findTwin(slots, si, src.product, variant)
+  let at
+  let outcome
+  if (ti > -1) {
+    next[si].photos.splice(pi, 1)
+    next[ti].photos.push(entry)
+    at = { key: next[ti].key, pi: next[ti].photos.length - 1 }
+    outcome = 'joined'
+  } else if (src.photos.length === 1) {
+    next[si].variant = variant
+    at = { key: src.key, pi: 0 }
+    outcome = 'switched'
+  } else {
+    next[si].photos.splice(pi, 1)
+    const added = { key: `split-${Math.random().toString(36).slice(2, 8)}`, product: src.product, variant, qty: null, photos: [entry], split: true }
+    next.splice(si + 1, 0, added)
+    at = { key: added.key, pi: 0 }
+    outcome = 'split'
+  }
+  const kept = next.filter((s) => s.photos.length)
+  return { slots: kept, index: flatIndex(kept, at.key, at.pi), outcome }
+}
+
+/** Switch every photo in an item; merges into an identical item if one exists. */
+function switchSlotVariant(slots, si, pi, variant) {
+  const src = slots[si]
+  const ti = findTwin(slots, si, src.product, variant)
+  if (ti > -1) {
+    const next = slots.map((s, i) => (i === ti ? { ...s, photos: [...s.photos, ...src.photos] } : s)).filter((_, i) => i !== si)
+    const key = slots[ti].key
+    return { slots: next, index: flatIndex(next, key, slots[ti].photos.length + pi), outcome: 'merged' }
+  }
+  const next = slots.map((s, i) => (i === si ? { ...s, variant } : s))
+  return { slots: next, index: flatIndex(next, src.key, pi), outcome: 'switched' }
+}
+
+// ---------------------------------------------------------------------------
 
 function TopBar({ title, step, setStep, canGo, total, compareAt, onClose }) {
   return (
@@ -72,7 +136,7 @@ function TopBar({ title, step, setStep, canGo, total, compareAt, onClose }) {
           <button onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]" aria-label="Close">
             <X size={16} />
           </button>
-          <p className="hidden truncate text-[14px] font-medium md:block">{title}</p>
+          <p className="hidden truncate text-14-sb md:block">{title}</p>
         </div>
         <nav className="flex items-center gap-1">
           {STEPS.map((s, i) => {
@@ -85,12 +149,12 @@ function TopBar({ title, step, setStep, canGo, total, compareAt, onClose }) {
                   onClick={() => canGo(i) && setStep(i)}
                   disabled={!canGo(i)}
                   className={cn(
-                    'relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] transition disabled:cursor-not-allowed',
+                    'relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-13-r transition disabled:cursor-not-allowed',
                     active ? 'text-white' : done ? 'text-type-0 hover:bg-surface-2' : 'text-type-3'
                   )}
                 >
                   {active && <motion.span layoutId="step-pill" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.45, ease }} />}
-                  <span className={cn('relative grid h-5 w-5 place-items-center rounded-full text-[11px] font-medium', active ? 'bg-white/15' : done ? 'bg-type-0 text-white' : 'bg-surface-2')}>
+                  <span className={cn('relative grid h-5 w-5 place-items-center rounded-full text-11-m', active ? 'bg-white/15' : done ? 'bg-type-0 text-white' : 'bg-surface-2')}>
                     {done ? <Check size={11} weight="bold" /> : i + 1}
                   </span>
                   <span className="relative hidden sm:inline">{s}</span>
@@ -100,8 +164,8 @@ function TopBar({ title, step, setStep, canGo, total, compareAt, onClose }) {
           })}
         </nav>
         <div className="flex shrink-0 items-baseline gap-2 text-right">
-          {compareAt && <span className="hidden text-[13px] text-type-3 line-through sm:inline">{money(compareAt)}</span>}
-          <span className="text-[16px] font-medium">
+          {compareAt && <span className="hidden text-13-r text-type-3 line-through sm:inline">{money(compareAt)}</span>}
+          <span className="text-16-sb">
             <AnimatedNumber value={total} format={money} />
           </span>
         </div>
@@ -126,13 +190,13 @@ function SlotPill({ slot, active, onClick, index }) {
         <ProductMockup product={slot.product} variant={slot.variant} items={slot.photos} className="aspect-square" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium">
+        <p className="truncate text-13-m">
           {slot.qty > 1 && `${slot.qty} × `}
           {slot.product.name}
         </p>
-        <p className="text-[12px] text-type-2">{sizeOf(slot.product, slot.variant).label}</p>
+        <p className="truncate text-12-r text-type-2">{variantLabel(slot.product, slot.variant)}</p>
       </div>
-      <span className={cn('flex items-center gap-1 text-[12px] tabular-nums', v.ok ? 'text-success' : 'text-type-2')}>
+      <span className={cn('flex items-center gap-1 text-12-r tabular-nums', v.ok ? 'text-success' : 'text-type-2')}>
         {v.ok ? <CheckCircle size={16} weight="fill" /> : `${slot.photos.length}/${req.min === req.max ? req.max : req.min + '+'}`}
         <span className="sr-only">{index}</span>
       </span>
@@ -157,7 +221,7 @@ function Lightbox({ index, setIndex, selected, onToggle }) {
           {photo && (
             <>
               <div className="flex items-center justify-between text-white">
-                <p className="text-[13px] text-white/60">
+                <p className="text-13-r text-white/60">
                   {photo.name} · {index + 1} / {photos.length}
                 </p>
                 <Dialog.Close className="grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-white/20">
@@ -197,7 +261,7 @@ function Lightbox({ index, setIndex, selected, onToggle }) {
   )
 }
 
-function PhotosStep({ slot, toggle, selectMany, clear, flash }) {
+function PhotosStep({ slot, toggle, selectMany, clear }) {
   const [col, setCol] = useState('All')
   const [lightbox, setLightbox] = useState(null)
   const visible = photos.filter((p) => col === 'All' || p.collection === col)
@@ -212,7 +276,7 @@ function PhotosStep({ slot, toggle, selectMany, clear, flash }) {
             <button
               key={c}
               onClick={() => setCol(c)}
-              className={cn('relative shrink-0 rounded-full px-3.5 py-1.5 text-[13px] transition', col === c ? 'text-white' : 'text-type-1 hover:bg-surface-2')}
+              className={cn('relative shrink-0 rounded-full px-3.5 py-1.5 text-13-r transition', col === c ? 'text-white' : 'text-type-1 hover:bg-surface-2')}
             >
               {col === c && <motion.span layoutId="col-pill" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.4, ease }} />}
               <span className="relative">{c}</span>
@@ -232,19 +296,6 @@ function PhotosStep({ slot, toggle, selectMany, clear, flash }) {
           )}
         </div>
       </div>
-
-      <AnimatePresence>
-        {flash && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="fixed left-1/2 top-20 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-type-0 px-4 py-2 text-[13px] text-white shadow-lg"
-          >
-            <Info size={15} /> {flash}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <motion.div layout className="columns-2 gap-3 pt-2 sm:columns-3 xl:columns-4 2xl:columns-5">
         {visible.map((p, i) => {
@@ -272,7 +323,7 @@ function PhotosStep({ slot, toggle, selectMany, clear, flash }) {
                 />
                 <span
                   className={cn(
-                    'absolute right-3 top-3 grid h-7 min-w-7 place-items-center rounded-full px-1.5 text-[12px] font-semibold transition-all duration-300',
+                    'absolute right-3 top-3 grid h-7 min-w-7 place-items-center rounded-full px-1.5 text-12-sb transition-all duration-300',
                     sel ? 'scale-100 bg-white text-type-0' : 'scale-90 bg-black/25 text-transparent ring-2 ring-white/80 backdrop-blur group-hover:scale-100'
                   )}
                 >
@@ -299,15 +350,105 @@ function PhotosStep({ slot, toggle, selectMany, clear, flash }) {
 // ---------------------------------------------------------------------------
 // Step 2 – Crop
 
-function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
+function VariantPanel({ slot, draft, setDraft, twin, locked, onApply }) {
+  const { product } = slot
+  const changed = draft && !sameVariant(draft, slot.variant)
+  const canSplit = product.mode === 'unit' && slot.photos.length > 1
+  const per = product.mode === 'unit'
+  const priceOf = (v) => (per ? unitPrice(product, v) : unitPrice(product, v, slot.photos.length))
+  const twinLabel = twin && `${product.name} ${sizeOf(product, twin.variant).label}`
+  const actionsRef = useRef(null)
+  const draftKey = draft ? JSON.stringify(draft) : ''
+  // keep the apply buttons in view as options change (the side panel can scroll)
+  useEffect(() => {
+    if (changed) actionsRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [draftKey, changed])
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border">
+      <div className="flex items-start justify-between gap-3 p-3">
+        <div className="min-w-0">
+          <p className="text-13-sb">Print options</p>
+          <p className="text-12-r text-type-2">{variantLabel(product, slot.variant)}</p>
+        </div>
+        {locked ? (
+          <Badge tone="muted" className="shrink-0">Set by package</Badge>
+        ) : (
+          <button
+            onClick={() => setDraft(draft ? null : { ...slot.variant })}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface-2 px-3 py-1 text-12-m text-type-0 transition hover:bg-[#ececec]"
+          >
+            {draft ? 'Cancel' : <><Swap size={13} /> Switch</>}
+          </button>
+        )}
+      </div>
+
+      <AnimatePresence initial={false}>
+        {draft && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-4 border-t border-border p-3">
+              {product.options.map((o) => (
+                <OptionGroup key={o.id} compact option={o} value={draft[o.id]} onChange={(val) => setDraft((d) => ({ ...d, [o.id]: val }))} />
+              ))}
+
+              {changed ? (
+                <div ref={actionsRef} className="space-y-2.5 rounded-lg bg-surface-2 p-3">
+                  <p className="flex items-baseline justify-between text-12-r text-type-2">
+                    <span>{per ? 'Price each' : 'Item price'}</span>
+                    <span className="tabular-nums">
+                      <span className="line-through">{money(priceOf(slot.variant))}</span>{' '}
+                      <span className="text-13-m text-type-0">{money(priceOf(draft))}</span>
+                    </span>
+                  </p>
+                  {canSplit && (
+                    <div>
+                      <Button size="sm" className="w-full" onClick={() => onApply('photo', draft)}>
+                        <PlusCircle size={14} /> Only this photo
+                      </Button>
+                      <p className="mt-1.5 text-11-r text-type-2">
+                        {twin
+                          ? `Moves this photo into your ${twinLabel} item.`
+                          : `Added to your cart as a second ${product.name}. The other ${plural(slot.photos.length - 1, 'photo')} stay as they are.`}
+                      </p>
+                    </div>
+                  )}
+                  <Button size="sm" variant={canSplit ? 'outline' : 'default'} className="w-full" onClick={() => onApply('all', draft)}>
+                    {canSplit ? `Apply to all ${slot.photos.length} photos` : 'Apply'}
+                  </Button>
+                  {!canSplit && twin && <p className="text-11-r text-type-2">Combines with your matching {twinLabel} item.</p>}
+                </div>
+              ) : (
+                <p className="text-12-r text-type-3">Pick a new size or finish. The crop on the left previews it before you apply.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto, locked, onSwitch }) {
   const cur = items[index]
+  const slot = cur && slots[cur.si]
+  const entry = slot?.photos[cur.pi]
+  const [draft, setDraft] = useState(null)
+  // close the switcher whenever the client moves to another photo
+  useEffect(() => setDraft(null), [slot?.key, entry?.photoId])
   if (!cur) return null
-  const slot = slots[cur.si]
-  const entry = slot.photos[cur.pi]
+  const v = draft || slot.variant
   const photo = getPhoto(entry.photoId)
-  const aspect = cellAspect(slot.product, slot.variant, entry.orientation)
-  const inches = frameInches(slot.product, slot.variant, entry.orientation)
+  const aspect = cellAspect(slot.product, v, entry.orientation)
+  const inches = frameInches(slot.product, v, entry.orientation)
   const dpi = printDpi(photo, entry.crop, aspect, inches.w)
+  const twinIdx = draft ? slots.findIndex((s, i) => i !== cur.si && s.product.id === slot.product.id && sameVariant(s.variant, draft)) : -1
+  const multi = !locked && slots.length > 1
   const q = quality(dpi)
   const crop = entry.crop || DEFAULT_CROP
   const canRemove = validate(slot.product, slot.photos.length - 1, slot.qty).ok
@@ -324,14 +465,14 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
             onChange={(c) => updatePhoto(cur.si, cur.pi, { crop: c })}
             className="h-[48svh] min-h-[320px] lg:h-[calc(100svh-300px)]"
           />
-          <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[12px] text-type-1 backdrop-blur">
+          <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-12-r text-type-1 backdrop-blur">
             <Hand size={14} /> Drag to reposition · scroll or pinch to zoom
           </div>
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2">
             <button onClick={() => setIndex(Math.max(0, index - 1))} disabled={index === 0} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow disabled:opacity-40">
               <CaretLeft size={16} />
             </button>
-            <span className="rounded-full bg-white px-3 py-2 text-[12px] font-medium tabular-nums shadow">
+            <span className="rounded-full bg-white px-3 py-2 text-12-m tabular-nums shadow">
               {index + 1} / {items.length}
             </span>
             <button onClick={() => setIndex(Math.min(items.length - 1, index + 1))} disabled={index === items.length - 1} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow disabled:opacity-40">
@@ -349,6 +490,12 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
             return (
               <div key={`${it.si}-${it.pi}`} className="flex shrink-0 items-end gap-2">
                 {first && it.si > 0 && <span className="mx-1 h-12 w-px bg-border" />}
+                {first && (
+                  <span className="w-16 shrink-0 self-center text-11-r text-type-3">
+                    <span className="block truncate" title={s.product.name}>{s.qty ? s.product.name : `Item ${it.si + 1}`}</span>
+                    <span className="text-type-1">{sizeOf(s.product, s.variant).label}</span>
+                  </span>
+                )}
                 <button
                   onClick={() => setIndex(i)}
                   className={cn('relative overflow-hidden rounded-md transition', i === index ? 'ring-2 ring-type-0 ring-offset-2' : 'opacity-70 hover:opacity-100')}
@@ -362,24 +509,42 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
       </div>
 
       {/* controls */}
-      <aside className="space-y-5 rounded-2xl border border-border bg-surface-1 p-5 lg:sticky lg:top-24 lg:self-start">
+      <aside className="no-scrollbar space-y-5 rounded-2xl border border-border bg-surface-1 p-5 lg:sticky lg:top-24 lg:max-h-[calc(100svh-190px)] lg:self-start lg:overflow-y-auto">
         <div>
-          <p className="text-[12px] uppercase tracking-[0.14em] text-type-3">Photo {index + 1} of {items.length}</p>
-          <p className="mt-1 text-[16px] font-medium">{slot.product.name}</p>
-          <p className="text-[13px] text-type-2">
-            {inches.w} × {inches.h}" · {variantLabel(slot.product, slot.variant, { skipSize: true })}
+          <p className="text-12-sb uppercase text-type-3">
+            Photo {index + 1} of {items.length}
+            {multi && ` · Item ${cur.si + 1} of ${slots.length}`}
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <p className="text-16-sb">{slot.product.name}</p>
+            {multi && slot.split && <Badge tone="success">New item</Badge>}
+          </div>
+          <p className="text-13-r text-type-2">
+            {inches.w} × {inches.h}"{draft && <span className="text-type-3"> · previewing</span>}
           </p>
         </div>
 
+        <VariantPanel
+          slot={slot}
+          draft={draft}
+          setDraft={setDraft}
+          twin={twinIdx > -1 ? slots[twinIdx] : null}
+          locked={locked}
+          onApply={(scope, variant) => {
+            setDraft(null)
+            onSwitch(cur, scope, variant)
+          }}
+        />
+
         {slot.product.allowOrientation && (
           <div>
-            <p className="mb-2 text-[13px] font-medium">Orientation</p>
+            <p className="mb-2 text-13-m">Orientation</p>
             <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
               {['portrait', 'landscape'].map((o) => (
                 <button
                   key={o}
                   onClick={() => updatePhoto(cur.si, cur.pi, { orientation: o, crop: DEFAULT_CROP })}
-                  className={cn('relative flex items-center justify-center gap-2 rounded-lg py-2 text-[13px] capitalize transition', entry.orientation === o ? 'text-type-0' : 'text-type-2')}
+                  className={cn('relative flex items-center justify-center gap-2 rounded-lg py-2 text-13-r capitalize transition', entry.orientation === o ? 'text-type-0' : 'text-type-2')}
                 >
                   {entry.orientation === o && <motion.span layoutId="orient" className="absolute inset-0 rounded-lg bg-surface-1 shadow-sm" transition={{ duration: 0.35, ease }} />}
                   <Rectangle size={16} className={cn('relative', o === 'portrait' && 'rotate-90')} />
@@ -392,8 +557,8 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[13px] font-medium">Zoom</p>
-            <span className="text-[12px] tabular-nums text-type-2">{Math.round(crop.zoom * 100)}%</span>
+            <p className="text-13-m">Zoom</p>
+            <span className="text-12-r tabular-nums text-type-2">{Math.round(crop.zoom * 100)}%</span>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => setZoom(crop.zoom - 0.1)} className="text-type-2 hover:text-type-0"><MagnifyingGlassMinus size={18} /></button>
@@ -413,7 +578,7 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
 
         <div
           className={cn(
-            'flex items-start gap-2.5 rounded-xl p-3 text-[13px]',
+            'flex items-start gap-2.5 rounded-xl p-3 text-13-r',
             q.tone === 'good' && 'bg-success-bg text-success',
             q.tone === 'ok' && 'bg-surface-2 text-type-1',
             q.tone === 'low' && 'bg-amber-50 text-amber-800'
@@ -421,7 +586,7 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
         >
           {q.tone === 'low' ? <Warning size={17} className="mt-px shrink-0" /> : <CheckCircle size={17} className="mt-px shrink-0" />}
           <div>
-            <p className="font-medium">{q.label}</p>
+            <p className="text-13-m">{q.label}</p>
             <p className="opacity-80">
               {q.tone === 'low' ? 'Zoom out or choose a smaller size for a sharper print.' : `Prints at ~${dpi} DPI at this size.`}
             </p>
@@ -438,7 +603,7 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto }) {
             </Button>
           )}
         </div>
-        <p className="border-t border-border pt-4 text-[12px] leading-relaxed text-type-3">
+        <p className="border-t border-border pt-4 text-12-r-p text-type-3">
           {gallery.photographer} reviews every crop before your order goes to print.
         </p>
       </aside>
@@ -454,19 +619,28 @@ function ReviewStep({ state, slots, goCrop, total, compareAt }) {
   return (
     <div className="mx-auto max-w-3xl space-y-4 py-4">
       <div>
-        <h2 className="text-[30px] font-medium tracking-[-0.03em] md:text-[40px]">Review your order</h2>
-        <p className="mt-1 text-[15px] text-type-2">Check sizes, quantities and crops before adding to your cart.</p>
+        <h2 className="text-36-sb">Review your order</h2>
+        <p className="mt-1 text-16-r text-type-2">Check sizes, quantities and crops before adding to your cart.</p>
       </div>
+
+      {!pkg && slots.length > 1 && (
+        <div className="flex items-start gap-2.5 rounded-xl bg-surface-2 p-4 text-13-r text-type-1">
+          <Swap size={17} className="mt-px shrink-0" />
+          <p>
+            You switched options for some photos, so this goes into your cart as <b className="font-medium text-type-0">{slots.length} separate items</b>.
+          </p>
+        </div>
+      )}
 
       {pkg && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-type-0 p-5 text-white">
           <div>
-            <p className="text-[12px] uppercase tracking-[0.14em] text-white/50">Package</p>
-            <p className="text-[20px] font-medium">{pkg.name}</p>
+            <p className="text-12-sb uppercase text-white/50">Package</p>
+            <p className="text-20-m">{pkg.name}</p>
           </div>
           <div className="text-right">
-            <p className="text-[13px] text-white/50 line-through">{money(compareAt)}</p>
-            <p className="text-[22px] font-medium">{money(total)}</p>
+            <p className="text-13-r text-white/50 line-through">{money(compareAt)}</p>
+            <p className="text-24-m">{money(total)}</p>
           </div>
           <Badge tone="success" className="w-full justify-center border-0 py-1 sm:w-auto">
             <Tag size={12} /> You save {money(compareAt - total)}
@@ -491,12 +665,15 @@ function ReviewStep({ state, slots, goCrop, total, compareAt }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[17px] font-medium">{s.product.name}</p>
-                  <p className="text-[13px] text-type-2">{variantLabel(s.product, s.variant)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-16-sb">{s.product.name}</p>
+                    {!pkg && s.split && <Badge tone="success">New item</Badge>}
+                  </div>
+                  <p className="text-13-r text-type-2">{variantLabel(s.product, s.variant)}</p>
                 </div>
-                {!pkg && <p className="text-[16px] font-medium">{money(slotTotal(s))}</p>}
+                {!pkg && <p className="text-16-sb">{money(slotTotal(s))}</p>}
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
+              <div className="mt-3 flex flex-wrap gap-2 text-12-r">
                 <Badge tone="muted">Qty {qty}</Badge>
                 <Badge tone="muted">{plural(s.photos.length, 'photo')}</Badge>
                 {!pkg && s.product.mode !== 'book' && <Badge tone="muted">{money(unitPrice(s.product, s.variant))} each</Badge>}
@@ -506,9 +683,9 @@ function ReviewStep({ state, slots, goCrop, total, compareAt }) {
                 {s.photos.slice(0, 14).map((e, i) => (
                   <CroppedImage key={i} photo={getPhoto(e.photoId)} crop={e.crop} aspect={cellAspect(s.product, s.variant, e.orientation)} className="h-12 rounded-[3px] ring-1 ring-black/5" />
                 ))}
-                {s.photos.length > 14 && <span className="self-center text-[12px] text-type-2">+{s.photos.length - 14}</span>}
+                {s.photos.length > 14 && <span className="self-center text-12-r text-type-2">+{s.photos.length - 14}</span>}
               </div>
-              <button onClick={() => goCrop(si)} className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-type-1 hover:text-type-0">
+              <button onClick={() => goCrop(si)} className="mt-4 inline-flex items-center gap-1.5 text-13-m text-type-1 hover:text-type-0">
                 <PencilSimple size={14} /> Edit crops
               </button>
             </div>
@@ -516,7 +693,7 @@ function ReviewStep({ state, slots, goCrop, total, compareAt }) {
         )
       })}
 
-      <div className="flex items-center gap-2 rounded-xl bg-surface-2 p-4 text-[13px] text-type-1">
+      <div className="flex items-center gap-2 rounded-xl bg-surface-2 p-4 text-13-r text-type-1">
         <ShieldCheck size={18} className="shrink-0" /> {gallery.photographer} will review your crops and colour before printing.
       </div>
     </div>
@@ -550,10 +727,11 @@ export default function Builder() {
 
   const pkg = state.packageId && packageById[state.packageId]
   const extras = slots.reduce((s, x) => s + bookExtras(x.product, x.photos.length), 0)
-  const total = pkg ? packagePrice(pkg) + extras : slotTotal(slots[0])
+  const total = pkg ? packagePrice(pkg) + extras : slots.reduce((s, x) => s + slotTotal(x), 0)
   const compareAt = pkg ? packageValue(pkg) + extras : null
   const allValid = slots.every((s) => validate(s.product, s.photos.length, s.qty).ok)
-  const slot = slots[active]
+  const slot = slots[Math.min(active, slots.length - 1)]
+  const multi = !!pkg || slots.length > 1
 
   const setSlots = (fn) => setState((st) => ({ ...st, slots: fn(st.slots) }))
   const updateSlotPhotos = (si, fn) => setSlots((ss) => ss.map((s, i) => (i === si ? { ...s, photos: fn(s.photos) } : s)))
@@ -582,6 +760,23 @@ export default function Builder() {
     setCropIndex((i) => Math.max(0, Math.min(i, items.length - 2)))
   }
 
+  const switchVariant = (cur, scope, variant) => {
+    const src = slots[cur.si]
+    const r = (scope === 'photo' ? switchPhotoVariant : switchSlotVariant)(slots, cur.si, cur.pi, variant)
+    setState((st) => ({ ...st, slots: r.slots }))
+    setCropIndex(r.index)
+    setActive((a) => Math.min(a, r.slots.length - 1))
+    const name = `${src.product.name} ${sizeOf(src.product, variant).label}`
+    setFlash(
+      {
+        split: `Added as a new item · ${name}`,
+        joined: `Moved to your ${name} item`,
+        merged: `Combined with your matching ${name} item`,
+        switched: `Switched to ${variantLabel(src.product, variant)}`,
+      }[r.outcome]
+    )
+  }
+
   const canGo = (i) => i <= step || allValid
   const close = () => nav(-1)
 
@@ -600,16 +795,17 @@ export default function Builder() {
   }
 
   const addToCart = () => {
-    const line =
+    // a product build becomes one cart line per variant (switched photos are their own item)
+    const newLines =
       state.kind === 'package'
-        ? { kind: 'package', packageId: state.packageId, slots: slots.map((s) => ({ slotId: s.key, productId: s.product.id, variant: s.variant, photos: s.photos })) }
-        : { kind: 'product', productId: slots[0].product.id, variant: slots[0].variant, photos: slots[0].photos }
+        ? [{ kind: 'package', packageId: state.packageId, slots: slots.map((s) => ({ slotId: s.key, productId: s.product.id, variant: s.variant, photos: s.photos })) }]
+        : slots.filter((s) => s.photos.length).map((s) => ({ kind: 'product', productId: s.product.id, variant: s.variant, photos: s.photos }))
     if (state.editId) {
-      dispatch({ type: 'update', id: state.editId, line })
+      dispatch({ type: 'replace', id: state.editId, lines: newLines })
       nav('/cart')
       return
     }
-    dispatch({ type: 'add', line })
+    newLines.forEach((line) => dispatch({ type: 'add', line }))
     nav(state.kind === 'package' ? `/packages/${state.packageId}` : `/product/${state.productId}?${new URLSearchParams(slots[0].variant)}`)
     setTimeout(() => setDrawer(true), 350)
   }
@@ -619,7 +815,11 @@ export default function Builder() {
     setStep(1)
   }
 
-  const title = pkg ? `${pkg.name} Package` : `${slot.product.name} · ${variantLabel(slot.product, slot.variant)}`
+  const title = pkg
+    ? `${pkg.name} Package`
+    : slots.length > 1
+      ? `${slot.product.name} · ${plural(slots.length, 'item')}`
+      : `${slot.product.name} · ${variantLabel(slot.product, slot.variant)}`
 
   // bottom bar summary text
   const v = validate(slot.product, slot.photos.length, slot.qty)
@@ -634,6 +834,19 @@ export default function Builder() {
 
   return (
     <div className="min-h-screen bg-surface-0 pb-32">
+      <AnimatePresence>
+        {flash && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="fixed left-1/2 top-20 z-40 flex max-w-[calc(100vw-32px)] -translate-x-1/2 items-center gap-2 rounded-full bg-type-0 px-4 py-2 text-13-r text-white shadow-lg"
+          >
+            <Info size={15} /> {flash}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <TopBar title={title} step={step} setStep={setStep} canGo={canGo} total={total} compareAt={compareAt} onClose={close} />
 
       <AnimatePresence mode="wait">
@@ -648,33 +861,33 @@ export default function Builder() {
           {step === 0 && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
               <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start lg:pt-4">
-                {!pkg && (
+                {!multi && (
                   <div className="hidden overflow-hidden rounded-2xl border border-border bg-surface-1 lg:block">
                     <ProductMockup product={slot.product} variant={slot.variant} items={slot.photos} className="aspect-square" />
                     <div className="p-4">
-                      <p className="text-[15px] font-medium">{slot.product.name}</p>
-                      <p className="text-[13px] text-type-2">{variantLabel(slot.product, slot.variant)}</p>
-                      <button onClick={close} className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium text-type-1 hover:text-type-0">
+                      <p className="text-16-sb">{slot.product.name}</p>
+                      <p className="text-13-r text-type-2">{variantLabel(slot.product, slot.variant)}</p>
+                      <button onClick={close} className="mt-2 inline-flex items-center gap-1 text-12-m text-type-1 hover:text-type-0">
                         <ArrowLeft size={12} /> Change options
                       </button>
                     </div>
                   </div>
                 )}
-                {pkg && (
+                {multi && (
                   <>
-                    <p className="mb-3 hidden text-[12px] uppercase tracking-[0.14em] text-type-3 lg:block">Fill each item</p>
+                    <p className="mb-3 hidden text-12-sb uppercase text-type-3 lg:block">{pkg ? 'Fill each item' : `${slots.length} items`}</p>
                     <div className="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3 pt-3 lg:mx-0 lg:flex-col lg:px-0 lg:pt-0">
                       {slots.map((s, i) => (
-                        <SlotPill key={s.key} slot={s} index={i} active={i === active} onClick={() => setActive(i)} />
+                        <SlotPill key={s.key} slot={s} index={i} active={s === slot} onClick={() => setActive(i)} />
                       ))}
                     </div>
                   </>
                 )}
-                <div className="mt-3 hidden rounded-xl bg-surface-2 p-3 text-[13px] text-type-1 lg:block">{requirementText(slot.product, slot.qty)}</div>
+                <div className="mt-3 hidden rounded-xl bg-surface-2 p-3 text-13-r text-type-1 lg:block">{requirementText(slot.product, slot.qty)}</div>
               </aside>
               <div>
-                {pkg && (
-                  <p className="pt-4 text-[13px] text-type-2">
+                {multi && (
+                  <p className="pt-4 text-13-r text-type-2">
                     Choosing for <span className="font-medium text-type-0">{slot.qty > 1 && `${slot.qty} × `}{slot.product.name}</span> · {requirementText(slot.product, slot.qty)}
                   </p>
                 )}
@@ -683,14 +896,13 @@ export default function Builder() {
                   toggle={toggle}
                   selectMany={selectMany}
                   clear={() => updateSlotPhotos(active, () => [])}
-                  flash={flash}
                 />
               </div>
             </div>
           )}
           {step === 1 && (
             <div className="pt-4">
-              <CropStep slots={slots} items={items} index={Math.min(cropIndex, items.length - 1)} setIndex={setCropIndex} updatePhoto={updatePhoto} removePhoto={removePhoto} />
+              <CropStep slots={slots} items={items} index={Math.min(cropIndex, items.length - 1)} setIndex={setCropIndex} updatePhoto={updatePhoto} removePhoto={removePhoto} locked={pkg ? pkg.name : null} onSwitch={switchVariant} />
             </div>
           )}
           {step === 2 && <ReviewStep state={state} slots={slots} goCrop={goCrop} total={total} compareAt={compareAt} />}
@@ -723,8 +935,8 @@ export default function Builder() {
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-medium">{summary}</p>
-            <p className={cn('truncate text-[12px]', step === 0 && !v.ok && slot.photos.length ? 'text-amber-700' : 'text-type-2')}>
+            <p className="truncate text-14-m">{summary}</p>
+            <p className={cn('truncate text-12-r', step === 0 && !v.ok && slot.photos.length ? 'text-amber-700' : 'text-type-2')}>
               {step === 0 && !v.ok && slot.photos.length
                 ? v.message
                 : pkg
@@ -740,7 +952,7 @@ export default function Builder() {
             </Button>
           )}
           <Button size="lg" onClick={next} disabled={step === 0 && slots.every((s) => !s.photos.length)}>
-            {step === 0 ? 'Continue to crop' : step === 1 ? 'Review' : state.editId ? 'Update cart' : 'Add to cart'}
+            {step === 0 ? 'Continue to crop' : step === 1 ? 'Review' : state.editId ? 'Update cart' : !pkg && slots.length > 1 ? `Add ${slots.length} items to cart` : 'Add to cart'}
             <ArrowRight size={16} />
           </Button>
         </div>
