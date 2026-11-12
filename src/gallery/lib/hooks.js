@@ -23,12 +23,14 @@ export function useBreakpoint() {
 
 /**
  * Infinite scroll. Reveals `batch` more items whenever the sentinel nears the viewport.
+ * `min` forces at least that many to be shown (e.g. to jump to a section further down).
  * Returns how many to show, a ref for the sentinel, and whether everything is shown.
  */
-export function useInfinite(total, { batch = 24, resetKey } = {}) {
-  const [count, setCount] = useState(batch)
+export function useInfinite(total, { batch = 24, resetKey, min = 0 } = {}) {
+  const [stored, setCount] = useState(batch)
   const [loading, setLoading] = useState(false)
   const ref = useRef(null)
+  const count = Math.max(stored, min)
   const done = count >= total
 
   useEffect(() => { setCount(batch) }, [resetKey, batch])
@@ -43,7 +45,7 @@ export function useInfinite(total, { batch = 24, resetKey } = {}) {
         setLoading(true)
         // Short delay stands in for a paginated API request.
         timer = setTimeout(() => {
-          setCount((c) => Math.min(total, c + batch))
+          setCount((c) => Math.min(total, Math.max(c, min) + batch))
           setLoading(false)
           timer = undefined
         }, 350)
@@ -52,7 +54,7 @@ export function useInfinite(total, { batch = 24, resetKey } = {}) {
     )
     io.observe(el)
     return () => { io.disconnect(); clearTimeout(timer) }
-  }, [total, batch, done, count])
+  }, [total, batch, done, count, min])
 
   return { count: Math.min(count, total), ref, done, loading }
 }

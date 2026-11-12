@@ -97,9 +97,21 @@ function LayoutMenu({ settings, onChange }) {
 }
 
 /** Sticky gallery nav: title, collections, layout, favourites, and the entry to the store. */
-export default function NavBar({ gallery, collection, onCollection, counts, settings, onSetting, favCount, showFavs, onToggleFavs, onClearFavs }) {
+export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, showFavs, onToggleFavs, onClearFavs }) {
+  // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
+  const tabsRef = useRef(null)
+  useEffect(() => {
+    const row = tabsRef.current
+    const btn = row?.querySelector('[aria-current="true"]')
+    if (!row || !btn) return
+    const r = row.getBoundingClientRect()
+    const b = btn.getBoundingClientRect()
+    const left = row.scrollLeft + (b.left - r.left) - (r.width - b.width) / 2
+    row.scrollTo({ left, behavior: 'smooth' })
+  }, [collection, showFavs])
+
   return (
-    <div className="sticky top-0 z-40 border-b border-border bg-surface-0/85 backdrop-blur-xl">
+    <div ref={navRef} className="sticky top-0 z-40 border-b border-border bg-surface-0/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between gap-3 px-4 md:px-8">
         <div className="min-w-0">
           <p className="truncate text-16-sb text-type-0">{gallery.client}</p>
@@ -158,12 +170,12 @@ export default function NavBar({ gallery, collection, onCollection, counts, sett
           )}
         </div>
       ) : (
-      <nav aria-label="Collections" className="no-scrollbar mx-auto flex max-w-[1800px] gap-1 overflow-x-auto px-4 pb-2 md:px-8">
-        {gallery.collections.map((c) => (
+      <nav ref={tabsRef} aria-label="Collections" className="no-scrollbar mx-auto flex max-w-[1800px] gap-1 overflow-x-auto px-4 pb-2 md:px-8">
+        {collections.map((c) => (
           <button
             key={c}
             onClick={() => onCollection(c)}
-            aria-pressed={collection === c && !showFavs}
+            aria-current={collection === c && !showFavs}
             className={cn(
               'relative shrink-0 rounded-full px-3 py-1.5 text-14-r text-type-2 transition hover:text-type-0',
               collection === c && !showFavs && 'text-type-0'

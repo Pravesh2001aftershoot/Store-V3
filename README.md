@@ -30,6 +30,9 @@ Product modes: `unit` (1 photo = 1 item, so N photos = qty N), `set` (e.g. tript
 
 ## Client gallery (`src/gallery/`)
 The entry page: Cover → sticky Nav (collections, layout, favourites, **Shop prints** → `/store`) → infinite-scroll grid → lightbox.
+- The grid is **one continuous infinite scroll** through every collection in tab order, each with its own heading (no "All" tab).
+- The collection tabs **auto-switch** as you scroll (scroll-spy), and the active tab slides into view on mobile. Tapping a tab loads that section and scrolls to it.
+- Favourites is a separate flat grid (no sections).
 - Grid options (also URL params, so a layout can be shared, e.g. `/?orientation=horizontal&size=small&spacing=airy`):
   - `orientation` — `vertical` (masonry columns) · `horizontal` (justified rows)
   - `size` — `small` 4 · `medium` 3 · `large` 2 per row on desktop (steps down on tablet/mobile)

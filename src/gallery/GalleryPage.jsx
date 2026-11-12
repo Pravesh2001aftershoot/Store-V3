@@ -1,38 +1,122 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
 import { useGridSettings } from './lib/settings'
 import { useMeasuredPhotos } from './lib/hooks'
 import Cover from './components/Cover'
 import NavBar from './components/NavBar'
-import GalleryGrid from './components/GalleryGrid'
+import GalleryGrid, { sectionId } from './components/GalleryGrid'
 import Lightbox from './components/Lightbox'
 import Toaster from './components/Toaster'
 import { useFavorites } from './lib/actions'
 
-/** Client gallery — the app's entry page. Cover → nav → infinite grid, with a way into the store. */
+// Every collection is a section of one continuous scroll, so there's no "All" tab.
+const COLLECTIONS = gallery.collections.filter((c) => c !== 'All')
+const BATCH = 24
+
+/**
+ * Client gallery — the app's entry page. Cover → nav → one infinite grid of all collections, in order.
+ * The collection tabs follow the scroll (scroll-spy); tapping one jumps to that section.
+ */
 export default function GalleryPage() {
   const [settings, setSetting] = useGridSettings()
-  const [collection, setCollection] = useState('All')
+  const [collection, setCollection] = useState(COLLECTIONS[0])
   const [favorites, toggleFav, clearFavs] = useFavorites(gallery.client)
   const [showFavs, setShowFavs] = useState(false)
   const [lightbox, setLightbox] = useState(null)
+  const [minCount, setMinCount] = useState(0)
+  const [jump, setJump] = useState(null)
   const gridRef = useRef(null)
+  const navRef = useRef(null)
+  const lock = useRef(null) // set while a tab jump is scrolling, so the spy doesn't flick through tabs
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
 
   const photos = useMeasuredPhotos(allPhotos)
-  const counts = useMemo(() => {
-    const c = { All: photos.length }
-    photos.forEach((p) => { c[p.collection] = (c[p.collection] || 0) + 1 })
-    return c
+
+  // All photos grouped by collection (tab order), plus each collection's range in that list.
+  const { ordered, sections } = useMemo(() => {
+    const ordered = []
+    const sections = COLLECTIONS.map((title) => {
+      const start = ordered.length
+      photos.forEach((p) => p.collection === title && ordered.push(p))
+      return { title, start, end: ordered.length }
+    }).filter((s) => s.end > s.start)
+    return { ordered, sections }
   }, [photos])
 
-  const visible = useMemo(() => {
-    if (showFavs) return photos.filter((p) => favorites.has(p.id))
-    return collection === 'All' ? photos : photos.filter((p) => p.collection === collection)
-  }, [photos, collection, showFavs, favorites])
+  const counts = useMemo(() => Object.fromEntries(sections.map((s) => [s.title, s.end - s.start])), [sections])
+  const tabs = useMemo(() => sections.map((s) => s.title), [sections])
 
-  // Keep the nav pinned at the top of the grid when switching views.
+  const favPhotos = useMemo(() => ordered.filter((p) => favorites.has(p.id)), [ordered, favorites])
+  const visible = showFavs ? favPhotos : ordered
+
+  const navBottom = () => navRef.current?.getBoundingClientRect().bottom ?? 0
+
+  // Scroll-spy: the active tab is the last section whose heading has passed under the nav.
+  useEffect(() => {
+    if (showFavs) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      if (lock.current) return
+      const line = navBottom() + 32
+      let active = tabs[0]
+      for (const t of tabs) {
+        const el = document.getElementById(sectionId(t))
+        if (el && el.getBoundingClientRect().top <= line) active = t
+      }
+      // At the very bottom a short last section may never reach the line — count it as active.
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
+      if (atBottom) {
+        const rendered = tabs.filter((t) => document.getElementById(sectionId(t)))
+        if (rendered.length) active = rendered[rendered.length - 1]
+      }
+      setCollection((c) => (c === active ? c : active))
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    update()
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [showFavs, tabs])
+
+  // Tab tap: make sure the section is loaded, then scroll its heading to just under the nav.
+  const goTo = (title) => {
+    const s = sections.find((x) => x.title === title)
+    if (!s) return
+    setShowFavs(false)
+    setCollection(title)
+    setMinCount((m) => Math.max(m, Math.min(s.end, s.start + BATCH)))
+    setJump({ title }) // new object each time, so tapping the same tab twice still scrolls
+  }
+
+  useLayoutEffect(() => {
+    if (!jump) return
+    const el = document.getElementById(sectionId(jump.title))
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.scrollY - (navRef.current?.offsetHeight ?? 0)
+    lock.current = jump.title
+    const release = () => {
+      lock.current = null
+      window.removeEventListener('scrollend', release)
+      window.removeEventListener('wheel', release)
+      window.removeEventListener('touchstart', release)
+      clearTimeout(timer)
+      window.dispatchEvent(new Event('scroll')) // re-sync the spy where the scroll landed
+    }
+    const timer = setTimeout(release, 1500) // fallback where `scrollend` isn't supported
+    window.addEventListener('scrollend', release)
+    window.addEventListener('wheel', release, { passive: true }) // the user took over
+    window.addEventListener('touchstart', release, { passive: true })
+    window.scrollTo({ top, behavior: 'smooth' })
+    return release
+  }, [jump])
+
+  // Keep the nav pinned at the top of the grid when switching to/from favourites.
   const toGrid = () => {
     const top = gridRef.current?.offsetTop ?? 0
     if (window.scrollY > top) window.scrollTo({ top, behavior: 'instant' })
@@ -44,9 +128,11 @@ export default function GalleryPage() {
 
       <div ref={gridRef}>
         <NavBar
+          navRef={navRef}
           gallery={gallery}
+          collections={tabs}
           collection={collection}
-          onCollection={(c) => { setCollection(c); setShowFavs(false); toGrid() }}
+          onCollection={goTo}
           counts={counts}
           settings={settings}
           onSetting={setSetting}
@@ -57,11 +143,13 @@ export default function GalleryPage() {
         />
         <GalleryGrid
           photos={visible}
+          sections={showFavs ? undefined : sections}
           settings={settings}
           favorites={favorites}
           onFavorite={toggleFav}
           onOpen={setLightbox}
-          resetKey={`${collection}|${showFavs}`}
+          resetKey={String(showFavs)}
+          minCount={showFavs ? 0 : minCount}
           emptyMessage={showFavs ? 'No favourites yet. Tap the heart on any photo to add it here.' : undefined}
         />
       </div>
