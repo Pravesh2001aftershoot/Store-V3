@@ -29,13 +29,11 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       .map((r) => ({ ...r, items: photos.slice(r.start, Math.min(r.end, count)) }))
       .filter((b) => b.items.length > 0)
   }, [photos, sections, count])
-  const rounded = settings.spacing === 'airy'
 
   const tile = (offset, { item, index }, style) => (
     <Photo
       key={item.id}
       photo={item}
-      rounded={rounded}
       style={style}
       favorite={favorites.has(item.id)}
       onFavorite={() => onFavorite(item.id)}

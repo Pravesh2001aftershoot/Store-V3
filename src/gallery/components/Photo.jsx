@@ -4,12 +4,12 @@ import { downloadPhoto, sharePhoto } from '../lib/actions'
 import { cn } from '../../lib/utils'
 
 /** One gallery tile. Keeps its aspect ratio; the parent decides its width. */
-export default function Photo({ photo, rounded, favorite, onFavorite, onOpen, onBuy, style, className }) {
+export default function Photo({ photo, favorite, onFavorite, onOpen, onBuy, style, className }) {
   const [loaded, setLoaded] = useState(false)
   return (
     <figure
       style={{ aspectRatio: `${photo.w} / ${photo.h}`, ...style }}
-      className={cn('group relative overflow-hidden bg-surface-2', rounded && 'rounded-sm', className)}
+      className={cn('group relative overflow-hidden bg-surface-2', className)}
     >
       <button onClick={onOpen} className="absolute inset-0 block cursor-zoom-in" aria-label={`Open ${photo.name}`}>
         <img
