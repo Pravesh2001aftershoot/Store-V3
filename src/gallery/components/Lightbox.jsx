@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretLeft, CaretRight, DownloadSimple, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, DownloadSimple, Eye, EyeSlash, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 
 const SWIPE_DISTANCE = 60 // px dragged before release counts as a swipe
@@ -25,7 +25,7 @@ function useCoarsePointer() {
 }
 
 /** Full-screen photo viewer. Arrow keys / Esc, and swipe on touch devices. */
-export default function Lightbox({ photos, index, onIndex, onClose, favorites, onFavorite, onBuy }) {
+export default function Lightbox({ photos, index, onIndex, onClose, favorites, onFavorite, hidden, onHide, onBuy }) {
   const open = index != null && photos[index]
   const photo = open ? photos[index] : null
   const dir = useRef(1) // 1 = moving forward, -1 = backward; drives slide direction
@@ -84,6 +84,15 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
             <div className="flex items-center gap-1">
               <button onClick={() => onFavorite(photo.id)} className={btn} aria-label="Favourite" title="Favourite" aria-pressed={favorites.has(photo.id)}>
                 <Heart size={20} weight={favorites.has(photo.id) ? 'fill' : 'regular'} className={favorites.has(photo.id) ? 'text-destructive' : undefined} />
+              </button>
+              <button
+                onClick={() => onHide(photo.id)}
+                className={btn}
+                aria-label={hidden.has(photo.id) ? 'Unhide photo' : 'Hide photo'}
+                title={hidden.has(photo.id) ? 'Unhide' : 'Hide'}
+                aria-pressed={hidden.has(photo.id)}
+              >
+                {hidden.has(photo.id) ? <Eye size={20} /> : <EyeSlash size={20} />}
               </button>
               <button onClick={() => downloadPhoto(photo)} className={btn} aria-label="Download photo" title="Download">
                 <DownloadSimple size={20} />

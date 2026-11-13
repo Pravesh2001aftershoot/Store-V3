@@ -16,7 +16,7 @@ This doc describes the tokens, primitives and conventions the UI is built with. 
 - **Use a token, not a value.** Pick type, colour and radius from the tokens. Don't use one-off pixel values or hex colours.
 - **Motion should be quiet.** Use one shared easing curve, reveal content once, and animate prices instead of swapping them abruptly.
 - **Design for touch first.** Tap targets should be at least 32px and usually 40px. Every gallery layout works on mobile.
-- **Light theme only, for now.** There is no dark mode yet.
+- **Light theme only, for now.** There is no dark mode yet. The one exception is the gallery footer's Dark background, which re-maps the colour tokens inside the footer only (see Footer backgrounds below).
 
 ## Colour
 
@@ -229,9 +229,12 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 | `CartDrawer` | Radix dialog sheet that holds the cart |
 | `CheckoutShell` | Minimal header and step indicator for checkout and payment |
 | Gallery: `Cover`, `NavBar`, `GalleryGrid`, `Photo`, `Lightbox`, `Toaster` | See `src/gallery/` |
-| `CoverEditor` | 400px left pane on tablet/desktop (`inset-y-2 left-2 rounded-2xl`), bottom sheet on phones (`58svh`, collapses to a `64px` bar). Header: `16-SB` title, `12-R type-2` template name, close and Preview/Edit pills in `surface-2`. A 4-tab pill bar, a scrolling body, and a footer with "Reset all" (ghost) and "Done" (primary). |
-| Cover editor controls (`src/gallery/cover/controls.jsx`) | `Section` (an `11-SB` uppercase `type-2` title with an optional `12-R type-3` hint, separated by hairlines), `Segmented`, `PositionGrid` (3×3 grid over a 16:9 mini cover), `Slider` (the shared `.range` input with a `tabular-nums` value), `Switch` (40×24, `type-0` when on) and `TextField` (40px input with a hint and an `n/limit` counter that turns amber, then `destructive`) |
+| `EditorPane` (`src/gallery/editor/`) | Shared shell for the cover and footer editors. 400px left pane on tablet/desktop (`inset-y-2 left-2 rounded-2xl`), bottom sheet on phones (`58svh`, collapses to a `64px` bar). Header: `16-SB` title, `12-R type-2` subtitle (the template name), close and Preview/Edit pills in `surface-2`. A tab pill bar (one column per tab), a scrolling body, and a footer with "Reset all" (ghost) and "Done" (primary). |
+| `CoverEditor` / `FooterEditor` | Both use `EditorPane`. Cover tabs: Templates, Layout, Text, Photo. Footer tabs: Templates, Content, Socials, Style. Template cards: a scaled live render inside a `rounded-xl` ring card, name `13-M`, description `12-R type-2`. |
+| Cover editor controls (`src/gallery/cover/controls.jsx`) | `Section` (an `11-SB` uppercase `type-2` title with an optional `12-R type-3` hint, separated by hairlines), `Segmented`, `PositionGrid` (3×3 grid over a 16:9 mini cover), `Slider` (the shared `.range` input with a `tabular-nums` value), `Switch` (40×24, `type-0` when on) and `TextField` (40px input with a hint and an `n/limit` counter that turns amber, then `destructive`; an `error` message replaces the hint and turns the border `destructive`; takes an input `type`). Shared by both editors |
 | Cover photo picker (Photo tab) | A dashed upload box (`rounded-xl`, `border-dashed`), an uploaded-photo row (80×56 thumbnail, name, trash icon button), collection chips and a 3-column grid of square thumbnails (`rounded-lg`, 6px gap) with "Show more" (secondary) every 36 |
+| Gallery footer (`src/gallery/footer/Footer.jsx`) | Six templates (Simple, Statement, Let's talk, Photo card, Grid, Wordmark), all on `border-t border-border`. Taglines `20-M` (`24-M` wide; `24-M`/`30-M` in Let's talk), column labels `11-SB` uppercase `type-3`, links `14-R` (`13-M` in single-line rows) `type-1` → `type-0` on hover, small print `12-R type-3`. Calls to action and social icons are outline `Button`s (`icon` size for socials); "Get in touch" uses `Eyebrow`. Photos are `rounded-2xl`. Layouts use container queries, so they follow the footer's width, not the window's. |
+| Footer social editor | One row per profile: a `rounded-xl` input-bordered box with the platform icon, a 40px input, a trash icon button and the resolved link in `11-R type-3`. Unused platforms are `surface-2` 32px chips with a plus and the platform icon. |
 | `PortfolioHeader` | Sticky portfolio bar: back link (label hidden below `sm`), photographer name, section anchor links (`md` and up) and a small "Enquire" `mailto:` button |
 | `Hero` (portfolio) | Greeting (`text-48-sb md:text-72-sb xl:text-96-sb`), disciplines in `20-M type-2`, bio in `16-R-P` (`18-R` from `md`), CTAs, a 4:5 portrait (4:3 on `sm`–`md`), and a facts strip of `11-SB` labels over `14-M` values. "Availability" has a `success` dot. |
 | `ProjectCard` | Portfolio gallery card: 4:5 cover, title `16-M`, "Genre · Location" `13-R type-2`, photo count `13-R type-3 tabular-nums`. On hover: bottom gradient, scrub progress bars and a white arrow disc. |
@@ -256,6 +259,9 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 - **Quality tones.** `good` uses success colours, `ok` is neutral, and `low` uses amber. Low resolution is a warning and never blocks the order.
 - **Prices.** Format with `money()`, which drops the decimals for whole dollars. Strike-through compare-at prices use `type-3`, and savings use `success`.
 - **Empty states.** Title in `20-M` or `30-M`, a one-line `type-2` explanation, and one or two calls to action. The portfolio's no-results state is smaller (`16-M` title, `14-R` hint, one "Clear filters" pill).
+- **Footer backgrounds.** White (`surface-1`, default for every template), Page (`surface-0`), Grey (`surface-2`) and Dark. Dark sets these variables on the footer element only: `surface-0/1` `#181818`, `surface-2` `#2c2c2c`, `type-0` `#fafafa`, `type-1` `#e4e4e7`, `type-2` `#919191`, `type-3` `#71717a`, `border` `#2c2c2c`, `input` `#474747`, `primary` `#fafafa` / `primary-foreground` `#181818`, `ring` `#fafafa`. All values come from the existing palette. Because Tailwind's colours are `@theme inline`, every token class inside the footer picks them up.
+- **Wordmark.** The studio name as an SVG `<text>` with `textLength`, so it fills the width exactly at any size. Medium weight, `-3` letter spacing; `border` colour for a faint mark, `type-0` for a solid one.
+- **Footer columns.** Up to three titled columns (Gallery, Contact, Follow), each an `11-SB` uppercase label over a list with a 10px gap. Empty columns are dropped. On phones, two sit side by side and Contact takes the full row below. Long emails can break after the `@`.
 - **Toasts.**
   - Gallery: `notify(message)` from `gallery/lib/actions.js`.
   - Builder: its own flash bar.
@@ -271,6 +277,9 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 - [ ] Portfolio photos use `alt=""` because they are decorative alongside the gallery title. Give them real alt text once captions exist.
 - [ ] Film strip thumbnails are buttons with `aria-label="View <name>"`; the current one has `aria-current`, and the strip is a `<nav aria-label="Film strip">`.
 - [ ] Cover editor tabs use `role="tablist"` / `role="tab"` with `aria-selected`; segmented controls and the position grid are `radiogroup`s; photo thumbnails and template cards use `aria-pressed`, and thumbnails are labelled "Use <name> as cover". The upload box is a real button, so the file picker works from the keyboard as well as by drag and drop.
+- [ ] Footer template cards are the template render plus a full-size overlay `<button>` (`aria-label="<name> template"`, `aria-pressed`), so the footer's own links aren't nested inside a button. Template renders are `inert`.
+- [ ] "Edit footer" keeps its `aria-label` when the label is hidden on narrow footers. Social icon links have `aria-label` and `title`; the social inputs in the editor have visually hidden labels, and each remove button is labelled "Remove <platform>".
+- [ ] Links and buttons inside the footer's preview stage are disabled while editing, so tapping them can't navigate away from the editor.
 - [ ] Text contrast: `type-2` and `type-3` are for secondary text only. Don't use `type-3` for anything essential.
 
 ## Backlog
@@ -279,4 +288,5 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 - Get the proposed type tokens (display, `24-M`, `18-R`, paragraph, `16-M`) reviewed and added to Figma.
 - Add a dark theme. Tokens are already CSS variables, so this means adding a second set of values. The gallery footer's Dark background already does this locally (`DARK_TOKENS` in `src/gallery/footer/Footer.jsx`) and could seed the global set.
 - Turn the segmented control and the tab pill into shared primitives. Today they are written separately in the gallery NavBar, OptionGroup, the Builder and the portfolio WorkGrid.
-- The portfolio "Clear filters" button uses a hard-coded `hover:bg-[#ededed]`, another case for a `surface-3` token. So do the cover editor's icon pills and collection chips (`hover:bg-[#ececec]`).
+- Promote the footer's `DARK_TOKENS` into a global dark theme, and drop the local override.
+- The portfolio "Clear filters" button uses a hard-coded `hover:bg-[#ededed]`, another case for a `surface-3` token. So do the editor shell's icon pills, the cover editor's collection chips and the footer editor's "Add a profile" chips (`hover:bg-[#ececec]`).

@@ -16,7 +16,7 @@ export const sectionId = (name) => `collection-${name.toLowerCase().replace(/[^a
  *  size         small 4 · medium 3 · large 2 per row (desktop; fewer on smaller screens)
  *  spacing      airy · thin · none
  */
-export default function GalleryGrid({ photos, sections, settings, favorites, onFavorite, onOpen, onBuy, resetKey, minCount = 0, emptyMessage = 'No photos here yet' }) {
+export default function GalleryGrid({ photos, sections, settings, favorites, onFavorite, hidden, onHide, onOpen, onBuy, resetKey, minCount = 0, emptyMessage = 'No photos here yet' }) {
   const bp = useBreakpoint()
   const columns = COLUMNS[settings.size][bp]
   const gap = GAP[settings.spacing][bp]
@@ -37,6 +37,8 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       style={style}
       favorite={favorites.has(item.id)}
       onFavorite={() => onFavorite(item.id)}
+      hidden={hidden.has(item.id)}
+      onHide={() => onHide(item.id)}
       onOpen={() => onOpen(offset + index)}
       onBuy={() => onBuy(item)}
     />

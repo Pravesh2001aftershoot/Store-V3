@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Heart, Handbag, DownloadSimple, ShareNetwork } from '@phosphor-icons/react'
+import { Heart, Handbag, DownloadSimple, ShareNetwork, Eye, EyeSlash } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 import { cn } from '../../lib/utils'
 
 /** One gallery tile. Keeps its aspect ratio; the parent decides its width. */
-export default function Photo({ photo, favorite, onFavorite, onOpen, onBuy, style, className }) {
+export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onOpen, onBuy, style, className }) {
   const [loaded, setLoaded] = useState(false)
   return (
     <figure
@@ -28,6 +28,15 @@ export default function Photo({ photo, favorite, onFavorite, onOpen, onBuy, styl
 
       {/* Hover actions. Hidden on touch screens: tapping opens the loupe, which carries the same actions. */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 [@media(hover:none)]:hidden" />
+      <button
+        onClick={onHide}
+        aria-label={hidden ? 'Unhide photo' : 'Hide photo'}
+        aria-pressed={hidden}
+        title={hidden ? 'Unhide' : 'Hide'}
+        className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-surface-1/90 text-type-0 opacity-0 backdrop-blur transition hover:bg-surface-1 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:hidden"
+      >
+        {hidden ? <Eye size={15} /> : <EyeSlash size={15} />}
+      </button>
       <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:hidden">
         <button
           onClick={onFavorite}

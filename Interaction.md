@@ -174,14 +174,14 @@ The drawer opens from the header cart button on every store screen. It also open
 
 ### Cover editor: [src/gallery/cover/CoverEditor.jsx](src/gallery/cover/CoverEditor.jsx), [controls.jsx](src/gallery/cover/controls.jsx)
 
-Opens from "Edit cover". It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
+Opens from "Edit cover". The pane, sheet, tab pill, tab body and footer come from the shared [EditorPane.jsx](src/gallery/editor/EditorPane.jsx). It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
 | Pane (tablet / desktop) | Open / close | Slides in from the left | `x -100% → 0`, exit `→ -110%`, `0.55s`, `ease` | framer-motion + Radix |
 | Sheet (phone) | Open / close | Slides up from the bottom | `y 100% → 0`, `0.55s`, `ease` | framer-motion + Radix |
 | Sheet (phone) | Grab handle or Preview / Edit button | Collapses to a `64px` bar to show the whole cover, and expands back to `58svh` | `height`, `500ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
-| Tab pill (Templates / Layout / Text / Photo) | Tab changes | The white pill slides | `layoutId="cover-tab"`, `0.35s`, `ease` | framer-motion |
+| Tab pill (Templates / Layout / Text / Photo) | Tab changes | The white pill slides | `layoutId="editor-tab-{title}"` (one per editor), `0.35s`, `ease` | framer-motion |
 | Tab body | Tab changes | Crossfade with a small rise | Enter `opacity 0 → 1`, `y 8 → 0`. Exit `y → -8`. `0.2s`, `ease`. `mode="wait"` | framer-motion |
 | Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected | Tailwind default | Tailwind |
 | Segmented controls (alignment, title size, width, logo, buttons) | Option chosen | The white pill slides | `layoutId="seg-{id}"`, `0.35s`, `ease` | framer-motion |
@@ -196,16 +196,24 @@ Opens from "Edit cover". It uses Radix Dialog with a transparent overlay, so the
 
 ### Footer and footer editor: [src/gallery/footer/Footer.jsx](src/gallery/footer/Footer.jsx), [FooterEditor.jsx](src/gallery/footer/FooterEditor.jsx), [FooterSection.jsx](src/gallery/footer/FooterSection.jsx)
 
-The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/editor/EditorPane.jsx)): same pane and sheet motion, tab pill, Reset all and Done. It's non-modal so the preview stage can scroll.
+Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Content / Socials / Style), tab body crossfade, Reset all and Done. It's non-modal (`modal={false}`): there's no overlay, so the preview stage can scroll, and `FooterSection` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
 | "Edit footer" button (top right of the footer) | Hover / press | Outline [Button](#button-srccomponentsuiindexjsx): `surface-1 → surface-2`. Icon only below a `28rem` footer width. Hidden while editing | Tailwind default | Tailwind |
 | Preview stage | Editor opens / closes | Fades in beside the pane (or above the phone sheet); follows the sheet as it collapses | `opacity 0 → 1`, `0.35s`, `ease`; `left` / `bottom`, `550ms`, `cubic-bezier(.22,1,.36,1)` | framer-motion + Tailwind |
 | Links and buttons in the stage | Click | Nothing: the preview is display only | n/a | n/a |
+| "Live preview" label | Stage scrolls | Stays pinned to the top-left of the stage | `sticky top-0` | CSS |
 | Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Thumbnails are real footers at 1280px, scaled to the card | Tailwind default | Tailwind |
+| Template thumbnails | Template chosen / content edited | Re-render live with the current text and socials; height follows the template | `ResizeObserver` scale of a 1280px render | React |
+| Footer (page and stage) | Template, text, social or background change | Updates instantly; no transition between templates. Dark swaps colour tokens, no motion | n/a | n/a |
+| Switch / Segmented (Content, Socials) | Toggle / option chosen | Same as the cover editor controls | See Cover editor | framer-motion |
+| Email field | Invalid address | Border and hint turn `destructive`; the email disappears from the footer until it's valid | Tailwind default | Tailwind |
 | Social profile row | Focus | Border `→ type-0`, `ring-4 black/5`. The resolved link shows under the input | Tailwind default | Tailwind |
 | "Add a profile" chip | Hover | Fill `surface-2 → #ececec` | Tailwind default | Tailwind |
+| "Add a profile" chip / trash button | Click | The row appears or disappears instantly; the chip moves between the list and the chips | n/a | n/a |
+| Background swatches (Style) | Chosen | Same as the cover editor swatches | Tailwind default | Tailwind |
+| Card photo thumbnails (Style, Photo card only) | Hover / chosen | Same as the cover photo picker | Tailwind default | Tailwind |
 | Footer links and back to top | Hover | Text `type-1` / `type-3` → `type-0` | Tailwind default | Tailwind |
 | Social icon buttons, "Book a session" | Hover / press | Outline [Button](#button-srccomponentsuiindexjsx); the Let's talk button has the sliding arrow | Tailwind default | Tailwind |
 | Wordmark template email | Hover | Underline `border → type-0`, arrow nudges up-right | `translate 0.5`, Tailwind default | Tailwind |
@@ -563,3 +571,5 @@ These are observations, not changes. They are useful when tidying up motion.
 9. **Two toggle styles.** The portfolio grid/list toggle jumps between options, while the gallery layout menu's segmented control slides a pill with `layoutId`.
 10. **Portfolio header is always visible.** The store header hides on scroll down; the portfolio header stays put, and the work toolbar stacks under it, so about 170px of the viewport is chrome while browsing work on mobile (120px on desktop).
 11. **Cover editor collection chips don't slide.** They switch instantly, while the editor's tab bar and segmented controls slide a pill with `layoutId`.
+12. **Footer changes don't animate.** Switching footer templates or backgrounds swaps the layout instantly, while the cover's text block glides between positions. Adding or removing a social profile has no motion either.
+13. **The footer has no entrance motion.** The gallery grid and cover reveal on scroll; the footer simply appears.

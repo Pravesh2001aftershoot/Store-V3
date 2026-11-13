@@ -79,8 +79,8 @@ function Header() {
         </div>
         <div
           className={cn(
-            'border-b transition-all duration-500',
-            scrolled || menu ? 'border-border bg-surface-0/85 backdrop-blur-xl' : 'border-transparent bg-transparent'
+            'border-b bg-surface-0 transition-colors duration-500',
+            scrolled || menu ? 'border-border' : 'border-transparent'
           )}
         >
           <div className="mx-auto flex h-16 max-w-[1360px] items-center justify-between gap-4 px-4 md:px-8">

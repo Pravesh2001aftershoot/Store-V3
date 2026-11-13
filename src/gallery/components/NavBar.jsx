@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretLeft, Handbag, Heart, SlidersHorizontal, X } from '@phosphor-icons/react'
+import { CaretLeft, EyeSlash, Handbag, Heart, SlidersHorizontal, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../lib/settings'
 import { useBreakpoint } from '../lib/hooks'
@@ -167,8 +167,8 @@ function LayoutMenu({ settings, onChange }) {
   )
 }
 
-/** Sticky gallery nav: title, collections, layout, favourites, and the entry to the store. */
-export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, showFavs, onToggleFavs, onClearFavs }) {
+/** Sticky gallery nav: title, collections, layout, the favourites / hidden buckets, and the entry to the store. */
+export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, view, onView, onClearFavs, onUnhideAll }) {
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
@@ -180,26 +180,34 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
     const b = btn.getBoundingClientRect()
     const left = row.scrollLeft + (b.left - r.left) - (r.width - b.width) / 2
     row.scrollTo({ left, behavior: 'smooth' })
-  }, [collection, showFavs, isPhone])
+  }, [collection, view, isPhone])
 
-  const tabs = showFavs ? (
+  const showFavs = view === 'favs'
+  const showHidden = view === 'hidden'
+  const bucket = showFavs
+    ? { label: 'Favourites', count: favCount, action: 'Clear all', confirm: `Remove all ${favCount} favourites?`, run: onClearFavs }
+    : showHidden
+      ? { label: 'Hidden', count: hiddenCount, action: 'Unhide all', confirm: `Show all ${hiddenCount} hidden photos in the gallery again?`, run: onUnhideAll }
+      : null
+
+  const tabs = bucket ? (
       <div className="flex min-w-0 items-center gap-2">
         <button
-          onClick={onToggleFavs}
+          onClick={() => onView(view)}
           className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1.5 text-14-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
         >
           <CaretLeft size={14} /> All photos
         </button>
         <span className="h-4 w-px bg-border" />
         <p className="truncate text-14-m text-type-0">
-          Favourites <span className="text-type-3">{favCount}</span>
+          {bucket.label} <span className="text-type-3">{bucket.count}</span>
         </p>
-        {favCount > 0 && (
+        {bucket.count > 0 && (
           <button
-            onClick={() => window.confirm(`Remove all ${favCount} favourites?`) && onClearFavs()}
+            onClick={() => window.confirm(bucket.confirm) && bucket.run()}
             className="shrink-0 rounded-full px-3 py-1.5 text-13-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
           >
-            Clear all
+            {bucket.action}
           </button>
         )}
       </div>
@@ -209,13 +217,13 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
           <button
             key={c}
             onClick={() => onCollection(c)}
-            aria-current={collection === c && !showFavs}
+            aria-current={collection === c && !bucket}
             className={cn(
               'relative h-full shrink-0 text-14-r text-type-2 transition hover:text-type-0',
-              collection === c && !showFavs && 'text-type-0'
+              collection === c && !bucket && 'text-type-0'
             )}
           >
-            {collection === c && !showFavs && (
+            {collection === c && !bucket && (
               <motion.span layoutId="collection-underline" className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />
             )}
             <span className="relative">
@@ -247,7 +255,21 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
         <div className="flex shrink-0 items-center gap-1">
           <LayoutMenu settings={settings} onChange={onSetting} />
           <button
-            onClick={onToggleFavs}
+            onClick={() => onView('hidden')}
+            aria-pressed={showHidden}
+            aria-label={showHidden ? 'Show all photos' : 'Show hidden photos'}
+            title={showHidden ? 'Show all photos' : 'Show hidden photos'}
+            className={cn(
+              'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+              showHidden && 'bg-surface-2 text-type-0'
+            )}
+          >
+            <EyeSlash size={18} weight={showHidden ? 'bold' : 'regular'} />
+            <span className="hidden md:inline">Hidden</span>
+            <span className="tabular-nums">{hiddenCount}</span>
+          </button>
+          <button
+            onClick={() => onView('favs')}
             aria-pressed={showFavs}
             aria-label={showFavs ? 'Show all photos' : 'Show favourites'}
             title={showFavs ? 'Show all photos' : 'Show favourites'}

@@ -9,7 +9,7 @@ import Lightbox from './components/Lightbox'
 import Toaster from './components/Toaster'
 import QuickBuy from './components/QuickBuy'
 import { registerPhoto } from '../data/gallery'
-import { useFavorites } from './lib/actions'
+import { notify, useFavorites, useHidden } from './lib/actions'
 import FooterSection from './footer/FooterSection'
 
 // Every collection is a section of one continuous scroll, so there's no "All" tab.
@@ -24,7 +24,9 @@ export default function GalleryPage() {
   const [settings, setSetting] = useGridSettings()
   const [collection, setCollection] = useState(COLLECTIONS[0])
   const [favorites, toggleFav, clearFavs] = useFavorites(gallery.client)
-  const [showFavs, setShowFavs] = useState(false)
+  const [hidden, toggleHidden, clearHidden] = useHidden(gallery.client)
+  const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden'
+  const inBucket = view !== 'all' // a flat list (favourites / hidden), not the sectioned gallery
   const [lightboxId, setLightboxId] = useState(null) // id of the photo open in the lightbox
   const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
   const [minCount, setMinCount] = useState(0)
@@ -37,22 +39,26 @@ export default function GalleryPage() {
 
   const photos = useMeasuredPhotos(allPhotos)
 
-  // All photos grouped by collection (tab order), plus each collection's range in that list.
+  // All photos in collection (tab order) — the cover and footer use the full set, hidden or not.
+  const everything = useMemo(() => COLLECTIONS.flatMap((title) => photos.filter((p) => p.collection === title)), [photos])
+
+  // The browsable gallery: hidden photos left out, grouped by collection, plus each collection's range.
   const { ordered, sections } = useMemo(() => {
     const ordered = []
     const sections = COLLECTIONS.map((title) => {
       const start = ordered.length
-      photos.forEach((p) => p.collection === title && ordered.push(p))
+      photos.forEach((p) => p.collection === title && !hidden.has(p.id) && ordered.push(p))
       return { title, start, end: ordered.length }
     }).filter((s) => s.end > s.start)
     return { ordered, sections }
-  }, [photos])
+  }, [photos, hidden])
 
   const counts = useMemo(() => Object.fromEntries(sections.map((s) => [s.title, s.end - s.start])), [sections])
   const tabs = useMemo(() => sections.map((s) => s.title), [sections])
 
   const favPhotos = useMemo(() => ordered.filter((p) => favorites.has(p.id)), [ordered, favorites])
-  const visible = showFavs ? favPhotos : ordered
+  const hiddenPhotos = useMemo(() => everything.filter((p) => hidden.has(p.id)), [everything, hidden])
+  const visible = view === 'favs' ? favPhotos : view === 'hidden' ? hiddenPhotos : ordered
 
   // The lightbox tracks a photo id, not a position, so it can't drift onto another photo when `visible` changes.
   const lightboxIndex = lightboxId == null ? -1 : visible.findIndex((p) => p.id === lightboxId)
@@ -61,6 +67,18 @@ export default function GalleryPage() {
   useEffect(() => {
     if (lightboxId != null && lightboxIndex === -1) setLightboxId(null)
   }, [lightboxId, lightboxIndex])
+
+  // Hiding (or unhiding, in the Hidden bucket) takes the photo out of the current view. If it's open
+  // in the lightbox, step to its neighbour instead of closing.
+  const toggleHide = (id) => {
+    const wasHidden = hidden.has(id)
+    if (lightboxId === id) {
+      const i = visible.findIndex((p) => p.id === id)
+      setLightboxId(visible[i + 1]?.id ?? visible[i - 1]?.id ?? null)
+    }
+    toggleHidden(id)
+    notify(wasHidden ? 'Photo is back in the gallery' : 'Photo hidden — find it under Hidden')
+  }
 
   // Quick buy works on store photos, so register this gallery photo with the store first.
   const buy = (photo) => {
@@ -72,7 +90,7 @@ export default function GalleryPage() {
 
   // Scroll-spy: the active tab is the last section whose heading has passed under the nav.
   useEffect(() => {
-    if (showFavs) return
+    if (inBucket) return
     let frame = 0
     const update = () => {
       frame = 0
@@ -100,13 +118,13 @@ export default function GalleryPage() {
       window.removeEventListener('resize', onScroll)
       cancelAnimationFrame(frame)
     }
-  }, [showFavs, tabs])
+  }, [inBucket, tabs])
 
   // Tab tap: make sure the section is loaded, then scroll its heading to just under the nav.
   const goTo = (title) => {
     const s = sections.find((x) => x.title === title)
     if (!s) return
-    setShowFavs(false)
+    setView('all')
     setCollection(title)
     setMinCount((m) => Math.max(m, Math.min(s.end, s.start + BATCH)))
     setJump({ title }) // new object each time, so tapping the same tab twice still scrolls
@@ -134,7 +152,7 @@ export default function GalleryPage() {
     return release
   }, [jump])
 
-  // Keep the nav pinned at the top of the grid when switching to/from favourites.
+  // Keep the nav pinned at the top of the grid when switching between all photos and a bucket.
   const toGrid = () => {
     const top = gridRef.current?.offsetTop ?? 0
     if (window.scrollY > top) window.scrollTo({ top, behavior: 'instant' })
@@ -142,7 +160,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CoverSection gallery={gallery} photo={coverPhoto} photos={ordered} collections={tabs} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <CoverSection gallery={gallery} photo={coverPhoto} photos={everything} collections={tabs} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <div ref={gridRef}>
         <NavBar
@@ -154,26 +172,34 @@ export default function GalleryPage() {
           counts={counts}
           settings={settings}
           onSetting={setSetting}
-          favCount={favorites.size}
-          showFavs={showFavs}
-          onToggleFavs={() => { setShowFavs((v) => !v); toGrid() }}
-          onClearFavs={() => { clearFavs(); setShowFavs(false) }}
+          favCount={favPhotos.length}
+          hiddenCount={hidden.size}
+          view={view}
+          onView={(v) => { setView((cur) => (cur === v ? 'all' : v)); toGrid() }}
+          onClearFavs={() => { clearFavs(); setView('all') }}
+          onUnhideAll={() => { clearHidden(); setView('all') }}
         />
         <GalleryGrid
           photos={visible}
-          sections={showFavs ? undefined : sections}
+          sections={inBucket ? undefined : sections}
           settings={settings}
           favorites={favorites}
           onFavorite={toggleFav}
+          hidden={hidden}
+          onHide={toggleHide}
           onOpen={openAt}
           onBuy={buy}
-          resetKey={String(showFavs)}
-          minCount={showFavs ? 0 : minCount}
-          emptyMessage={showFavs ? 'No favourites yet. Tap the heart on any photo to add it here.' : undefined}
+          resetKey={view}
+          minCount={inBucket ? 0 : minCount}
+          emptyMessage={
+            view === 'favs' ? 'No favourites yet. Tap the heart on any photo to add it here.'
+            : view === 'hidden' ? 'No hidden photos. Photos you hide will wait here.'
+            : undefined
+          }
         />
       </div>
 
-      <FooterSection gallery={gallery} coverPhoto={coverPhoto} photos={ordered} onGallery={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <FooterSection gallery={gallery} coverPhoto={coverPhoto} photos={everything} onGallery={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <Lightbox
         photos={visible}
@@ -182,6 +208,8 @@ export default function GalleryPage() {
         onClose={() => setLightboxId(null)}
         favorites={favorites}
         onFavorite={toggleFav}
+        hidden={hidden}
+        onHide={toggleHide}
         onBuy={buy}
       />
       <QuickBuy photo={buying} onClose={() => setBuying(null)} />

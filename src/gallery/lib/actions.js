@@ -71,10 +71,9 @@ export async function sharePhoto(photo) {
   }
 }
 
-// ── Favourites (persisted per gallery) ──────────────────────────────────────
-export function useFavorites(key) {
-  const storageKey = `gallery-favs:${key}`
-  const [favorites, setFavorites] = useState(() => {
+// ── Favourites & hidden photos (each a set of photo ids, persisted per gallery) ──
+function usePersistedIds(storageKey) {
+  const [ids, setIds] = useState(() => {
     try {
       return new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'))
     } catch {
@@ -83,21 +82,24 @@ export function useFavorites(key) {
   })
   useEffect(() => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify([...favorites]))
+      localStorage.setItem(storageKey, JSON.stringify([...ids]))
     } catch {
-      /* storage unavailable — favourites last for this visit only */
+      /* storage unavailable — the set lasts for this visit only */
     }
-  }, [favorites, storageKey])
+  }, [ids, storageKey])
 
   const toggle = useCallback(
     (id) =>
-      setFavorites((s) => {
+      setIds((s) => {
         const n = new Set(s)
         n.has(id) ? n.delete(id) : n.add(id)
         return n
       }),
     []
   )
-  const clear = useCallback(() => setFavorites(new Set()), [])
-  return [favorites, toggle, clear]
+  const clear = useCallback(() => setIds(new Set()), [])
+  return [ids, toggle, clear]
 }
+
+export const useFavorites = (key) => usePersistedIds(`gallery-favs:${key}`)
+export const useHidden = (key) => usePersistedIds(`gallery-hidden:${key}`)
