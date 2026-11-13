@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowUpRight, Handbag, List, X, Images } from '@phosphor-ico
 import { categories } from '../data/catalog'
 import { useCatalogVersion } from '../data/storeConfig'
 import { gallery } from '../data/gallery'
-import { galleryPath, useActiveGallery, DEFAULT_GALLERY } from '../data/galleries'
+import { galleryPath, useActiveGallery } from '../data/galleries'
 import { useStore } from '../state/store'
 import { cn } from '../lib/utils'
 import CartDrawer from './CartDrawer'
@@ -64,7 +64,7 @@ function Header() {
 
   // The gallery the client came from: its name in the banner, and where "Back to gallery" goes.
   const active = useActiveGallery()
-  const back = active.id === DEFAULT_GALLERY ? '/' : galleryPath(active.id)
+  const back = galleryPath(active.id)
 
   const links = [
     { to: '/shop', label: 'Shop all' },

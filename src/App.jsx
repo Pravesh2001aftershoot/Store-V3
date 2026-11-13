@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
@@ -17,9 +17,9 @@ import PhotographerDashboard from './photographer-dashboard/PhotographerDashboar
 export default function App() {
   return (
     <Routes>
-      {/* Client gallery is the entry page; the print store opens from it. */}
-      <Route index element={<GalleryPage />} />
-      {/* Every other gallery the photographer has made. */}
+      {/* The photographer dashboard is the entry point: galleries are created and shared from there. */}
+      <Route index element={<Navigate to="/dashboard" replace />} />
+      {/* A client gallery (the link the photographer shares). The print store opens from it. */}
       <Route path="g/:galleryId" element={<GalleryPage />} />
       {/* Photographer portfolio, opened from the photographer's name in the gallery nav. */}
       <Route path="portfolio" element={<PortfolioPage />} />

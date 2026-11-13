@@ -38,7 +38,7 @@ The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Esteban Gil
 
 ## 5. Scope and requirements
 
-### 5.1 Client gallery (`/`)
+### 5.1 Client gallery (`/g/:galleryId`)
 
 | # | Requirement | Status |
 |---|---|---|

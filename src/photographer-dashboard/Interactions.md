@@ -46,7 +46,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 5. New photos appear at the end of the collection with a "New" tag.
 
 ### Collections
-- The chip row is sticky under the top bar: **All photos**, each collection with its count, **New collection**, and **Removed** (only when something is removed). It scrolls sideways on phones.
+- The chip row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New collection**, and **Removed** (only when something is removed). It scrolls sideways on phones.
 - **New collection** turns into an inline name field. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
 - Open a collection, then use **⋯** for **Rename** (inline field, same rules), **Add photos here**, **Move earlier** / **Move later**, or **Delete collection**.
 - **Delete** asks first if the collection has photos ("Its 89 photos move to Golden Hour"), then shows All. It's disabled when only one collection is left.

@@ -6,7 +6,7 @@ It is front end only. All data is mocked, and the cart and favourites are saved 
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 (opens the photographer dashboard)
 npm run build    # production build → dist/
 ```
 
@@ -25,14 +25,15 @@ In dev, Locator is enabled: alt-click any element to open its source file.
 
 ## Flow
 
-1. **Gallery** (`/`, the entry page)
-2. **Shop prints** opens the Store (`/store`)
-3. Category (`/shop/:id`)
-4. Product page (`/product/:id`), where the client picks options
-5. **Builder** (`/build/:kind/:id`): select photos → crop → review
-6. Cart (`/cart`, or the cart drawer)
-7. Checkout (`/checkout`)
-8. Payment (`/payment`). The prototype ends at **Make payment**.
+1. **Photographer dashboard** (`/` → `/dashboard`, the entry point): create a gallery, add photos, design it, pick its store catalog, then share its link
+2. **Gallery** (`/g/:galleryId`), the link the client opens. The sample gallery is `/g/lexie-taylor`
+3. **Shop prints** opens the Store (`/store`)
+4. Category (`/shop/:id`)
+5. Product page (`/product/:id`), where the client picks options
+6. **Builder** (`/build/:kind/:id`): select photos → crop → review
+7. Cart (`/cart`, or the cart drawer)
+8. Checkout (`/checkout`)
+9. Payment (`/payment`). The prototype ends at **Make payment**.
 
 Packages (`/packages`) go through the same Builder, with one slot per item in the package.
 
@@ -51,7 +52,7 @@ src/
 ├── components/             Store UI: Layout, CartDrawer, ProductMockup, CropEditor, OptionGroup…
 ├── components/ui/          Primitives: Button, Badge, Eyebrow, Reveal, AnimatedNumber, Accordion, Field
 ├── pages/                  Store pages, including Builder.jsx (photos → crop → review)
-├── gallery/                Client gallery (entry page), kept self-contained
+├── gallery/                Client gallery (/g/:galleryId), kept self-contained
 ├── tokens/typography.js    Type tokens (source of truth)
 └── index.css               Colour tokens and Tailwind theme
 ```

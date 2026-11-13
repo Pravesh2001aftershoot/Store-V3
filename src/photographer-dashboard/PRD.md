@@ -45,7 +45,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - G2. **New gallery** (sidebar, page header or card) asks for a title (required, up to 60 characters), client name (defaults to the title), date (defaults to this month), the store catalog, and whether to start empty or with the sample photos. Creating it opens its Photos step. A new gallery has one collection, "Highlights".
 - G3. A card's menu: Edit gallery, Settings, View as client, Delete. Inside a gallery, the header has a breadcrumb back to Galleries, the gear (Settings) and View.
 - G4. **Settings** edits the title, client, date and catalog. Delete is there too, after a confirmation; it removes the gallery's photos (including uploads), design and link. The last gallery can't be deleted.
-- G5. Each gallery has its own photos, collections, cover, grid, headings and footer. Clients open it at `/g/<id>`; `/` still opens the sample gallery. An unknown link shows "This gallery isn't available".
+- G5. Each gallery has its own photos, collections, cover, grid, headings and footer. Clients open it at `/g/<id>`. The app opens on the dashboard (`/` redirects to `/dashboard`). An unknown link shows "This gallery isn't available".
 - G6. The print store follows the gallery the client came from: its banner names that gallery, "Back to gallery" returns to it, and it sells from that gallery's catalog.
 
 ### Gallery: Photos (step 1)

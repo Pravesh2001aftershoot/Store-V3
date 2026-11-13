@@ -233,7 +233,7 @@ export default function PhotosStep({ ws }) {
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
 
       {/* Collections */}
-      <div style={{ top }} className="sticky z-20 -mx-4 mt-6 border-b border-border bg-surface-0/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+      <div style={{ top }} className="sticky z-20 -mx-4 mt-6 border-b border-border bg-surface-0 px-4 py-3 md:-mx-6 md:px-6">
         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
           <Chip active={active === ALL} count={photos.length} onClick={() => setActive(ALL)}>All photos</Chip>
           <span className="h-5 w-px shrink-0 bg-border" />

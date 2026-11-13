@@ -33,7 +33,7 @@ const BATCH = 24
 export default function GalleryPage() {
   const params = useParams()
   const { galleries } = useGalleries()
-  // `/` shows the sample gallery (or the newest one if it was deleted); `/g/:id` any other.
+  // Rendered at `/g/:id`. Without an id (not routed today), fall back to the sample or the newest gallery.
   const galleryId = params.galleryId ?? (galleries.some((g) => g.id === DEFAULT_GALLERY) ? DEFAULT_GALLERY : galleries[0].id)
   const data = useGalleryData(galleryId)
   useEffect(() => { if (data) setActiveGallery(galleryId) }, [data, galleryId])

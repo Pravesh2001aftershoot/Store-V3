@@ -36,7 +36,7 @@ src/
 ├── components/           Store UI (Layout, CartDrawer, ProductMockup, CropEditor, OptionGroup…)
 │   └── ui/index.jsx      Primitives: Button, Badge, Reveal, SplitText, AnimatedNumber, Accordion, Field
 ├── pages/                Store routes (Home, Shop, Product, Packages, PackageDetail, Builder, Cart, Checkout, Payment)
-├── gallery/              Client gallery module (entry page), kept self-contained
+├── gallery/              Client gallery module (/g/:galleryId), kept self-contained
     ├── GalleryPage.jsx   Page composition, scroll-spy, tab jumps, views (favourites / hidden / people / sets), multi-select
     ├── components/       NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster, QuickBuy, SelectionBar, FacePane (Find people)
     ├── templates/        Editable page templates, one folder per kind
@@ -78,10 +78,10 @@ Defined in `src/App.jsx`.
 
 | Path | Component | Shell |
 |---|---|---|
-| `/` | `GalleryPage` | Own layout (cover + sticky nav) |
+| `/` | Redirects to `/dashboard` | The photographer dashboard is the entry point |
 | `/portfolio` | `PortfolioPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
 | `/portfolio/:slug` | `ProjectPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
-| `/g/:galleryId` | `GalleryPage` for that gallery | Same page as `/`; unknown ids show "This gallery isn't available" |
+| `/g/:galleryId` | `GalleryPage` for that gallery | Own layout (cover + sticky nav). The client's link; the sample is `/g/lexie-taylor`. Unknown ids show "This gallery isn't available" |
 | `/dashboard/*` | `PhotographerDashboard` (galleries, galleries/:id/:step, portfolio, store, store/:catalogId) | Own layout; see `src/photographer-dashboard/Architecture.md` |
 | `/store` | `Home` | `Layout` (header, footer, cart drawer) |
 | `/shop`, `/shop/:categoryId` | `Shop` | `Layout` |
@@ -325,7 +325,7 @@ These are the places that would be swapped out for real services:
 ## Known gaps / tech debt
 
 - **Two photo sets.** The store builder picks from the 28 photos in `data/gallery.js`, while the gallery page shows up to 200, or the local images. Photos dropped into `gallery/assets/photos/` do not appear in the builder.
-- **Portfolio galleries are synthetic.** They are fixed-size slices of a genre folder with mock names, places and dates, and are unrelated to the client gallery at `/`. Portfolio photos can't be opened in a lightbox or bought.
+- **Portfolio galleries are synthetic.** They are fixed-size slices of a genre folder with mock names, places and dates, and are unrelated to the client galleries at `/g/:galleryId`. Portfolio photos can't be opened in a lightbox or bought.
 - **Portfolio images are committed to the repo.** About 500 web-sized JPEGs live in `src/portfolio/assets/work/` and are emitted as build assets. Only their URLs are in the JS bundle; each image downloads when it renders.
 - **Cover uploads live in `localStorage`.** A data URL is roughly 0.5–1.5MB, so it shares the ~5MB browser quota with everything else and can fail to save. The cover editor is also open to every visitor; there is no photographer mode yet.
 - **Footer settings are per device too.** Like the cover, the footer editor is open to every visitor and its settings live in `localStorage`. Social handles aren't checked against the platform, and the Photo card caption ("Loved these photos?") isn't editable.

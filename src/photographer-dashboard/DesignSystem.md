@@ -73,6 +73,7 @@ Prices and counts always use `tabular-nums`.
 - **Gallery header.** Breadcrumb `12-R type-3` (Galleries › client) over the title `14-M`, the step bar centred, ⚙ `IconButton` and an outline **View** pill on the right.
 
 - **Step bar.** Numbered 28px discs: the current step is `primary`, done steps show a tick on `type-0/10`, and a hairline connects them. The active step sits on a `surface-2` pill that slides between steps (`layoutId`).
+- **Collection bar** (Photos). A sticky row of chips on solid `surface-0` (no transparency or blur, so photos never show through) with a `border-b`; it scrolls sideways on phones.
 - **Photo tile.** Square, `rounded-lg`, `object-cover`. Selected: the photo insets to 90% with a check on `type-0`. Hover: a 10% black wash and the check outline. Tags sit top right. The drop position is a 4px `type-0` bar on the left edge.
 - **Selection bar.** A floating `type-0` pill (max 720px), white text: clear ✕, count, Select all, then actions with icon and label (icon only on phones). It sits 20px from the bottom.
 - **List row** (store). `rounded-2xl`, `border`, `surface-1`: drag handle, 56px thumbnail (the store's own `ProductMockup` at 25%), title with tags, `12-R` meta, price block, chevron and switch. The open row gets a `type-0` border and a 4px `black/5` ring. Hidden rows grey out their thumbnail.

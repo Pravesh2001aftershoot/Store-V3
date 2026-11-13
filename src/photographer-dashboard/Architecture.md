@@ -64,7 +64,7 @@ Settings modules (outside this folder, owned by their module):
 | `/dashboard/store/:catalogId` | `StoreTab`; an unknown catalog redirects to the list |
 | `/dashboard/gallery/:step?` | Old URL: redirects to the sample gallery |
 
-Client routes added in `App.jsx`: `/g/:galleryId` renders `GalleryPage` for that gallery (`/` is still the sample gallery, or the newest one if it was deleted).
+Client routes in `App.jsx`: `/` redirects to `/dashboard` (the app's entry point), and `/g/:galleryId` renders `GalleryPage` for that gallery. The store's "Back to gallery" and the portfolio's "Gallery" link go to the active gallery's `/g/<id>`.
 
 ## Galleries: `data/galleries.js`
 

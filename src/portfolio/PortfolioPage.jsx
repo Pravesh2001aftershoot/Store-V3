@@ -5,6 +5,7 @@ import Hero from './components/Hero'
 import WorkGrid from './components/WorkGrid'
 import Contact from './components/Contact'
 import { scrollToEl, usePreviewTarget } from '../lib/embed'
+import { galleryPath, useActiveGallery } from '../data/galleries'
 
 const LINKS = [
   { href: '#work', label: 'Work' },
@@ -21,6 +22,7 @@ export default function PortfolioPage() {
   // Runs on arrival only: in-page links (#work, #about…) change the hash too, and re-running here
   // would cut their smooth scroll (html has `scroll-behavior: smooth`) short with an instant jump.
   const { hash } = useLocation()
+  const active = useActiveGallery() // the gallery the client came from: where "Gallery" goes back to
   useEffect(() => {
     const el = hash && document.getElementById(hash.slice(1))
     if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'instant' }))
@@ -35,7 +37,7 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-surface-0">
-      <PortfolioHeader back={{ to: '/', label: 'Gallery' }} links={LINKS} />
+      <PortfolioHeader back={{ to: galleryPath(active.id), label: 'Gallery' }} links={LINKS} />
       <main>
         <Hero />
         <WorkGrid />

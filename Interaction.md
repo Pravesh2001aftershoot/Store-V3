@@ -151,7 +151,7 @@ The drawer opens from the header cart button on every store screen. It also open
 
 ---
 
-## Gallery (`/`)
+## Gallery (`/g/:galleryId`)
 
 ### Cover: [src/gallery/templates/cover/Cover.jsx](src/gallery/templates/cover/Cover.jsx)
 
