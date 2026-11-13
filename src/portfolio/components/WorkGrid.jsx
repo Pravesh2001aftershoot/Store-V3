@@ -17,6 +17,8 @@ const SORTS = [
 ]
 const DEFAULTS = { genre: 'all', sort: 'newest', view: 'grid', q: '' }
 const BATCH = { grid: 12, list: 30 }
+// Search, sort and grid/list toggle are hidden for now — flip to bring them back.
+const SHOW_CONTROLS = false
 
 /** Filter state lives in the URL, so a filtered portfolio can be shared by link. Defaults are left out. */
 function useWorkParams() {
@@ -106,6 +108,7 @@ export default function WorkGrid() {
             ))}
           </nav>
 
+          {SHOW_CONTROLS && (
           <div className="flex items-center gap-2 py-3 lg:py-0">
             <label className="relative flex h-9 min-w-0 flex-1 items-center lg:w-64 lg:flex-none">
               <MagnifyingGlass size={16} className="pointer-events-none absolute left-3 text-type-3" />
@@ -151,6 +154,7 @@ export default function WorkGrid() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
 
