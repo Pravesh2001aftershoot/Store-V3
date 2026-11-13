@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowCounterClockwise, CaretDown, CaretUp, Check, CircleNotch, TextAlignCenter, TextAlignLeft, TextAlignRight, Trash, UploadSimple, X } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, CaretDown, CaretLeft, CaretRight, CaretUp, Check, CircleNotch, Crosshair, Trash, UploadSimple, X } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn } from '../../lib/utils'
 import {
-  ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO, MARGIN_X, MARGIN_Y, PHOTO_SIZE,
+  ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO_ALIGN, LOGO_PLACEMENT, MARGIN_X, MARGIN_Y, PHOTO_SIZE,
   SHAPES, SURFACES, TEMPLATES, TITLE_SIZE, WIDTH, isComposed, photoCount,
 } from './config'
 import { FocalPoint, Label, PositionGrid, Section, Segmented, Slider, Swatches, Switch, TextField } from './controls'
@@ -18,11 +18,6 @@ const TABS = [
   { id: 'layout', label: 'Layout' },
   { id: 'text', label: 'Text' },
   { id: 'photo', label: 'Photo' },
-]
-const ALIGN_ICONS = [
-  { id: 'left', label: 'Align left', icon: TextAlignLeft },
-  { id: 'center', label: 'Align center', icon: TextAlignCenter },
-  { id: 'right', label: 'Align right', icon: TextAlignRight },
 ]
 
 /** Pane width on tablet/desktop. CoverSection uses it to shift the cover preview clear of the pane. */
@@ -172,22 +167,18 @@ function TemplatesTab({ cover, photo, slots, gallery }) {
   }
   return (
     <div>
-      <p className="mb-1 text-12-r text-type-2">Start from a template, then fine-tune it under Layout and Text. Your words are kept.</p>
-      <Section title="Full bleed" hint="The photo fills the screen, text on top.">
-        <div className="grid grid-cols-2 gap-3">{TEMPLATES.map((t) => card(t, <TemplateThumb template={t} photo={photo} />))}</div>
-      </Section>
-      <Section title="Composed" hint="The photo is placed on a backdrop. Pick its shape and size under Layout.">
-        <div className="grid grid-cols-2 gap-3">
-          {COMPOSED_TEMPLATES.map((t) => card(t, <ComposedThumb template={t} slots={slots} gallery={gallery} content={cover.config.content} />))}
-        </div>
-      </Section>
+      <p className="mb-4 text-12-r text-type-2">Start from a template, then fine-tune it under Layout and Text. Your words are kept.</p>
+      <div className="grid grid-cols-2 gap-3">
+        {TEMPLATES.map((t) => card(t, <FullBleedThumb template={t} photo={photo} gallery={gallery} content={cover.config.content} />))}
+        {COMPOSED_TEMPLATES.map((t) => card(t, <ComposedThumb template={t} slots={slots} gallery={gallery} content={cover.config.content} />))}
+      </div>
     </div>
   )
 }
 
-/** The composed cover itself, rendered at a desktop size and scaled down to fit the card. */
+/** A cover rendered at a desktop size and scaled down to fit the card, so thumbnails look like the real thing. */
 const VW = 1200
-function ComposedThumb({ template, slots, gallery, content }) {
+function ScaledThumb({ className, children }) {
   const ref = useRef(null)
   const [scale, setScale] = useState(0.14)
   useLayoutEffect(() => {
@@ -196,75 +187,70 @@ function ComposedThumb({ template, slots, gallery, content }) {
     return () => ro.disconnect()
   }, [])
   return (
-    <div ref={ref} inert className="relative aspect-[4/3] overflow-hidden rounded-[10px] bg-surface-2">
+    <div ref={ref} inert className={cn('relative aspect-[4/3] overflow-hidden rounded-[10px]', className)}>
       <div className="absolute left-0 top-0 origin-top-left" style={{ width: VW, height: VW * 0.75, transform: `scale(${scale})` }}>
-        <Composed gallery={gallery} slots={slots} config={{ layout: template.layout, show: template.show, content }} still />
+        {children}
       </div>
     </div>
   )
 }
 
-/** A wireframe of the template over the cover photo: logo, eyebrow, title, subtitle and buttons as bars. */
-function TemplateThumb({ template, photo }) {
-  const { layout: L, show } = template
-  const [v, h] = L.position.split('-')
-  const items = { left: 'items-start', center: 'items-center', right: 'items-end' }[L.align]
-  const pad = { x: 6 + L.marginX / 8, y: 6 + L.marginY / 10 }
-  const title = { s: 'h-2 w-12', m: 'h-2.5 w-16', l: 'h-3.5 w-20' }[L.titleSize]
-  const logoBar = <span className="block h-1.5 w-6 rounded-full bg-white/90" />
-  const store = show.storeLink && <span className="block h-2.5 w-8 rounded-full border border-white/60" />
-  const right = L.logo === 'top-right'
+function ComposedThumb({ template, slots, gallery, content }) {
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-[10px] bg-type-0">
-      {photo && <img src={photo.thumb ?? photo.src} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />}
-      <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${0.15 + L.overlay / 200})` }} />
-      <div className="absolute inset-x-0 top-0 flex items-center justify-between px-2 py-2">
-        <span>{L.logo === 'top-left' ? logoBar : right ? store : null}</span>
-        <span>{L.logo === 'top-center' && logoBar}</span>
-        <span>{right ? logoBar : store}</span>
+    <ScaledThumb className="bg-surface-2">
+      <Composed gallery={gallery} slots={slots} config={{ layout: template.layout, show: template.show, content }} still />
+    </ScaledThumb>
+  )
+}
+
+/** A still of the full-bleed cover: photo, gradient, logo, then eyebrow, title, subtitle and buttons at the bottom. */
+function FullBleedThumb({ template, photo, gallery, content: C }) {
+  const { show } = template
+  return (
+    <ScaledThumb className="bg-type-0">
+      {photo && (
+        <img
+          src={photo.thumb ?? photo.src}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: photo.focus ? `${photo.focus.x}% ${photo.focus.y}%` : undefined }}
+          draggable={false}
+        />
+      )}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.1) 45%, rgba(0,0,0,.65))' }} />
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between px-8 py-6">
+        <img src={gallery.logo} alt="" className="h-9 w-auto brightness-0 invert" draggable={false} />
+        {show.storeLink && <span className="rounded-full border border-white/40 px-5 py-2.5 text-[16px] font-medium text-white">Print store</span>}
       </div>
-      <div
-        className={cn('absolute inset-0 flex flex-col', { top: 'justify-start', middle: 'justify-center', bottom: 'justify-end' }[v], { left: 'items-start', center: 'items-center', right: 'items-end' }[h])}
-        style={{ padding: `${v === 'top' ? pad.y + 12 : pad.y}px ${pad.x}px ${pad.y}px` }}
-      >
-        <div className={cn('flex flex-col gap-1', items)}>
-          {L.logo === 'inline' && <span className="mb-0.5 h-1.5 w-6 rounded-full bg-white/90" />}
-          {show.eyebrow && <span className="h-1 w-10 rounded-full bg-white/60" />}
-          <span className={cn('rounded-sm bg-white', title)} />
-          {show.subtitle && <span className="h-1 w-12 rounded-full bg-white/60" />}
-          {(show.primaryCta || show.secondaryCta) && (
-            <span className={cn('mt-1 flex gap-1', L.ctaLayout === 'stack' && 'flex-col')}>
-              {show.primaryCta && <span className="h-2.5 w-9 rounded-full bg-white" />}
-              {show.secondaryCta && <span className="h-2.5 w-9 rounded-full border border-white/70" />}
-            </span>
-          )}
+      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-8 pb-16 text-center text-white">
+        {show.eyebrow && C.eyebrow && <p className="mb-5 text-16-sb uppercase text-white/75">{C.eyebrow}</p>}
+        <p className="text-[84px] font-semibold leading-none">{C.title || gallery.client}</p>
+        {show.subtitle && C.subtitle && <p className="mt-5 text-[22px] text-white/80">{C.subtitle}</p>}
+        <div className="mt-10 flex gap-4">
+          {show.primaryCta && C.primaryCta && <span className="rounded-full bg-white px-9 py-4 text-[20px] font-medium text-type-0">{C.primaryCta}</span>}
+          {show.secondaryCta && C.secondaryCta && <span className="rounded-full border border-white/40 px-9 py-4 text-[20px] font-medium">{C.secondaryCta}</span>}
         </div>
       </div>
-    </div>
+    </ScaledThumb>
   )
 }
 
 // ── Layout ──────────────────────────────────────────────────────────────────
 
 function LayoutTab({ cover, photo }) {
-  const { layout: L, show } = cover.config
+  const { layout: L } = cover.config
   const set = cover.setLayout
-  const anyCta = show.primaryCta || show.secondaryCta
   if (isComposed(L)) return <ComposedLayout cover={cover} photo={photo} />
   return (
     <div>
       <Section title="Text" hint="Tap where the title block should sit.">
         <PositionGrid value={L.position} onChange={(position) => set({ position })} photo={photo} />
-        <Segmented label="Alignment" options={ALIGN_ICONS} value={L.align} onChange={(align) => set({ align })} />
         <Segmented label="Title size" options={TITLE_SIZE} value={L.titleSize} onChange={(titleSize) => set({ titleSize })} />
         <Segmented label="Text width" options={WIDTH} value={L.width} onChange={(width) => set({ width })} />
       </Section>
 
-      <Section title="Logo">
-        <Segmented options={LOGO} value={L.logo} onChange={(logo) => set({ logo })} />
-      </Section>
+      <LogoSection value={L.logo} onChange={(logo) => set({ logo })} />
 
-      <ButtonsSection L={L} set={set} anyCta={anyCta} />
       <MarginsSection L={L} set={set} />
 
       <Section title="Overlay" hint="Darkens the photo behind the text so it stays readable.">
@@ -274,13 +260,30 @@ function LayoutTab({ cover, photo }) {
   )
 }
 
-function ButtonsSection({ L, set, anyCta }) {
+/** Logo as three settings: show/hide, placement (top bar or in the text), and top-bar alignment. */
+function LogoSection({ value, onChange }) {
+  const shown = value !== 'hidden'
+  const inBar = value.startsWith('top-')
+  // Remember the last top-bar alignment so switching placement or hiding doesn't lose it.
+  const [lastBar, setLastBar] = useState(inBar ? value : 'top-left')
+  const [lastShown, setLastShown] = useState(shown ? value : 'top-left')
+  const change = (next) => {
+    if (next.startsWith('top-')) setLastBar(next)
+    if (next !== 'hidden') setLastShown(next)
+    onChange(next)
+  }
   return (
-    <Section title="Buttons" hint={anyCta ? undefined : 'Both buttons are hidden. Turn them on under Text.'}>
-      <div className={cn('space-y-3', !anyCta && 'pointer-events-none opacity-50')}>
-        <Segmented label="Arrangement" options={CTA_LAYOUT} value={L.ctaLayout} onChange={(ctaLayout) => set({ ctaLayout })} />
-        <Segmented label="Size" options={CTA_SIZE} value={L.ctaSize} onChange={(ctaSize) => set({ ctaSize })} />
+    <Section title="Logo">
+      <div className="flex items-center justify-between gap-3">
+        <Label>Show logo</Label>
+        <Switch checked={shown} onChange={(on) => change(on ? lastShown : 'hidden')} label="Show logo" />
       </div>
+      {shown && (
+        <>
+          <Segmented label="Placement" options={LOGO_PLACEMENT} value={inBar ? 'top' : 'inline'} onChange={(p) => change(p === 'top' ? lastBar : 'inline')} />
+          {inBar && <Segmented label="Alignment" options={LOGO_ALIGN} value={value} onChange={change} />}
+        </>
+      )}
     </Section>
   )
 }
@@ -306,7 +309,7 @@ const orientation = (p) => (!p?.w || !p?.h ? null : p.w > p.h * 1.05 ? 'landscap
 
 /** Layout controls for composed covers: the photo's shape and size, sides, backdrop. */
 function ComposedLayout({ cover, photo }) {
-  const { layout: L, show } = cover.config
+  const { layout: L } = cover.config
   const set = cover.setLayout
   const meta = COMPOSITIONS[L.composition]
   const found = orientation(photo)
@@ -339,7 +342,6 @@ function ComposedLayout({ cover, photo }) {
         <Segmented options={LOGO_TOGGLE} value={L.logo === 'hidden' ? 'hidden' : 'top-left'} onChange={(logo) => set({ logo })} />
       </Section>
 
-      <ButtonsSection L={L} set={set} anyCta={show.primaryCta || show.secondaryCta} />
       <MarginsSection L={L} set={set} />
     </div>
   )
@@ -348,7 +350,8 @@ function ComposedLayout({ cover, photo }) {
 // ── Text ────────────────────────────────────────────────────────────────────
 
 function TextTab({ cover }) {
-  const { content: C, show } = cover.config
+  const { content: C, show, layout: L } = cover.config
+  const anyCta = show.primaryCta || show.secondaryCta
   const text = (key) => ({ value: C[key] ?? '', onChange: (v) => cover.setContent({ [key]: v }), limit: LIMITS[key] })
   const toggle = (key) => ({ enabled: show[key], onToggle: (on) => cover.setShow({ [key]: on }) })
   return (
@@ -362,6 +365,10 @@ function TextTab({ cover }) {
       <Section title="Buttons">
         <TextField label="Primary button" hint="Scrolls to the photos" {...text('primaryCta')} {...toggle('primaryCta')} />
         <TextField label="Secondary button" hint="Opens the print store" {...text('secondaryCta')} {...toggle('secondaryCta')} />
+        <div className={cn('space-y-3', !anyCta && 'pointer-events-none opacity-50')} aria-disabled={!anyCta}>
+          <Segmented label="Arrangement" options={CTA_LAYOUT} value={L.ctaLayout} onChange={(ctaLayout) => cover.setLayout({ ctaLayout })} />
+          <Segmented label="Size" options={CTA_SIZE} value={L.ctaSize} onChange={(ctaSize) => cover.setLayout({ ctaSize })} />
+        </div>
       </Section>
 
       <Section title="Top bar">
@@ -378,25 +385,138 @@ function TextTab({ cover }) {
 }
 
 // ── Photo ───────────────────────────────────────────────────────────────────
+//
+// Three steps, the same for every template:
+//   1. On the cover — the photo(s) the current layout uses (1 for full-bleed, up to 3 for composed).
+//   2. Choose photo — pick from this gallery or upload one, for the spot tapped in step 1.
+//   3. Focal point — what stays in view when that photo is cropped.
 
 const PAGE = 36
+const STEPS = ['On the cover', 'Choose photo', 'Focal point']
+const spotName = (i, count) => (count === 1 ? 'Cover photo' : i === 0 ? 'Main photo' : `Photo ${i + 1}`)
+const sourceOf = (p) => (p.id === UPLOAD_ID ? `Uploaded · ${p.name ?? 'image'}` : p.name ? `Gallery · ${p.name}` : 'From this gallery')
 
 function PhotoTab({ cover, media, photos, collections }) {
   const count = photoCount(cover.config.layout)
-  const [picked, setSlot] = useState(0)
-  const slot = Math.min(picked, count - 1)
+  const [view, setView] = useState({ step: 0, slot: 0 })
+  // A template switch can drop the spot being edited; fall back to the overview.
+  const valid = view.slot < count
+  const step = valid ? view.step : 0
+  const slot = valid ? view.slot : 0
+  const go = (next, s = slot) => setView({ step: next, slot: s })
+  const photo = media.slots[slot]
+  const name = spotName(slot, count)
+
+  // Each step starts at the top of the pane.
+  const root = useRef(null)
+  useLayoutEffect(() => {
+    root.current?.closest('.overflow-y-auto')?.scrollTo({ top: 0 })
+  }, [step, slot])
+
+  return (
+    <div ref={root}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={`${step}-${slot}`}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          transition={{ duration: 0.18, ease }}
+        >
+          {step > 0 && <StepHeader step={step} title={name} onBack={() => go(step - 1)} />}
+          {step === 0 && <PhotoOverview count={count} slots={media.slots} composed={isComposed(cover.config.layout)} onChange={(i) => go(1, i)} onFocus={(i) => go(2, i)} />}
+          {step === 1 && <PhotoSource media={media} slot={slot} count={count} photos={photos} collections={collections} composed={isComposed(cover.config.layout)} onChosen={() => go(2)} />}
+          {step === 2 && (
+            <PhotoFocus
+              media={media}
+              photo={photo}
+              onChange={() => go(1)}
+              onDone={() => go(0)}
+              next={slot < count - 1 ? { label: spotName(slot + 1, count), go: () => go(2, slot + 1) } : null}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function StepHeader({ step, title, onBack }) {
+  return (
+    <div className="mb-1 flex items-start gap-2 border-b border-border pb-4">
+      <button
+        onClick={onBack}
+        className="-ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-full text-type-1 transition hover:bg-surface-2 hover:text-type-0"
+        aria-label={`Back to ${STEPS[step - 1].toLowerCase()}`}
+      >
+        <CaretLeft size={16} />
+      </button>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <p className="text-11-sb uppercase text-type-2">Step {step + 1} of {STEPS.length} · {title}</p>
+        <p className="text-16-sb text-type-0">{STEPS[step]}</p>
+        <div className="mt-2.5 grid grid-cols-3 gap-1" aria-hidden>
+          {STEPS.map((s, i) => <span key={s} className={cn('h-1 rounded-full transition-colors', i <= step ? 'bg-type-0' : 'bg-border')} />)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Step 1: the photos the current template shows. Tap one to replace it, or jump straight to its focal point. */
+function PhotoOverview({ count, slots, composed, onChange, onFocus }) {
+  return (
+    <Section
+      title={count > 1 ? `Photos in this layout · ${count}` : 'Cover photo'}
+      hint={count > 1 ? 'Tap a photo to replace it. Each spot keeps its own focal point.' : composed ? 'Tap to replace it.' : 'Tap to replace it. Landscape works best.'}
+    >
+      <div className="space-y-2">
+        {slots.slice(0, count).map((p, i) => (
+          <div key={i} className="group flex items-center gap-1 rounded-xl ring-1 ring-border transition hover:ring-type-3">
+            <button onClick={() => onChange(i)} className="flex min-w-0 flex-1 items-center gap-3 p-2 text-left" aria-label={`Change ${spotName(i, count).toLowerCase()}`}>
+              <span className="relative block h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-2">
+                <img src={p.thumb ?? p.src} alt="" draggable={false} className="h-full w-full object-cover" style={{ objectPosition: `${p.focus.x}% ${p.focus.y}%` }} />
+                {count > 1 && <span className="absolute left-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-white text-11-sb text-type-0 shadow">{i + 1}</span>}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-13-m text-type-0">{spotName(i, count)}</span>
+                <span className="block truncate text-12-r text-type-2">{sourceOf(p)}</span>
+                <span className="mt-0.5 block text-12-m text-type-3 transition group-hover:text-type-1">Change photo</span>
+              </span>
+            </button>
+            <button
+              onClick={() => onFocus(i)}
+              className="mr-2 grid h-9 w-9 shrink-0 place-items-center rounded-full text-type-2 transition hover:bg-surface-2 hover:text-type-0"
+              aria-label={`Set focal point for ${spotName(i, count).toLowerCase()}`}
+              title="Focal point"
+            >
+              <Crosshair size={17} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+const SOURCES = [{ id: 'gallery', label: 'From gallery' }, { id: 'upload', label: 'Upload' }]
+
+/** Step 2: pick from this gallery, or upload an image. Choosing moves on to the focal point. */
+function PhotoSource({ media, slot, count, photos, collections, composed, onChosen }) {
+  const photo = media.slots[slot]
+  const { upload } = media
+  const [source, setSource] = useState(photo.id === UPLOAD_ID ? 'upload' : 'gallery')
   const [filter, setFilter] = useState('All')
   const [limit, setLimit] = useState(PAGE)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
   const input = useRef(null)
-  const { upload } = media
-  const photo = media.slots[slot]
   const usedIn = (id) => media.slots.slice(0, count).findIndex((p) => p.id === id)
 
   const list = filter === 'All' ? photos : photos.filter((p) => p.collection === filter)
   const shown = list.slice(0, limit)
+
+  const pick = (id) => { media.choose(id, slot); onChosen() }
 
   const takeFile = async (file) => {
     if (!file) return
@@ -406,6 +526,7 @@ function PhotoTab({ cover, media, photos, collections }) {
     try {
       const img = await readImage(file)
       media.setUpload({ ...img, name: file.name }, slot)
+      onChosen()
     } catch {
       setError('We couldn’t read that image. Try another file.')
     } finally {
@@ -413,26 +534,132 @@ function PhotoTab({ cover, media, photos, collections }) {
     }
   }
 
-  const focus = photo.focus ?? CENTER
-  const centered = focus.x === CENTER.x && focus.y === CENTER.y
-
   return (
     <div>
-      {count > 1 && (
-        <Section title="Photos in this layout" hint="Pick a spot, then choose its photo below.">
-          <div role="radiogroup" aria-label="Photo spot" className="grid gap-2" style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}>
-            {media.slots.slice(0, count).map((p, i) => (
-              <button key={i} role="radio" aria-checked={slot === i} onClick={() => setSlot(i)} className="group text-left">
-                <span className={cn('relative block aspect-square overflow-hidden rounded-lg transition', slot === i ? 'ring-2 ring-type-0 ring-offset-2' : 'ring-1 ring-border group-hover:ring-type-3')}>
-                  <img src={p.thumb ?? p.src} alt="" draggable={false} className="h-full w-full object-cover" style={{ objectPosition: `${p.focus.x}% ${p.focus.y}%` }} />
-                  <span className="absolute left-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-11-sb text-type-0 shadow">{i + 1}</span>
-                </span>
-                <span className={cn('mt-1.5 block text-12-m', slot === i ? 'text-type-0' : 'text-type-2')}>{i === 0 ? 'Main' : `Photo ${i + 1}`}</span>
+      <div className="pt-4">
+        <Segmented options={SOURCES} value={source} onChange={setSource} />
+      </div>
+
+      {source === 'gallery' && (
+        <Section title="From this gallery" hint={`${list.length} photos · tap one to use it`} className="border-b-0">
+          <div className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+            {['All', ...collections].map((c) => (
+              <button
+                key={c}
+                onClick={() => { setFilter(c); setLimit(PAGE) }}
+                aria-pressed={filter === c}
+                className={cn(
+                  'h-8 shrink-0 rounded-full px-3 text-12-m transition',
+                  filter === c ? 'bg-type-0 text-white' : 'bg-surface-2 text-type-1 hover:bg-[#ececec]'
+                )}
+              >
+                {c}
               </button>
             ))}
           </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {shown.map((p) => {
+              const active = photo.id === p.id
+              const elsewhere = count > 1 && !active ? usedIn(p.id) : -1
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => pick(p.id)}
+                  aria-pressed={active}
+                  aria-label={`Use ${p.name}`}
+                  className={cn('relative aspect-square overflow-hidden rounded-lg bg-surface-2 transition', active ? 'ring-2 ring-type-0 ring-offset-2' : 'hover:opacity-85')}
+                >
+                  <img src={p.thumb ?? p.src} alt="" loading="lazy" className="h-full w-full object-cover" draggable={false} />
+                  {active && (
+                    <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-type-0 shadow">
+                      <Check size={12} weight="bold" />
+                    </span>
+                  )}
+                  {elsewhere >= 0 && (
+                    <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/55 text-11-sb text-white">{elsewhere + 1}</span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          {list.length > shown.length && (
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => setLimit((l) => l + PAGE)}>
+              Show more ({list.length - shown.length})
+            </Button>
+          )}
         </Section>
       )}
+
+      {source === 'upload' && (
+        <Section title="Upload" hint={composed ? 'Use a photo that isn’t in this gallery.' : 'Use a photo that isn’t in this gallery. Landscape works best.'} className="border-b-0">
+          <input
+            ref={input}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { takeFile(e.target.files?.[0]); e.target.value = '' }}
+          />
+          <button
+            onClick={() => input.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => { e.preventDefault(); setDragging(false); takeFile(e.dataTransfer.files?.[0]) }}
+            disabled={busy}
+            className={cn(
+              'flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-8 text-center transition',
+              dragging ? 'border-type-0 bg-surface-2' : 'border-border hover:border-type-3 hover:bg-surface-2'
+            )}
+          >
+            {busy ? <CircleNotch size={22} className="animate-spin text-type-2" /> : <UploadSimple size={22} className="text-type-2" />}
+            <span className="text-13-m text-type-0">{busy ? 'Preparing image…' : upload ? 'Upload a different image' : 'Upload from computer'}</span>
+            <span className="text-12-r text-type-3">or drop an image here</span>
+          </button>
+          {error && <p className="text-12-r text-destructive">{error}</p>}
+
+          {upload && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => pick(UPLOAD_ID)}
+                aria-pressed={photo.id === UPLOAD_ID}
+                className={cn('relative h-14 w-20 shrink-0 overflow-hidden rounded-lg ring-offset-2 transition', photo.id === UPLOAD_ID ? 'ring-2 ring-type-0' : 'ring-1 ring-border hover:ring-type-3')}
+                aria-label="Use uploaded photo"
+              >
+                <img src={upload.thumb} alt="" className="h-full w-full object-cover" draggable={false} />
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-13-m text-type-0">{upload.name}</p>
+                <p className="text-12-r text-type-2">
+                  {photo.id === UPLOAD_ID ? 'In this spot' : usedIn(UPLOAD_ID) >= 0 ? `In spot ${usedIn(UPLOAD_ID) + 1} · tap to use here` : 'Uploaded · tap to use'}
+                </p>
+              </div>
+              <button
+                onClick={media.removeUpload}
+                className="grid h-8 w-8 place-items-center rounded-full text-type-2 transition hover:bg-surface-2 hover:text-type-0"
+                aria-label="Remove uploaded photo"
+              >
+                <Trash size={15} />
+              </button>
+            </div>
+          )}
+        </Section>
+      )}
+    </div>
+  )
+}
+
+/** Step 3: the focal point for the chosen photo. Changes apply to the cover live. */
+function PhotoFocus({ media, photo, onChange, onDone, next }) {
+  const focus = photo.focus ?? CENTER
+  const centered = focus.x === CENTER.x && focus.y === CENTER.y
+  return (
+    <div>
+      <Section title="Selected photo" className="pt-4">
+        <div className="flex items-center gap-3">
+          <img src={photo.thumb ?? photo.src} alt="" draggable={false} className="h-10 w-14 shrink-0 rounded-md object-cover" />
+          <p className="min-w-0 flex-1 truncate text-13-r text-type-1">{sourceOf(photo)}</p>
+          <Button variant="ghost" size="sm" className="-mr-2" onClick={onChange}>Change</Button>
+        </div>
+      </Section>
 
       <Section title="Focal point" hint="Tap or drag to the part that should stay in view when the photo is cropped.">
         <FocalPoint photo={photo} value={focus} onChange={(point) => media.setFocus(photo.id, point)} />
@@ -444,103 +671,16 @@ function PhotoTab({ cover, media, photos, collections }) {
         </div>
       </Section>
 
-      <Section title="Upload" hint={isComposed(cover.config.layout) ? 'Use a photo that isn’t in this gallery.' : 'Use a photo that isn’t in this gallery. Landscape works best.'}>
-        <input
-          ref={input}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => { takeFile(e.target.files?.[0]); e.target.value = '' }}
-        />
-        <button
-          onClick={() => input.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => { e.preventDefault(); setDragging(false); takeFile(e.dataTransfer.files?.[0]) }}
-          disabled={busy}
-          className={cn(
-            'flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-5 text-center transition',
-            dragging ? 'border-type-0 bg-surface-2' : 'border-border hover:border-type-3 hover:bg-surface-2'
-          )}
-        >
-          {busy ? <CircleNotch size={20} className="animate-spin text-type-2" /> : <UploadSimple size={20} className="text-type-2" />}
-          <span className="text-13-m text-type-0">{busy ? 'Preparing image…' : 'Upload from computer'}</span>
-          <span className="text-12-r text-type-3">or drop an image here</span>
-        </button>
-        {error && <p className="text-12-r text-destructive">{error}</p>}
-
-        {upload && (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => media.choose(UPLOAD_ID, slot)}
-              aria-pressed={photo.id === UPLOAD_ID}
-              className={cn('relative h-14 w-20 shrink-0 overflow-hidden rounded-lg ring-offset-2 transition', photo.id === UPLOAD_ID ? 'ring-2 ring-type-0' : 'ring-1 ring-border hover:ring-type-3')}
-              aria-label="Use uploaded photo"
-            >
-              <img src={upload.thumb} alt="" className="h-full w-full object-cover" draggable={false} />
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-13-m text-type-0">{upload.name}</p>
-              <p className="text-12-r text-type-2">{photo.id === UPLOAD_ID ? 'On the cover' : usedIn(UPLOAD_ID) >= 0 ? `In spot ${usedIn(UPLOAD_ID) + 1}` : 'Uploaded · tap to use'}</p>
-            </div>
-            <button
-              onClick={media.removeUpload}
-              className="grid h-8 w-8 place-items-center rounded-full text-type-2 transition hover:bg-surface-2 hover:text-type-0"
-              aria-label="Remove uploaded photo"
-            >
-              <Trash size={15} />
-            </button>
-          </div>
-        )}
-      </Section>
-
-      <Section title="From this gallery" hint={`${list.length} photos`}>
-        <div className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
-          {['All', ...collections].map((c) => (
-            <button
-              key={c}
-              onClick={() => { setFilter(c); setLimit(PAGE) }}
-              aria-pressed={filter === c}
-              className={cn(
-                'h-8 shrink-0 rounded-full px-3 text-12-m transition',
-                filter === c ? 'bg-type-0 text-white' : 'bg-surface-2 text-type-1 hover:bg-[#ececec]'
-              )}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          {shown.map((p) => {
-            const active = photo.id === p.id
-            const elsewhere = count > 1 && !active ? usedIn(p.id) : -1
-            return (
-              <button
-                key={p.id}
-                onClick={() => media.choose(p.id, slot)}
-                aria-pressed={active}
-                aria-label={`Use ${p.name} as cover`}
-                className={cn('relative aspect-square overflow-hidden rounded-lg bg-surface-2 transition', active ? 'ring-2 ring-type-0 ring-offset-2' : 'hover:opacity-85')}
-              >
-                <img src={p.thumb ?? p.src} alt="" loading="lazy" className="h-full w-full object-cover" draggable={false} />
-                {active && (
-                  <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-type-0 shadow">
-                    <Check size={12} weight="bold" />
-                  </span>
-                )}
-                {elsewhere >= 0 && (
-                  <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/55 text-11-sb text-white">{elsewhere + 1}</span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-        {list.length > shown.length && (
-          <Button variant="secondary" size="sm" className="w-full" onClick={() => setLimit((l) => l + PAGE)}>
-            Show more ({list.length - shown.length})
+      <div className="flex gap-2 pt-1">
+        {next && (
+          <Button variant="secondary" size="md" className="flex-1" onClick={next.go}>
+            Next: {next.label} <CaretRight size={14} />
           </Button>
         )}
-      </Section>
+        <Button variant={next ? 'ghost' : 'secondary'} size="md" className="flex-1" onClick={onDone}>
+          <Check size={15} weight="bold" /> {next ? 'Back to photos' : 'Done'}
+        </Button>
+      </div>
     </div>
   )
 }

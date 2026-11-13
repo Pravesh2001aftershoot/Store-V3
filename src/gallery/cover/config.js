@@ -29,12 +29,20 @@ export const ALIGN = [
   { id: 'right', label: 'Right' },
 ]
 
-export const LOGO = [
-  { id: 'top-left', label: 'Left', hint: 'Top bar, left' },
-  { id: 'top-center', label: 'Center', hint: 'Top bar, centered' },
-  { id: 'top-right', label: 'Right', hint: 'Top bar, right' },
-  { id: 'inline', label: 'In text', hint: 'Above the title' },
-  { id: 'hidden', label: 'Off', hint: 'No logo on the cover' },
+// `layout.logo` is one value: 'top-left' | 'top-center' | 'top-right' | 'inline' | 'hidden'.
+// The editor shows it as three controls: show/hide, placement, and (in the top bar) alignment.
+
+/** Where a visible logo sits. */
+export const LOGO_PLACEMENT = [
+  { id: 'top', label: 'Top bar' },
+  { id: 'inline', label: 'In text' },
+]
+
+/** Alignment of the logo in the top bar. */
+export const LOGO_ALIGN = [
+  { id: 'top-left', label: 'Left' },
+  { id: 'top-center', label: 'Center' },
+  { id: 'top-right', label: 'Right' },
 ]
 
 export const TITLE_SIZE = [
@@ -125,48 +133,9 @@ const base = {
   show: { eyebrow: true, subtitle: true, primaryCta: true, secondaryCta: true, storeLink: true },
 }
 
+// One full-bleed starting point: position, logo, title size, overlay etc. are tuned under Layout.
 export const TEMPLATES = [
-  {
-    id: 'classic',
-    name: 'Classic',
-    description: 'Centered at the bottom',
-    ...base,
-  },
-  {
-    id: 'centered',
-    name: 'Centered',
-    description: 'Big title, logo above it',
-    layout: { ...base.layout, position: 'middle-center', logo: 'inline', titleSize: 'l', width: 'medium', marginY: 48, overlay: 60 },
-    show: base.show,
-  },
-  {
-    id: 'editorial',
-    name: 'Editorial',
-    description: 'Left-aligned, magazine feel',
-    layout: { ...base.layout, position: 'bottom-left', align: 'left', titleSize: 'l', width: 'medium', ctaSize: 'md', marginX: 56, marginY: 56 },
-    show: base.show,
-  },
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Title and one button',
-    layout: { ...base.layout, position: 'middle-center', logo: 'hidden', width: 'medium', ctaSize: 'md', overlay: 35 },
-    show: { ...base.show, subtitle: false, secondaryCta: false, storeLink: false },
-  },
-  {
-    id: 'corner',
-    name: 'Top corner',
-    description: 'Text top left, logo right',
-    layout: { ...base.layout, position: 'top-left', align: 'left', logo: 'top-right', width: 'narrow', ctaSize: 'md', marginX: 40, marginY: 32 },
-    show: base.show,
-  },
-  {
-    id: 'signature',
-    name: 'Signature',
-    description: 'Quiet, bottom right',
-    layout: { ...base.layout, position: 'bottom-right', align: 'right', logo: 'inline', titleSize: 's', width: 'narrow', ctaLayout: 'stack', ctaSize: 'md', marginX: 48, marginY: 48, overlay: 45 },
-    show: { ...base.show, storeLink: false },
-  },
+  { id: 'full-bleed', name: 'Full bleed', description: 'Photo fills the screen, text on top', ...base },
 ]
 
 // Composed covers: quiet by default (title and date), buttons can be turned on under Text.
@@ -179,7 +148,7 @@ export const COMPOSED_TEMPLATES = [
   { id: 'framed', name: 'Framed', description: 'Centered print, title across', layout: composed({ composition: 'frame' }), show: quiet },
   { id: 'strip', name: 'Side title', description: 'Vertical title, big photo', layout: composed({ composition: 'strip', photoSize: 'l' }), show: quiet },
   { id: 'triptych', name: 'Triptych', description: 'Three photos in a row', layout: composed({ composition: 'triptych', shape: 'square', marginX: 88 }), show: quiet },
-  { id: 'corner', name: 'Corner print', description: 'Small print, oversized title', layout: composed({ composition: 'corner', titleSize: 'l', marginX: 40, marginY: 40 }), show: quiet },
+  { id: 'corner-print', name: 'Corner print', description: 'Small print, oversized title', layout: composed({ composition: 'corner', titleSize: 'l', marginX: 40, marginY: 40 }), show: quiet },
   { id: 'stacked', name: 'Stacked', description: 'Title over a centered print', layout: composed({ composition: 'stacked', titleSize: 's' }), show: quiet },
 ]
 
@@ -231,7 +200,7 @@ export function useCoverConfig(defaults) {
 
   const setLayout = useCallback((patch) => setState((s) => {
     const layout = { ...s.layout, ...patch }
-    // Moving the text sideways brings its alignment along; alignment can still be changed afterwards.
+    // The text aligns to the side of the position grid it sits on.
     if (patch.position && !patch.align) layout.align = patch.position.split('-')[1]
     return { ...s, layout }
   }), [])
