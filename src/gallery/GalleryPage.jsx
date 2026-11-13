@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
+import { useParams } from 'react-router-dom'
 import { useGridSettings } from './lib/settings'
 import { useBreakpoint, useMeasuredPhotos } from './lib/hooks'
 import CoverSection from './templates/cover/CoverSection'
@@ -17,9 +17,13 @@ import { people, withFaces } from './data/faces'
 import { registerPhoto } from '../data/gallery'
 import { MAX_SETS, downloadPhotos, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
 import FooterSection from './templates/footer/FooterSection'
+import { useGalleryLibrary } from './lib/library'
+import { isEmbedded, scrollToEl, usePreviewTarget } from '../lib/embed'
+import { fallbackCover, useGalleryData } from './lib/useGalleryData'
+import { DEFAULT_GALLERY, GalleryProvider, setActiveGallery, useGalleries } from '../data/galleries'
 
 // Every collection is a section of one continuous scroll, so there's no "All" tab.
-const COLLECTIONS = gallery.collections.filter((c) => c !== 'All')
+// The photographer can rename, reorder and add collections in the dashboard (lib/library.js).
 const BATCH = 24
 
 /**
@@ -27,12 +31,38 @@ const BATCH = 24
  * The collection tabs follow the scroll (scroll-spy); tapping one jumps to that section.
  */
 export default function GalleryPage() {
+  const params = useParams()
+  const { galleries } = useGalleries()
+  // `/` shows the sample gallery (or the newest one if it was deleted); `/g/:id` any other.
+  const galleryId = params.galleryId ?? (galleries.some((g) => g.id === DEFAULT_GALLERY) ? DEFAULT_GALLERY : galleries[0].id)
+  const data = useGalleryData(galleryId)
+  useEffect(() => { if (data) setActiveGallery(galleryId) }, [data, galleryId])
+  if (!data) return <GalleryNotFound />
+  return (
+    <GalleryProvider id={galleryId}>
+      <ClientGallery key={galleryId} data={data} />
+    </GalleryProvider>
+  )
+}
+
+function GalleryNotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-6 text-center">
+      <p className="text-11-sb uppercase tracking-wider text-type-3">Gallery not found</p>
+      <h1 className="text-24-m text-type-0">This gallery isn’t available</h1>
+      <p className="max-w-sm text-14-r-p text-type-2">The link may be old, or the gallery may have been removed. Ask your photographer for a new link.</p>
+    </div>
+  )
+}
+
+function ClientGallery({ data }) {
+  const { gallery, base: allPhotos, baseCollections: BASE_COLLECTIONS } = data
   const [settings, setSetting] = useGridSettings()
   const isPhone = useBreakpoint() === 'mobile' // the phone dock sits where toasts would
-  const [collection, setCollection] = useState(COLLECTIONS[0])
-  const [favorites, toggleFav, clearFavs, setFavs] = useFavorites(gallery.client)
-  const [hidden, toggleHidden, clearHidden] = useHidden(gallery.client)
-  const [sets, createSet, deleteSet] = useSets(gallery.client)
+  const [collection, setCollection] = useState(BASE_COLLECTIONS[0])
+  const [favorites, toggleFav, clearFavs, setFavs] = useFavorites(data.clientKey)
+  const [hidden, toggleHidden, clearHidden] = useHidden(data.clientKey)
+  const [sets, createSet, deleteSet] = useSets(data.clientKey)
   const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden' | 'faces' | 'set:<id>'
   const [faceFilter, setFaceFilter] = useState({ ids: [], mode: 'any' }) // the people shown in the 'faces' view
   const [facesOpen, setFacesOpen] = useState(false) // the Find people pane
@@ -50,16 +80,21 @@ export default function GalleryPage() {
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
 
-  const photos = useMeasuredPhotos(allPhotos)
+  // The photographer's arrangement (collections, order, removed photos, uploads) from the dashboard.
+  const library = useGalleryLibrary(allPhotos, BASE_COLLECTIONS)
+  const COLLECTIONS = library.collections
+  const photos = useMeasuredPhotos(library.photos)
+  const embedded = isEmbedded() // dashboard preview: editing happens in the dashboard, not here
 
   // Cover settings live here (not in CoverSection) so collection headings can match the cover's style.
-  const coverText = useMemo(() => coverDefaults(gallery, photos.length), [photos.length])
+  const coverText = useMemo(() => coverDefaults(gallery, photos.length), [gallery, photos.length])
   const cover = useCoverConfig(coverText)
   const headings = useSectionConfig(cover.config)
   const [editingHeading, setEditingHeading] = useState(null) // collection whose heading is being edited
 
   // All photos in collection (tab order) — the cover and footer use the full set, hidden or not.
-  const everything = useMemo(() => COLLECTIONS.flatMap((title) => photos.filter((p) => p.collection === title)), [photos])
+  const everything = useMemo(() => COLLECTIONS.flatMap((title) => photos.filter((p) => p.collection === title)), [photos, COLLECTIONS])
+  const coverPhoto = fallbackCover(data, everything)
 
   // The browsable gallery: hidden photos left out, grouped by collection, plus each collection's range.
   const { ordered, sections } = useMemo(() => {
@@ -70,7 +105,7 @@ export default function GalleryPage() {
       return { title, start, end: ordered.length }
     }).filter((s) => s.end > s.start)
     return { ordered, sections }
-  }, [photos, hidden])
+  }, [photos, hidden, COLLECTIONS])
 
   const counts = useMemo(() => Object.fromEntries(sections.map((s) => [s.title, s.end - s.start])), [sections])
   const tabs = useMemo(() => sections.map((s) => s.title), [sections])
@@ -266,9 +301,26 @@ export default function GalleryPage() {
     if (window.scrollY > top) window.scrollTo({ top, behavior: 'instant' })
   }
 
+  // Dashboard preview: show the part being edited.
+  usePreviewTarget((target) => {
+    if (target === 'cover') window.scrollTo({ top: 0, behavior: 'smooth' })
+    else if (target === 'grid') scrollToEl(gridRef.current)
+    else if (target === 'footer') {
+      // The grid loads as you scroll, so the footer keeps moving away: load it all, then jump.
+      setView('all')
+      setMinCount(ordered.length)
+      setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }), 150)
+    }
+    else if (target?.startsWith('section:')) {
+      const title = target.slice(8)
+      if (sections.some((s) => s.title === title)) goTo(title)
+      else scrollToEl(gridRef.current)
+    }
+  })
+
   return (
     <div className="min-h-screen bg-background">
-      <CoverSection gallery={gallery} cover={cover} photo={coverPhoto} photos={everything} collections={tabs} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <CoverSection editable={!embedded} gallery={gallery} cover={cover} photo={coverPhoto} photos={everything} collections={tabs} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <div ref={gridRef}>
         <NavBar
@@ -290,7 +342,7 @@ export default function GalleryPage() {
           onView={(v) => { setView((cur) => (cur === v ? 'all' : v)); toGrid() }}
           onClearFavs={() => { clearFavs(); setView('all') }}
           onUnhideAll={() => { clearHidden(); setView('all') }}
-          onFaces={people.length ? () => setFacesOpen(true) : undefined}
+          onFaces={data.meta.sample && people.length ? () => setFacesOpen(true) : undefined}
           facesOpen={facesOpen}
           faceFilter={faceFilter}
           faceCount={facePhotos.length}
@@ -310,7 +362,7 @@ export default function GalleryPage() {
           selected={selected}
           onSelect={openSet ? undefined : select} // no multi-select inside a client's own set
           headings={headings}
-          onEditHeading={selecting ? undefined : setEditingHeading}
+          onEditHeading={selecting || embedded ? undefined : setEditingHeading}
           resetKey={view}
           minCount={inBucket ? 0 : minCount}
           emptyMessage={
@@ -323,7 +375,7 @@ export default function GalleryPage() {
         />
       </div>
 
-      <FooterSection gallery={gallery} coverPhoto={coverPhoto} photos={everything} onGallery={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <FooterSection editable={!embedded} gallery={gallery} coverPhoto={coverPhoto} photos={everything} onGallery={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <Lightbox
         photos={visible}

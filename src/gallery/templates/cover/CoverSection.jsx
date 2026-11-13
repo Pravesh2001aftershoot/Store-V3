@@ -10,7 +10,7 @@ import CoverEditor, { PANE_W, PEEK_H, SHEET_H } from './CoverEditor'
  * While editing, the cover's frame shrinks to the space beside (tablet/desktop) or above (phone)
  * the editor, so what you see is the cover at that size, live.
  */
-export default function CoverSection({ gallery, cover, photo: defaultPhoto, photos, collections, onEnter }) {
+export default function CoverSection({ gallery, cover, photo: defaultPhoto, photos, collections, onEnter, editable = true }) {
   const media = useCoverPhoto(defaultPhoto, photos)
   const photo = media.photo
   const [editing, setEditing] = useState(false)
@@ -31,7 +31,7 @@ export default function CoverSection({ gallery, cover, photo: defaultPhoto, phot
 
   return (
     <>
-      <Cover gallery={gallery} photo={photo} slots={media.slots} config={cover.config} inset={inset} editing={editing} onEnter={onEnter} onEdit={open} />
+      <Cover gallery={gallery} photo={photo} slots={media.slots} config={cover.config} inset={inset} editing={editing} onEnter={onEnter} onEdit={editable ? open : undefined} />
       <CoverEditor
         open={editing}
         onClose={() => setEditing(false)}

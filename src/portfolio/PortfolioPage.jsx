@@ -4,6 +4,7 @@ import PortfolioHeader from './components/PortfolioHeader'
 import Hero from './components/Hero'
 import WorkGrid from './components/WorkGrid'
 import Contact from './components/Contact'
+import { scrollToEl, usePreviewTarget } from '../lib/embed'
 
 const LINKS = [
   { href: '#work', label: 'Work' },
@@ -25,6 +26,12 @@ export default function PortfolioPage() {
     if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'instant' }))
     else window.scrollTo({ top: 0, behavior: 'instant' })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dashboard preview: show the section being edited.
+  usePreviewTarget((target) => {
+    if (target === 'top') window.scrollTo({ top: 0, behavior: 'smooth' })
+    else scrollToEl(document.getElementById(target), 64)
+  })
 
   return (
     <div className="min-h-screen bg-surface-0">

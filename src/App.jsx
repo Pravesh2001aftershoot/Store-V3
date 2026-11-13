@@ -12,15 +12,20 @@ import Payment from './pages/Payment'
 import GalleryPage from './gallery/GalleryPage'
 import PortfolioPage from './portfolio/PortfolioPage'
 import ProjectPage from './portfolio/ProjectPage'
+import PhotographerDashboard from './photographer-dashboard/PhotographerDashboard'
 
 export default function App() {
   return (
     <Routes>
       {/* Client gallery is the entry page; the print store opens from it. */}
       <Route index element={<GalleryPage />} />
+      {/* Every other gallery the photographer has made. */}
+      <Route path="g/:galleryId" element={<GalleryPage />} />
       {/* Photographer portfolio, opened from the photographer's name in the gallery nav. */}
       <Route path="portfolio" element={<PortfolioPage />} />
       <Route path="portfolio/:slug" element={<ProjectPage />} />
+      {/* Photographer dashboard: set up the gallery, portfolio and store clients see. */}
+      <Route path="dashboard/*" element={<PhotographerDashboard />} />
       <Route element={<Layout />}>
         <Route path="store" element={<Home />} />
         <Route path="shop" element={<Shop />} />

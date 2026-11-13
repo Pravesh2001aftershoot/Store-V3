@@ -4,7 +4,8 @@ import { motion } from 'framer-motion'
 import { useBreakpoint } from '../gallery/lib/hooks'
 import { masonry } from '../gallery/lib/layout'
 import { Reveal } from '../components/ui'
-import { formatDate, galleries, galleryBySlug } from './data/portfolio'
+import { formatDate } from './data/portfolio'
+import { usePortfolio } from './data/config'
 import PortfolioHeader from './components/PortfolioHeader'
 import { ProjectCard } from './components/ProjectCard'
 import Contact from './components/Contact'
@@ -14,7 +15,8 @@ const COLUMNS = { mobile: 2, tablet: 3, desktop: 3 }
 /** One published gallery from the portfolio: title, details, then its photos in masonry columns. */
 export default function ProjectPage() {
   const { slug } = useParams()
-  const g = galleryBySlug[slug]
+  const { galleries, galleryBySlug } = usePortfolio()
+  const g = galleryBySlug[slug] // hidden galleries aren't in here, so they show "isn't available"
   const bp = useBreakpoint()
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [slug])
@@ -23,7 +25,7 @@ export default function ProjectPage() {
   // More from the same genre, nearest in time first.
   const more = useMemo(
     () => (g ? galleries.filter((x) => x.genre === g.genre && x !== g).sort((a, b) => Math.abs(a.date - g.date) - Math.abs(b.date - g.date)).slice(0, 4) : []),
-    [g]
+    [g, galleries]
   )
 
   if (!g) {

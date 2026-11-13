@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import { forGallery, useGalleryId } from '../../../data/galleries'
 
 // Cover settings: what the photographer can change about the gallery cover.
 //
@@ -171,11 +172,9 @@ const same = (a, b) => Object.keys(a).every((k) => a[k] === b[k])
 export const matchTemplate = (config) =>
   ALL_TEMPLATES.find((t) => same(t.layout, config.layout) && same(t.show, config.show))?.id ?? null
 
-const KEY = 'store-v3:gallery-cover'
-
-function load() {
+function load(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY))
+    const saved = JSON.parse(localStorage.getItem(key))
     if (!saved) return DEFAULT
     return {
       layout: { ...DEFAULT.layout, ...saved.layout },
@@ -187,16 +186,15 @@ function load() {
   }
 }
 
+// Shared by every reader in this tab, and kept in sync with other tabs and the dashboard preview.
+const family = forGallery('cover', load)
+
 /**
  * Cover settings, saved to this browser. `defaults` fills in any text that hasn't been edited.
  * Returns the resolved config plus setters for each part.
  */
 export function useCoverConfig(defaults) {
-  const [state, setState] = useState(load)
-
-  useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode: settings just won't persist */ }
-  }, [state])
+  const [state, setState] = family(useGalleryId()).use()
 
   const setLayout = useCallback((patch) => setState((s) => {
     const layout = { ...s.layout, ...patch }

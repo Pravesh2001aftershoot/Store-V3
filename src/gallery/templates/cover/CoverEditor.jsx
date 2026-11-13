@@ -27,7 +27,7 @@ export { PANE_W, SHEET_H, PEEK_H }
  * and as a bottom sheet on phones that can collapse to a bar to preview the full cover.
  * There's no dimming backdrop: the cover beside/above it is the live preview.
  */
-export default function CoverEditor({ open, onClose, phone, peek, onPeek, gallery, photo, cover, media, photos = [], collections = [] }) {
+export default function CoverEditor({ open, onClose, phone, peek, onPeek, gallery, photo, cover, media, photos = [], collections = [], inline = false }) {
   const [tab, setTab] = useState('templates')
   const name = ALL_TEMPLATES.find((t) => t.id === cover.template)?.name ?? 'Custom'
 
@@ -45,6 +45,7 @@ export default function CoverEditor({ open, onClose, phone, peek, onPeek, galler
       tab={tab}
       onTab={setTab}
       onReset={() => { cover.reset(); media?.reset() }}
+      inline={inline}
     >
       {tab === 'templates' && <TemplatesTab cover={cover} photo={photo} slots={media.slots} gallery={gallery} />}
       {tab === 'layout' && <LayoutTab cover={cover} photo={photo} />}

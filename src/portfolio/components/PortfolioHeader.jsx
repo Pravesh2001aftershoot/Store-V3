@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 import { CaretLeft } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
-import { profile } from '../data/portfolio'
+import { usePortfolio } from '../data/config'
 
 /** Sticky top bar: a way back (to the client gallery or the portfolio), the name, section links and the enquiry CTA. */
 export default function PortfolioHeader({ back, links = [] }) {
+  const { profile, contact } = usePortfolio()
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface-0">
       <div className="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-4 md:px-8">
@@ -27,9 +28,11 @@ export default function PortfolioHeader({ back, links = [] }) {
             </a>
           ))}
         </nav>
-        <Button as="a" href={`mailto:${profile.email}`} size="sm" className="ml-auto shrink-0 md:ml-2">
-          Enquire
-        </Button>
+        {contact.enquire && (
+          <Button as="a" href={`mailto:${profile.email}`} size="sm" className="ml-auto shrink-0 md:ml-2">
+            Enquire
+          </Button>
+        )}
       </div>
     </header>
   )

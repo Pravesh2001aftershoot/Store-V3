@@ -5,7 +5,7 @@ import { ListBullets, MagnifyingGlass, SquaresFour, X } from '@phosphor-icons/re
 import { cn } from '../../lib/utils'
 import { Select } from '../../components/ui'
 import { useInfinite } from '../../gallery/lib/hooks'
-import { galleries, genres } from '../data/portfolio'
+import { usePortfolio } from '../data/config'
 import { ProjectCard, ProjectRow } from './ProjectCard'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -39,6 +39,7 @@ function useWorkParams() {
 /** "Selected work": filter by genre, search, sort, grid/list — then an infinite list grouped by year. */
 export default function WorkGrid() {
   const { genre, sort, view, q, set } = useWorkParams()
+  const { galleries, genres, workTitle } = usePortfolio()
   const sectionRef = useRef(null)
 
   const filtered = useMemo(() => {
@@ -50,7 +51,7 @@ export default function WorkGrid() {
     )
     const by = { newest: (a, b) => b.date - a.date, oldest: (a, b) => a.date - b.date, largest: (a, b) => b.count - a.count }
     return list.sort(by[sort] || by.newest)
-  }, [genre, sort, q])
+  }, [genre, sort, q, galleries])
 
   const { count, ref: sentinel, done, loading } = useInfinite(filtered.length, {
     batch: BATCH[view] || BATCH.grid,
@@ -84,7 +85,7 @@ export default function WorkGrid() {
     <section id="work" ref={sectionRef} className="mx-auto max-w-[1800px] scroll-mt-16 px-4 pt-16 md:px-8 md:pt-24">
       <div className="flex items-end justify-between gap-6">
         <h2 className="text-36-sb text-type-0 md:text-48-sb">
-          Selected work<span className="ml-2 align-baseline text-16-m text-type-3 md:text-20-m">({galleries.length})</span>
+          {workTitle}<span className="ml-2 align-baseline text-16-m text-type-3 md:text-20-m">({galleries.length})</span>
         </h2>
       </div>
 

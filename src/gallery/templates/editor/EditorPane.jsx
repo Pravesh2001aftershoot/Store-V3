@@ -13,16 +13,68 @@ export const SHEET_H = '58svh'
 export const PEEK_H = 64
 
 /**
- * The shell shared by the gallery's editors (cover, footer). Opens from the left on tablet/desktop
- * and as a bottom sheet on phones that can collapse to a bar to see the whole preview.
- * There's no dimming backdrop: whatever sits beside/above it is the live preview.
+ * The shell shared by the gallery's editors (cover, footer, headings) and the photographer dashboard.
+ * Opens from the left on tablet/desktop and as a bottom sheet on phones that can collapse to a bar
+ * to see the whole preview. There's no dimming backdrop: whatever sits beside/above it is the live preview.
  *
  * `modal={false}` drops the click-blocking overlay and scroll lock, for previews that need scrolling.
+ * `inline` renders the same pane in place (filling its parent) instead of as a floating panel — the
+ * dashboard uses it to dock editors beside its preview. ✕ / Esc / Done still call `onClose`.
+ * `resetLabel` renames the footer's reset action (e.g. "Reset product").
  */
 export default function EditorPane({
   open, onClose, phone, peek, onPeek, title, subtitle, previewLabel = 'Preview',
-  tabs, tab, onTab, onReset, modal = true, children,
+  tabs, tab, onTab, onReset, resetLabel = 'Reset all', modal = true, inline = false, children,
 }) {
+  const body = (
+    <>
+      <Header phone={phone && !inline} peek={peek} onPeek={onPeek} title={title} subtitle={subtitle} previewLabel={previewLabel} tabs={tabs} tab={tab} onTab={onTab} />
+      <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5', phone && !inline && peek && 'invisible')}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease }}
+            className="pb-6 pt-4"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      {!(phone && !inline && peek) && (
+        <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
+          {onReset && (
+            <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2">
+              <ArrowCounterClockwise size={14} /> {resetLabel}
+            </Button>
+          )}
+          <span className="flex-1" />
+          <Button size="md" onClick={onClose}>
+            <Check size={15} weight="bold" /> Done
+          </Button>
+        </div>
+      )}
+    </>
+  )
+
+  if (inline) {
+    if (!open) return null
+    return (
+      <Dialog.Root open modal={false} onOpenChange={(o) => !o && onClose()}>
+        <Dialog.Content
+          aria-describedby={undefined}
+          onInteractOutside={(e) => e.preventDefault()}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="flex h-full min-h-0 flex-col bg-surface-1 outline-none"
+        >
+          {body}
+        </Dialog.Content>
+      </Dialog.Root>
+    )
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()} modal={modal}>
       <AnimatePresence>
@@ -50,32 +102,7 @@ export default function EditorPane({
                 )}
                 style={phone ? { height: peek ? PEEK_H : SHEET_H } : { width: PANE_W }}
               >
-                <Header phone={phone} peek={peek} onPeek={onPeek} title={title} subtitle={subtitle} previewLabel={previewLabel} tabs={tabs} tab={tab} onTab={onTab} />
-                <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5', phone && peek && 'invisible')}>
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div
-                      key={tab}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2, ease }}
-                      className="pb-6 pt-4"
-                    >
-                      {children}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                {!(phone && peek) && (
-                  <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
-                    <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2">
-                      <ArrowCounterClockwise size={14} /> Reset all
-                    </Button>
-                    <span className="flex-1" />
-                    <Button size="md" onClick={onClose}>
-                      <Check size={15} weight="bold" /> Done
-                    </Button>
-                  </div>
-                )}
+                {body}
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -110,7 +137,7 @@ function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab,
           <X size={16} />
         </Dialog.Close>
       </div>
-      {!(phone && peek) && (
+      {!(phone && peek) && tabs.length > 1 && (
         <div role="tablist" className="mt-3 grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
           {tabs.map((t) => (
             <button

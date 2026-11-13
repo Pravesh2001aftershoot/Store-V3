@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useBreakpoint } from '../../lib/hooks'
-import { profile } from '../../../portfolio/data/portfolio'
+import { usePortfolio } from '../../../portfolio/data/config'
 import { PANE_W, PEEK_H, SHEET_H } from '../editor/EditorPane'
 import { defaultContent, defaultSocials, useFooterConfig } from './config'
 import Footer from './Footer'
@@ -14,9 +14,10 @@ const ease = [0.22, 1, 0.36, 1]
  * While editing, a preview stage fills the space beside (tablet/desktop) or above (phone) the
  * editor and shows the footer at that width. It scrolls, since footers can be taller than the space.
  */
-export default function FooterSection({ gallery, coverPhoto, photos, onGallery }) {
-  const defaults = useMemo(() => defaultContent(gallery, profile), [gallery])
-  const socialDefaults = useMemo(() => defaultSocials(profile), [])
+export default function FooterSection({ gallery, coverPhoto, photos, onGallery, editable = true }) {
+  const { profile } = usePortfolio() // the profile set up in the dashboard fills in the footer's contact details
+  const defaults = useMemo(() => defaultContent(gallery, profile), [gallery, profile])
+  const socialDefaults = useMemo(() => defaultSocials(profile), [profile])
   const footer = useFooterConfig(defaults, socialDefaults)
   const [editing, setEditing] = useState(false)
   const [peek, setPeek] = useState(false)
@@ -43,7 +44,7 @@ export default function FooterSection({ gallery, coverPhoto, photos, onGallery }
 
   return (
     <>
-      <Footer gallery={gallery} config={footer.config} photo={photo} onGallery={onGallery} onEdit={editing ? undefined : open} />
+      <Footer gallery={gallery} config={footer.config} photo={photo} onGallery={onGallery} onEdit={editing || !editable ? undefined : open} />
 
       <AnimatePresence>
         {editing && (

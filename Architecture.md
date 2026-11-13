@@ -51,6 +51,12 @@ src/
         ├── layout.js     Pure layout maths (masonry, justified rows)
         ├── hooks.js      useBreakpoint, useInfinite, useMeasuredPhotos
 │       └── actions.js    Toasts pub/sub, download / share (single and bulk), useFavorites, useHidden, useSets
+├── photographer-dashboard/  /dashboard: sidebar app — galleries (many), Portfolio, Store catalogs (many).
+│                         Has its own Architecture.md, PRD.md, DesignSystem.md and Interactions.md.
+├── lib/persisted.js      Shared localStorage value, synced across components and documents (all settings hooks)
+├── lib/embed.js          ?embed=1 preview mode and dashboard → preview messages
+├── data/galleries.js     Gallery registry, GalleryProvider / useGalleryId, galleryKey(), active gallery
+├── data/storeConfig.js   Store catalogs; the active one is applied to the catalog in place
 └── portfolio/            Photographer portfolio module, kept self-contained
     ├── PortfolioPage.jsx Page composition: header, Hero, WorkGrid, Contact; lands on a #hash on arrival
     ├── ProjectPage.jsx   One gallery: title, details, masonry photos, "More <genre>"
@@ -75,6 +81,8 @@ Defined in `src/App.jsx`.
 | `/` | `GalleryPage` | Own layout (cover + sticky nav) |
 | `/portfolio` | `PortfolioPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
 | `/portfolio/:slug` | `ProjectPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
+| `/g/:galleryId` | `GalleryPage` for that gallery | Same page as `/`; unknown ids show "This gallery isn't available" |
+| `/dashboard/*` | `PhotographerDashboard` (galleries, galleries/:id/:step, portfolio, store, store/:catalogId) | Own layout; see `src/photographer-dashboard/Architecture.md` |
 | `/store` | `Home` | `Layout` (header, footer, cart drawer) |
 | `/shop`, `/shop/:categoryId` | `Shop` | `Layout` |
 | `/product/:productId` | `Product` | `Layout` |
@@ -94,6 +102,8 @@ Defined in `src/App.jsx`.
 The portfolio is reached from the photographer's name in the gallery `NavBar`, which links to `/portfolio`. An unknown `:slug` renders a "This gallery isn't available" state with a link back to the portfolio.
 
 ## State
+
+> **Photographer dashboard.** Gallery photos and collections (`gallery/lib/library.js`, uploads in IndexedDB), grid defaults, portfolio settings (`portfolio/data/config.js`) and store edits (`data/storeConfig.js`) are now editable from `/dashboard`. Every settings hook is built on `lib/persisted.js`. There can be many galleries (`data/galleries.js`): per-gallery settings are keyed by `galleryKey(id, name)` and read the gallery from `GalleryProvider`; the sample gallery keeps the keys listed below. The store sells from the catalog of the gallery the client came from. Details in `src/photographer-dashboard/Architecture.md`.
 
 ### Store state (`src/state/store.jsx`)
 

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import { forGallery, useGalleryId } from '../../../data/galleries'
 import {
   BehanceLogo, FacebookLogo, Globe, InstagramLogo, LinkedinLogo, PinterestLogo, ThreadsLogo, TiktokLogo, WhatsappLogo, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react'
@@ -123,11 +124,9 @@ const pristine = (state) => {
   return !!tpl && same(tpl.layout, state.layout) && same(tpl.show, state.show)
 }
 
-const KEY = 'store-v3:gallery-footer'
-
-function load() {
+function load(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY))
+    const saved = JSON.parse(localStorage.getItem(key))
     if (!saved) return DEFAULT
     const layout = { ...DEFAULT.layout, ...saved.layout }
     layout.surface = LEGACY_SURFACE[layout.surface] ?? (SURFACES.some((x) => x.id === layout.surface) ? layout.surface : 'white')
@@ -142,16 +141,15 @@ function load() {
   }
 }
 
+// Shared by every reader in this tab, and kept in sync with other tabs and the dashboard preview.
+const family = forGallery('footer', load)
+
 /**
  * Footer settings, saved to this browser. `defaults` fills in any text that hasn't been edited and
  * `socialDefaults` is the starting list of socials. Returns the resolved config plus setters.
  */
 export function useFooterConfig(defaults, socialDefaults) {
-  const [state, setState] = useState(load)
-
-  useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode: settings just won't persist */ }
-  }, [state])
+  const [state, setState] = family(useGalleryId()).use()
 
   const setLayout = useCallback((patch) => setState((s) => ({ ...s, layout: { ...s.layout, ...patch } })), [])
   const setShow = useCallback((patch) => setState((s) => ({ ...s, show: { ...s.show, ...patch } })), [])

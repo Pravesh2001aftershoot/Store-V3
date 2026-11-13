@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import { forGallery, useGalleryId } from '../../../data/galleries'
 import '@fontsource-variable/fraunces'
 import '@fontsource-variable/cormorant-garamond'
 import '@fontsource-variable/geist-mono'
@@ -102,11 +103,9 @@ export function coverStyle(cover) {
   return { type: { font: 'sans', weight: 300, case: 'uppercase' }, align, size: L.titleSize ?? 'm' }
 }
 
-const KEY = 'store-v3:gallery-sections'
-
-function load() {
+function load(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY))
+    const saved = JSON.parse(localStorage.getItem(key))
     if (!saved) return DEFAULT
     return {
       layout: { ...DEFAULT.layout, ...saved.layout },
@@ -121,16 +120,15 @@ function load() {
 
 const same = (a, b) => Object.keys(a).every((k) => a[k] === b[k])
 
+// Shared by every reader in this tab, and kept in sync with other tabs and the dashboard preview.
+const family = forGallery('sections', load)
+
 /**
  * Heading settings, saved to this browser. `cover` is the live cover config, used when the type is
  * set to match it. Returns the resolved `style` (what headings draw with) plus setters.
  */
 export function useSectionConfig(cover) {
-  const [state, setState] = useState(load)
-
-  useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode: settings just won't persist */ }
-  }, [state])
+  const [state, setState] = family(useGalleryId()).use()
 
   const setLayout = useCallback((patch) => setState((s) => ({ ...s, layout: { ...s.layout, ...patch } })), [])
   const setShow = useCallback((patch) => setState((s) => ({ ...s, show: { ...s.show, ...patch } })), [])

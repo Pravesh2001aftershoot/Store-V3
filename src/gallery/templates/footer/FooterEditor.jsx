@@ -18,7 +18,7 @@ const TABS = [
  * Footer editor. Same shell as the cover editor (left pane / phone sheet). Non-modal, so the
  * preview beside it can scroll: a footer is often taller than the space left for it.
  */
-export default function FooterEditor({ open, onClose, phone, peek, onPeek, gallery, footer, photo, photos }) {
+export default function FooterEditor({ open, onClose, phone, peek, onPeek, gallery, footer, photo, photos, inline = false }) {
   const [tab, setTab] = useState('templates')
   const name = TEMPLATES.find((t) => t.id === footer.config.layout.template)?.name ?? 'Custom'
   return (
@@ -36,6 +36,7 @@ export default function FooterEditor({ open, onClose, phone, peek, onPeek, galle
       onTab={setTab}
       onReset={footer.reset}
       modal={false}
+      inline={inline}
     >
       {tab === 'templates' && <TemplatesTab footer={footer} gallery={gallery} photo={photo} />}
       {tab === 'content' && <ContentTab footer={footer} />}

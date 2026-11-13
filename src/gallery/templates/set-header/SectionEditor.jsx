@@ -24,8 +24,10 @@ const SAMPLE_NOTE = 'Quiet moments before the ceremony, as the light turned gold
  * Collection heading editor: the shared editor shell (left pane / phone sheet) plus a live preview
  * stage beside or above it. `collection` is the heading whose words are being edited; the template,
  * type and position apply to every collection heading.
+ *
+ * `inline` (the dashboard) docks the pane in place and drops the stage: the dashboard has its own preview.
  */
-export default function SectionEditor({ open, onClose, collection, onCollection, sections, headings, photos, cover }) {
+export default function SectionEditor({ open, onClose, collection, onCollection, sections, headings, photos, cover, inline = false }) {
   const [tab, setTab] = useState('templates')
   const [peek, setPeek] = useState(false)
   const phone = useBreakpoint() === 'mobile'
@@ -34,12 +36,12 @@ export default function SectionEditor({ open, onClose, collection, onCollection,
 
   // The page behind the stage shouldn't scroll while editing (the editor is non-modal).
   useEffect(() => {
-    if (!open) return
+    if (!open || inline) return
     const root = document.documentElement
     const prev = root.style.overflow
     root.style.overflow = 'hidden'
     return () => { root.style.overflow = prev }
-  }, [open])
+  }, [open, inline])
 
   const index = Math.max(0, sections.findIndex((s) => s.title === collection))
   const section = sections[index]
@@ -52,7 +54,7 @@ export default function SectionEditor({ open, onClose, collection, onCollection,
   return (
     <>
       <AnimatePresence>
-        {open && (
+        {open && !inline && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -93,6 +95,7 @@ export default function SectionEditor({ open, onClose, collection, onCollection,
         onTab={setTab}
         onReset={headings.reset}
         modal={false}
+        inline={inline}
       >
         {tab === 'templates' && <TemplatesTab headings={headings} words={words} index={index} />}
         {tab === 'text' && (

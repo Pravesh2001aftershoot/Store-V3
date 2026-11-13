@@ -1,21 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import { forGallery, useGalleryId } from '../../../data/galleries'
 
 // The cover photo: the gallery's default, any gallery photo, or an image uploaded from this computer.
 //
 // The choice is saved to this browser. A gallery photo is stored by id. An upload is shrunk to
 // MAX_EDGE and stored as a JPEG data URL; if that's too big for storage it still works until reload.
 
-const KEY = 'store-v3:gallery-cover-photo'
 const MAX_EDGE = 2400
 export const UPLOAD_ID = 'upload'
 
-function load() {
+function load(key) {
   try {
-    return JSON.parse(localStorage.getItem(KEY)) ?? {}
+    return JSON.parse(localStorage.getItem(key)) ?? {}
   } catch {
     return {}
   }
 }
+
+function save(key, state) {
+  try {
+    localStorage.setItem(key, JSON.stringify(state))
+  } catch {
+    // Upload too large for storage: keep it for this session, remember everything else.
+    const drop = (id) => (id === UPLOAD_ID ? undefined : id)
+    try { localStorage.setItem(key, JSON.stringify({ ...state, id: drop(state.id), extra: state.extra?.map(drop), upload: undefined })) } catch { /* ignore */ }
+  }
+}
+
+const family = forGallery('cover-photo', load, save)
 
 /** Reads an image file and returns a downscaled JPEG data URL with its size. */
 export function readImage(file) {
@@ -53,17 +65,7 @@ export const CENTER = { x: 50, y: 50 }
  * Focal points are saved per photo, so they survive switching photos back and forth.
  */
 export function useCoverPhoto(fallback, library) {
-  const [state, setState] = useState(load) // { id?, extra?: [id, id], upload?: { src, w, h, name }, focus?: { [id]: { x, y } } }
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state))
-    } catch {
-      // Upload too large for storage: keep it for this session, remember everything else.
-      const drop = (id) => (id === UPLOAD_ID ? undefined : id)
-      try { localStorage.setItem(KEY, JSON.stringify({ ...state, id: drop(state.id), extra: state.extra?.map(drop), upload: undefined })) } catch { /* ignore */ }
-    }
-  }, [state])
+  const [state, setState] = family(useGalleryId()).use() // { id?, extra?: [id, id], upload?: { src, w, h, name }, focus?: { [id]: { x, y } } }
 
   const upload = useMemo(
     () => (state.upload ? { id: UPLOAD_ID, name: state.upload.name, src: state.upload.src, thumb: state.upload.src, w: state.upload.w, h: state.upload.h } : null),

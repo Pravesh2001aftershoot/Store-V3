@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Link, NavLink, useOutlet, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from 'framer-motion'
 import { ArrowLeft, ArrowUpRight, Handbag, List, X, Images } from '@phosphor-icons/react'
 import { categories } from '../data/catalog'
+import { useCatalogVersion } from '../data/storeConfig'
 import { gallery } from '../data/gallery'
+import { galleryPath, useActiveGallery, DEFAULT_GALLERY } from '../data/galleries'
 import { useStore } from '../state/store'
 import { cn } from '../lib/utils'
 import CartDrawer from './CartDrawer'
@@ -60,6 +62,10 @@ function Header() {
     setScrolled(y > 12)
   })
 
+  // The gallery the client came from: its name in the banner, and where "Back to gallery" goes.
+  const active = useActiveGallery()
+  const back = active.id === DEFAULT_GALLERY ? '/' : galleryPath(active.id)
+
   const links = [
     { to: '/shop', label: 'Shop all' },
     ...categories.map((c) => ({ to: `/shop/${c.id}`, label: c.name })),
@@ -74,7 +80,7 @@ function Header() {
         className="fixed inset-x-0 top-0 z-40"
       >
         <div className="truncate bg-type-0 px-4 py-2 text-center text-12-r text-white/80">
-          <span className="max-sm:hidden">Ordering from <span className="font-medium text-white">{gallery.title}</span> · </span>Use code{' '}
+          <span className="max-sm:hidden">Ordering from <span className="font-medium text-white">{active.title}</span> · </span>Use code{' '}
           <span className="font-mono font-medium text-white">LEXIE10</span> for 10% off
         </div>
         <div
@@ -113,7 +119,7 @@ function Header() {
             </div>
             <div className="flex items-center gap-2">
               <Link
-                to="/"
+                to={back}
                 className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0 md:flex"
               >
                 <ArrowLeft size={15} /> Back to gallery
@@ -155,8 +161,8 @@ function Header() {
                 </motion.div>
               ))}
             </nav>
-            <Link to="/" className="mt-auto flex items-center gap-2 text-14-r text-type-2">
-              <Images size={16} /> Back to {gallery.client} gallery
+            <Link to={back} className="mt-auto flex items-center gap-2 text-14-r text-type-2">
+              <Images size={16} /> Back to {active.client} gallery
             </Link>
           </motion.div>
         )}
@@ -215,6 +221,8 @@ function Footer() {
 export default function Layout() {
   const loc = useLocation()
   const outlet = useOutlet()
+  // Store edits (dashboard) change the catalog in place; re-mount the page so it re-reads it.
+  const catalog = useCatalogVersion()
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [loc.pathname])
   return (
     <div className="min-h-screen">
@@ -228,7 +236,7 @@ export default function Layout() {
           transition={{ duration: 0.5, ease }}
           className="pt-[104px]"
         >
-          {outlet}
+          <Fragment key={catalog}>{outlet}</Fragment>
         </motion.main>
       </AnimatePresence>
       <Footer />

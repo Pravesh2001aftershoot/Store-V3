@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { readJSON } from '../../lib/persisted'
+import { forGallery, useGalleryId } from '../../data/galleries'
 
 // Grid options. Names match the Live Canvas gallery editor (spacing / thumbSize / orientation).
 export const SPACING = [
@@ -42,20 +44,44 @@ export const MARGIN = {
 
 const valid = (list, v, d) => (list.some((o) => o.id === v) ? v : d)
 
-/** Grid settings live in the URL (?spacing=airy&orientation=horizontal&size=large), so a layout can be shared. */
+// The photographer's default grid, set in the dashboard. Clients can still change their own view
+// (Layout menu), which goes in the URL; the URL only carries values that differ from these defaults.
+const loadDefaults = (key) => {
+  const saved = readJSON(key, {})
+  return {
+    spacing: valid(SPACING, saved.spacing, DEFAULTS.spacing),
+    orientation: valid(ORIENTATION, saved.orientation, DEFAULTS.orientation),
+    size: valid(SIZE, saved.size, DEFAULTS.size),
+  }
+}
+const gridDefaults = forGallery('grid', loadDefaults)
+
+/** The photographer's default grid: `[defaults, set(key, value), reset()]`. */
+export function useGridDefaults() {
+  const [defaults, setDefaults] = gridDefaults(useGalleryId()).use()
+  const set = useCallback((key, value) => setDefaults((d) => ({ ...d, [key]: value })), [setDefaults])
+  const reset = useCallback(() => setDefaults({ ...DEFAULTS }), [setDefaults])
+  return [defaults, set, reset]
+}
+
+/**
+ * Grid settings the client sees: the photographer's defaults, overridden by the URL
+ * (?spacing=airy&orientation=horizontal&size=large), so a layout can still be shared by link.
+ */
 export function useGridSettings() {
   const [params, setParams] = useSearchParams()
+  const [base] = gridDefaults(useGalleryId()).use()
   const settings = {
-    spacing: valid(SPACING, params.get('spacing'), DEFAULTS.spacing),
-    orientation: valid(ORIENTATION, params.get('orientation'), DEFAULTS.orientation),
-    size: valid(SIZE, params.get('size'), DEFAULTS.size),
+    spacing: valid(SPACING, params.get('spacing'), base.spacing),
+    orientation: valid(ORIENTATION, params.get('orientation'), base.orientation),
+    size: valid(SIZE, params.get('size'), base.size),
   }
   const set = useCallback(
     (key, value) =>
       setParams(
         (p) => {
           const next = new URLSearchParams(p)
-          if (value === DEFAULTS[key]) next.delete(key)
+          if (value === gridDefaults.get()[key]) next.delete(key)
           else next.set(key, value)
           return next
         },
