@@ -219,6 +219,27 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 | Wordmark template email | Hover | Underline `border → type-0`, arrow nudges up-right | `translate 0.5`, Tailwind default | Tailwind |
 | "Back to top" | Click | Smooth-scrolls to the top of the page | `scrollTo({ behavior: 'smooth' })` | Browser native |
 
+### Collection headings and heading editor: [src/gallery/sections/SectionHeader.jsx](src/gallery/sections/SectionHeader.jsx), [SectionEditor.jsx](src/gallery/sections/SectionEditor.jsx)
+
+Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Text / Style), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Edit pencil (top corner of each heading) | Heading hover or keyboard focus | Fades in. Always visible on touch screens. Sits on the side away from the text. Not shown while multi-selecting | `opacity 0 → 1`, Tailwind default | Tailwind |
+| Edit pencil | Hover | Background `surface-1 → surface-2`, icon `type-1 → type-0` | Tailwind default | Tailwind |
+| Preview stage | Editor opens / closes | Fades in beside the pane (or above the phone sheet); follows the sheet as it collapses | `opacity 0 → 1`, `0.35s`, `ease`; `left` / `bottom`, `550ms`, `cubic-bezier(.22,1,.36,1)` | framer-motion + Tailwind |
+| "Live preview · <collection>" label | Stage scrolls | Stays pinned to the top-left of the stage | `sticky top-0` | CSS |
+| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Thumbnails are real headings at 1280px, scaled to the card ([FitThumb.jsx](src/gallery/editor/FitThumb.jsx)) | Tailwind default; `ResizeObserver` scale | Tailwind + React |
+| Template thumbnails | Words or type change | Re-render live with the current words, font and cover match | n/a | React |
+| Collection picker (Text) | Collection chosen | The fields and the stage switch to that collection's words instantly | n/a | n/a |
+| Label / title / note fields | Typing | Same as the cover editor's text fields. The heading on the page and in the stage update as you type | Tailwind default | Tailwind |
+| "Restore <collection>'s original words" | Click | The words snap back to the defaults; the button disappears | n/a | n/a |
+| Match cover switch (Style) | Toggle | Knob slides as in the cover editor. While on, the typeface, alignment and size controls fade to `45%` opacity and ignore clicks | `transition-opacity`, Tailwind default | framer-motion + Tailwind |
+| Font card | Hover / chosen | Border `input → type-3` on hover; chosen gets `border-type-0 ring-1` | Tailwind default | Tailwind |
+| Segmented controls (weight, case, alignment, title side, size, space around) | Option chosen | Same as the cover editor | `layoutId="seg-{id}"`, `0.35s`, `ease` | framer-motion |
+| Headings (page and stage) | Template, type or spacing change | Update instantly; no transition between templates | n/a | n/a |
+| Headings | Cover changes while Match cover is on | Font, weight, case, alignment and size follow the cover instantly | n/a | n/a |
+
 ### Nav bar: [src/gallery/components/NavBar.jsx](src/gallery/components/NavBar.jsx)
 
 | Element | Trigger | Animation | Values | Library |
@@ -227,8 +248,13 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 | Collection tab text | Hover / active | Colour `type-2 → type-0` | Tailwind default | Tailwind |
 | Collection tab row | Active tab changes | The row scrolls sideways to centre the active tab | `row.scrollTo({ behavior: 'smooth' })` | Browser native |
 | Collection tab | Tap | The page scrolls so the section heading sits under the nav. Scroll-spy is locked until `scrollend`, wheel or touch (1.5s fallback) | `window.scrollTo({ behavior: 'smooth' })` | Browser native |
-| Layout / Favourites buttons | Hover / pressed | Background `→ surface-2` | Tailwind default | Tailwind |
-| Favourites toggle | Click | Jumps back to the top of the grid if scrolled past it | `scrollTo({ behavior: 'instant' })` | Browser native |
+| Layout / Hidden / Favourites buttons | Hover / pressed | Background `→ surface-2`. Text labels show from `lg` up; below that they're icon plus count. "Shop prints" is an icon-only circle below `lg` | Tailwind default | Tailwind |
+| Hidden button | Hover / pressed | Background `→ surface-2`; the eye-slash icon turns bold while the Hidden view is open | Tailwind default | Tailwind |
+| Favourites / Hidden toggle, set tab | Click | Opens that view (or goes back to all photos if it's already open) and jumps back to the top of the grid if scrolled past it. Any selection is cleared | `scrollTo({ behavior: 'instant' })` | Browser native |
+| Set tab | Hover | Text `type-2 → type-0`. No underline: sets aren't part of scroll-spy | Tailwind default | Tailwind |
+| Bucket header (Favourites, Hidden or a set) | View opens | Replaces the tab row instantly: "‹ All photos", name and count, and Clear all / Unhide all / Delete set | n/a | n/a |
+| Delete set / Clear all / Unhide all | Click | A browser `confirm()` dialog; on OK the action runs and the gallery returns to all photos | n/a | Browser native |
+| Select / Cancel (phones, end of the collection row) | Tap | Turns selection mode on or off. Pressed state `surface-2`, the icon fills. Not shown inside a set | Tailwind default | Tailwind |
 | Layout popover (tablet and desktop) | Open / close | Drops down from the top right | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it. `origin-top-right` | framer-motion |
 | Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
 | Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides to the selected option | `layoutId="seg-{label}"`, `0.35s`, `ease` | framer-motion |
@@ -245,6 +271,13 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 | Each action button | Hover | Background `surface-1/90 → surface-1` | Tailwind default | Tailwind |
 | Favourite heart badge (top left) | Tile hover | Hides so it doesn't double up with the action row | Instant `opacity 0` | Tailwind |
 | Infinite-scroll spinner | Next batch loading (350ms simulated delay) | Spins | `animate-spin` (1s linear infinite) | Tailwind keyframes |
+| Hide button (top right) | Tile hover or keyboard focus (hidden on touch) | Fades in with the tile actions; background `surface-1/90 → surface-1` on hover | Tailwind default | Tailwind |
+| Hide button | Click | The photo leaves the grid at once (the rest reflow with no animation) and a toast says where to find it. In the Hidden view the button unhides instead and the photo leaves that list | n/a | n/a |
+| Select check (top left) | Tile hover or keyboard focus (pointer devices; never on touch) | Fades in. Fill `black/15 → black/30` on hover. Click enters selection mode with that photo selected. Not shown inside a set | `opacity 0 → 1`, `duration-200` | Tailwind |
+| Tile | Long press (touch) | Enters selection mode with that photo selected; a short vibration. The tap that follows is ignored, and the system image menu is suppressed | Hold `450ms`; cancelled by more than `10px` of movement, scrolling or lifting the finger. `navigator.vibrate(10)` | Pointer events (custom) |
+| Tile | Tap / click while selecting | Toggles the photo instead of opening the lightbox. Shift-click selects the range from the last photo toggled. Hover zoom and hover actions are off; the heart badge moves to the bottom left | n/a | n/a |
+| Selected tile image | Selected / deselected | Shrinks into the tile with rounded corners; the check fills `primary` with a white tick | `scale 1 → 0.9`, `border-radius 0 → 4px`, `500ms`, `ease-out` | Tailwind |
+| Collection heading pencils | Selection mode on | Hidden until selection ends | n/a | n/a |
 
 ### Lightbox / loupe: [src/gallery/components/Lightbox.jsx](src/gallery/components/Lightbox.jsx)
 
@@ -255,14 +288,33 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 | Photo | Swipe (coarse pointer only) | Rubber-bands under the finger and snaps back. A swipe moves to the next photo | `drag="x"`, `dragElastic 0.7`, `dragSnapToOrigin`. Counts as a swipe at > `60px` offset or > `400px/s` | framer-motion drag |
 | Header icons, prev / next | Hover | Background `→ white/10`, text `white/80 → white` | Tailwind default | Tailwind |
 | Heart | Toggle | Icon switches between outline and red fill | Instant | n/a |
+| Hide / unhide (header) | Click | The photo leaves the current view; the viewer steps to the next photo (or the previous one at the end) with the usual slide, and closes if none are left. Toast confirms | See Photo above | framer-motion |
 | Film-strip thumb | Current / hover | Current: `opacity 100%` + white ring. Others `50%`, hover `80%` | Tailwind default | Tailwind |
 | Film strip | Index changes | Scrolls to centre the current thumb | `scrollIntoView({ behavior: 'smooth', inline: 'center' })` | Browser native |
+
+### Selection bar: [src/gallery/components/SelectionBar.jsx](src/gallery/components/SelectionBar.jsx)
+
+Shown while multi-selecting. Esc closes the name field if it's open, otherwise leaves selection; ⌘/Ctrl+A selects everything in view (not while typing).
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Bar | Selection starts / ends | Rises in from the bottom, drops out | `opacity 0 → 1`, `y 24 → 0`, `0.3s`, `ease`. Exit reverses it | framer-motion |
+| "N selected" | Count changes | Number changes instantly; announced politely to screen readers | `aria-live="polite"` | n/a |
+| "Select all N" / "Select none" | Hover / click | Text `white/60 → white`, underline. Click swaps the label | Tailwind default | Tailwind |
+| Action buttons (Share, Favourite, Download, New set) | Hover / disabled | Background `→ white/10`, text `white/85 → white`. Disabled at `35%` opacity when nothing is selected | Tailwind default | Tailwind |
+| Favourite action | Every selected photo is a favourite | Becomes "Unfavourite" with a filled red heart | Instant | n/a |
+| Favourite / Download | Click | Runs, toasts, and the bar leaves (selection ends) | See Bar | framer-motion |
+| Share | Click | Opens the share sheet, or copies links with a toast. Selection stays | n/a | Browser native |
+| New set (tablet / desktop) | Click | A name panel floats up above the bar; the name is pre-selected. Enter or "Create set" makes the set, toasts, and selection ends | Panel `opacity 0 → 1`, `y 8 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it | framer-motion |
+| New set (phone) | Tap | The name form opens in a [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx) | Same as BottomSheet | framer-motion |
+| New set | At the two-set limit | No form: a toast asks to delete a set first | n/a | n/a |
 
 ### Toast: [src/gallery/components/Toaster.jsx](src/gallery/components/Toaster.jsx)
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
-| Toast pill | Download / share / favourite feedback | Rises in, drops out | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`, `y → 8`. `0.2s` | framer-motion |
+| Toast pill | Download / share / favourite / hide / set feedback | Rises in, drops out | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`, `y → 8`. `0.2s` | framer-motion |
+| Toast stack | Selection bar shows / hides | Moves up above the bar, and back down | `bottom 24px → 96px`, `duration-300` | Tailwind |
 
 ### Quick buy panel: [src/gallery/components/QuickBuy.jsx](src/gallery/components/QuickBuy.jsx)
 
@@ -376,7 +428,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
 | Header | Scroll down past 240px / scroll up | Hides upward, shows again on scroll up. Stays visible while the mobile menu is open | `y 0 ↔ -100%`, `0.45s`, `ease` | framer-motion `useScroll` + `useMotionValueEvent` |
-| Header bar | Scroll past 12px | A frosted background and border appear | `bg transparent → surface-0/85` + `backdrop-blur-xl`, border `transparent → border`, `transition-all duration-500` | Tailwind |
+| Header bar | Scroll past 12px | The bottom border appears. The background is always solid `surface-0` | Border `transparent → border`, `transition-colors duration-500` | Tailwind |
 | Nav underline (desktop) | Route changes | Slides to the active link | `layoutId="nav-underline"`, `0.4s`, `ease` | framer-motion |
 | Nav links, "Back to gallery", footer links | Hover | Colour / background | Tailwind default | Tailwind |
 | Cart button count | Item count changes | The old number slides up and out, the new one slides up in | Enter `y 12 → 0`. Exit `y → -12`. `0.3s`, `ease`. `mode="popLayout"`, `initial={false}` | framer-motion |
@@ -573,3 +625,7 @@ These are observations, not changes. They are useful when tidying up motion.
 11. **Cover editor collection chips don't slide.** They switch instantly, while the editor's tab bar and segmented controls slide a pill with `layoutId`.
 12. **Footer changes don't animate.** Switching footer templates or backgrounds swaps the layout instantly, while the cover's text block glides between positions. Adding or removing a social profile has no motion either.
 13. **The footer has no entrance motion.** The gallery grid and cover reveal on scroll; the footer simply appears.
+14. **Collection headings don't animate.** Switching heading templates, fonts or spacing swaps instantly, and the headings have no scroll reveal, while the portfolio's section headings use `SplitText`.
+15. **Delete and clear confirmations use `window.confirm`.** Deleting a set, clearing favourites and unhiding all use the browser's dialog, unlike every other dialog in the app (Radix, animated).
+16. **Selection mode has no drag-select and no entry on tablets without a long press.** The phone Select button only appears below 640px, and touch tablets don't show the hover check.
+17. **Hiding has no motion.** A hidden photo vanishes and the grid reflows instantly, where the selected-tile shrink and the lightbox slide are animated. A short fade or collapse would make the change easier to follow.
