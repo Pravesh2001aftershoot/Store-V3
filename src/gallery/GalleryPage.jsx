@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
 import { useGridSettings } from './lib/settings'
 import { useMeasuredPhotos } from './lib/hooks'
-import Cover from './components/Cover'
+import CoverSection from './cover/CoverSection'
 import NavBar from './components/NavBar'
 import GalleryGrid, { sectionId } from './components/GalleryGrid'
 import Lightbox from './components/Lightbox'
@@ -142,7 +142,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Cover gallery={gallery} photo={coverPhoto} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <CoverSection gallery={gallery} photo={coverPhoto} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <div ref={gridRef}>
         <NavBar

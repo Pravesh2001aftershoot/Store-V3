@@ -1,0 +1,186 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+// Cover settings: what the photographer can change about the gallery cover.
+//
+//   layout  — where things sit (text position, alignment, logo, buttons, margins, overlay)
+//   show    — which optional pieces are visible
+//   content — the words. Only edited fields are stored; the rest fall back to the gallery's own data.
+//
+// Templates are preset `layout` + `show` combinations. Choosing one never touches `content`.
+
+/** Character limits for the text fields. */
+export const LIMITS = { eyebrow: 40, title: 40, subtitle: 80, primaryCta: 20, secondaryCta: 20 }
+
+/** 3 × 3 text positions, as `<vertical>-<horizontal>`. */
+export const POSITIONS = [
+  'top-left', 'top-center', 'top-right',
+  'middle-left', 'middle-center', 'middle-right',
+  'bottom-left', 'bottom-center', 'bottom-right',
+]
+
+export const ALIGN = [
+  { id: 'left', label: 'Left' },
+  { id: 'center', label: 'Center' },
+  { id: 'right', label: 'Right' },
+]
+
+export const LOGO = [
+  { id: 'top-left', label: 'Left', hint: 'Top bar, left' },
+  { id: 'top-center', label: 'Center', hint: 'Top bar, centered' },
+  { id: 'top-right', label: 'Right', hint: 'Top bar, right' },
+  { id: 'inline', label: 'In text', hint: 'Above the title' },
+  { id: 'hidden', label: 'Off', hint: 'No logo on the cover' },
+]
+
+export const TITLE_SIZE = [
+  { id: 's', label: 'Small' },
+  { id: 'm', label: 'Medium' },
+  { id: 'l', label: 'Large' },
+]
+
+export const WIDTH = [
+  { id: 'narrow', label: 'Narrow', px: 520 },
+  { id: 'medium', label: 'Medium', px: 720 },
+  { id: 'wide', label: 'Wide', px: 960 },
+]
+
+export const CTA_LAYOUT = [
+  { id: 'row', label: 'Side by side' },
+  { id: 'stack', label: 'Stacked' },
+]
+
+export const CTA_SIZE = [
+  { id: 'md', label: 'Regular' },
+  { id: 'lg', label: 'Large' },
+]
+
+/** Slider ranges, in px at full desktop width. Smaller screens scale these down (see Cover). */
+export const MARGIN_X = { min: 0, max: 120, step: 4 }
+export const MARGIN_Y = { min: 0, max: 160, step: 4 }
+
+const base = {
+  layout: {
+    position: 'bottom-center',
+    align: 'center',
+    logo: 'top-left',
+    titleSize: 'm',
+    width: 'wide',
+    ctaLayout: 'row',
+    ctaSize: 'lg',
+    marginX: 32,
+    marginY: 64,
+    overlay: 50,
+  },
+  show: { eyebrow: true, subtitle: true, primaryCta: true, secondaryCta: true, storeLink: true },
+}
+
+export const TEMPLATES = [
+  {
+    id: 'classic',
+    name: 'Classic',
+    description: 'Centered at the bottom',
+    ...base,
+  },
+  {
+    id: 'centered',
+    name: 'Centered',
+    description: 'Big title, logo above it',
+    layout: { ...base.layout, position: 'middle-center', logo: 'inline', titleSize: 'l', width: 'medium', marginY: 48, overlay: 60 },
+    show: base.show,
+  },
+  {
+    id: 'editorial',
+    name: 'Editorial',
+    description: 'Left-aligned, magazine feel',
+    layout: { ...base.layout, position: 'bottom-left', align: 'left', titleSize: 'l', width: 'medium', ctaSize: 'md', marginX: 56, marginY: 56 },
+    show: base.show,
+  },
+  {
+    id: 'minimal',
+    name: 'Minimal',
+    description: 'Title and one button',
+    layout: { ...base.layout, position: 'middle-center', logo: 'hidden', width: 'medium', ctaSize: 'md', overlay: 35 },
+    show: { ...base.show, subtitle: false, secondaryCta: false, storeLink: false },
+  },
+  {
+    id: 'corner',
+    name: 'Top corner',
+    description: 'Text top left, logo right',
+    layout: { ...base.layout, position: 'top-left', align: 'left', logo: 'top-right', width: 'narrow', ctaSize: 'md', marginX: 40, marginY: 32 },
+    show: base.show,
+  },
+  {
+    id: 'signature',
+    name: 'Signature',
+    description: 'Quiet, bottom right',
+    layout: { ...base.layout, position: 'bottom-right', align: 'right', logo: 'inline', titleSize: 's', width: 'narrow', ctaLayout: 'stack', ctaSize: 'md', marginX: 48, marginY: 48, overlay: 45 },
+    show: { ...base.show, storeLink: false },
+  },
+]
+
+const DEFAULT = { layout: base.layout, show: base.show, content: {} }
+
+/** The gallery's own words, used for any field the photographer hasn't edited. */
+export const defaultContent = (gallery, total) => ({
+  eyebrow: `${gallery.date} · ${total} photos`,
+  title: gallery.client,
+  subtitle: `Photographed by ${gallery.photographer}`,
+  primaryCta: 'View gallery',
+  secondaryCta: 'Shop prints',
+})
+
+const same = (a, b) => Object.keys(a).every((k) => a[k] === b[k])
+
+/** The template the current layout matches exactly, or null once it's been customised. */
+export const matchTemplate = (config) =>
+  TEMPLATES.find((t) => same(t.layout, config.layout) && same(t.show, config.show))?.id ?? null
+
+const KEY = 'store-v3:gallery-cover'
+
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY))
+    if (!saved) return DEFAULT
+    return {
+      layout: { ...DEFAULT.layout, ...saved.layout },
+      show: { ...DEFAULT.show, ...saved.show },
+      content: { ...saved.content },
+    }
+  } catch {
+    return DEFAULT
+  }
+}
+
+/**
+ * Cover settings, saved to this browser. `defaults` fills in any text that hasn't been edited.
+ * Returns the resolved config plus setters for each part.
+ */
+export function useCoverConfig(defaults) {
+  const [state, setState] = useState(load)
+
+  useEffect(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode: settings just won't persist */ }
+  }, [state])
+
+  const setLayout = useCallback((patch) => setState((s) => {
+    const layout = { ...s.layout, ...patch }
+    // Moving the text sideways brings its alignment along; alignment can still be changed afterwards.
+    if (patch.position && !patch.align) layout.align = patch.position.split('-')[1]
+    return { ...s, layout }
+  }), [])
+  const setShow = useCallback((patch) => setState((s) => ({ ...s, show: { ...s.show, ...patch } })), [])
+  const setContent = useCallback((patch) => setState((s) => ({ ...s, content: { ...s.content, ...patch } })), [])
+  const applyTemplate = useCallback((id) => {
+    const t = TEMPLATES.find((x) => x.id === id)
+    if (t) setState((s) => ({ ...s, layout: t.layout, show: t.show }))
+  }, [])
+  const reset = useCallback(() => setState(DEFAULT), [])
+
+  const config = useMemo(
+    () => ({ layout: state.layout, show: state.show, content: { ...defaults, ...state.content } }),
+    [state, defaults]
+  )
+  const template = matchTemplate(state)
+
+  return { config, template, setLayout, setShow, setContent, applyTemplate, reset }
+}
