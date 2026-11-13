@@ -254,8 +254,9 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
     )
 
   // Phones only, at the end of the collections row. On tablet/desktop selection starts from a photo's
-  // hover check and ends from the selection bar, so the top bar has no Select button.
-  const selectButton = (
+  // hover check and ends from the selection bar, so the top bar has no Select button. A client's own
+  // set has no multi-select, so the button is left out there.
+  const selectButton = !view?.startsWith('set:') && (
     <button
       onClick={onSelecting}
       aria-pressed={selecting}

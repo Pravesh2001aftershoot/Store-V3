@@ -44,7 +44,7 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       onBuy={() => onBuy(item)}
       selecting={selecting}
       selected={selected?.has(item.id)}
-      onSelect={(e) => onSelect?.(offset + index, e)}
+      onSelect={onSelect ? (e) => onSelect(offset + index, e) : undefined}
     />
   )
 

@@ -285,7 +285,7 @@ export default function GalleryPage() {
           onBuy={buy}
           selecting={selecting}
           selected={selected}
-          onSelect={select}
+          onSelect={openSet ? undefined : select} // no multi-select inside a client's own set
           headings={headings}
           onEditHeading={selecting ? undefined : setEditingHeading}
           resetKey={view}

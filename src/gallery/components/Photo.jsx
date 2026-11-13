@@ -91,7 +91,9 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
         </>
       )}
 
-      {/* Select check: always shown while selecting; otherwise appears on hover as the way into multi-select. */}
+      {/* Select check: always shown while selecting; otherwise appears on hover as the way into multi-select.
+          Left out where the grid doesn't offer multi-select (no `onSelect`), e.g. inside a client's set. */}
+      {onSelect && (
       <button
         onClick={onSelect}
         tabIndex={selecting ? -1 : 0}
@@ -109,6 +111,7 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
       >
         <Check size={12} weight="bold" />
       </button>
+      )}
 
       {favorite && (
         <Heart
@@ -147,7 +150,7 @@ function useLongPress(onLongPress) {
     },
     handlers: {
       onPointerDown: (e) => {
-        if (e.pointerType !== 'touch') return
+        if (e.pointerType !== 'touch' || !onLongPress) return
         fired.current = false
         start.current = { x: e.clientX, y: e.clientY }
         clearTimeout(timer.current)
