@@ -33,13 +33,14 @@ export default function CoverSection({ gallery, photo: defaultPhoto, photos, col
 
   return (
     <>
-      <Cover gallery={gallery} photo={photo} config={cover.config} inset={inset} editing={editing} onEnter={onEnter} onEdit={open} />
+      <Cover gallery={gallery} photo={photo} slots={media.slots} config={cover.config} inset={inset} editing={editing} onEnter={onEnter} onEdit={open} />
       <CoverEditor
         open={editing}
         onClose={() => setEditing(false)}
         phone={phone}
         peek={peek}
         onPeek={setPeek}
+        gallery={gallery}
         photo={photo}
         cover={cover}
         media={media}

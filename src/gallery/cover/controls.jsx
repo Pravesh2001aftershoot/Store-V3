@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
 import { POSITIONS } from './config'
@@ -175,6 +175,74 @@ export function TextField({ label, hint, value, onChange, limit, multiline, requ
           </span>
         </div>
       </div>
+    </div>
+  )
+}
+
+const clamp = (n) => Math.round(Math.min(100, Math.max(0, n)))
+
+/**
+ * The whole photo with a draggable focal point. The point (in % across and down) is what stays
+ * in view when the cover crops the photo to its frame. Click, drag or use the arrow keys.
+ */
+export function FocalPoint({ photo, value, onChange }) {
+  const box = useRef(null)
+  const ratio = photo.w && photo.h ? photo.w / photo.h : 3 / 2
+  const at = (e) => {
+    const r = box.current.getBoundingClientRect()
+    onChange({ x: clamp(((e.clientX - r.left) / r.width) * 100), y: clamp(((e.clientY - r.top) / r.height) * 100) })
+  }
+  const keys = { ArrowLeft: [-2, 0], ArrowRight: [2, 0], ArrowUp: [0, -2], ArrowDown: [0, 2] }
+  return (
+    <div className="flex justify-center rounded-xl bg-surface-2 p-3">
+      <div
+        ref={box}
+        role="slider"
+        tabIndex={0}
+        aria-label="Focal point"
+        aria-valuenow={value.x}
+        aria-valuetext={`${value.x}% across, ${value.y}% down`}
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); at(e) }}
+        onPointerMove={(e) => e.currentTarget.hasPointerCapture(e.pointerId) && at(e)}
+        onKeyDown={(e) => {
+          const d = keys[e.key]
+          if (!d) return
+          e.preventDefault()
+          const m = e.shiftKey ? 5 : 1
+          onChange({ x: clamp(value.x + d[0] * m), y: clamp(value.y + d[1] * m) })
+        }}
+        className="group relative cursor-crosshair touch-none select-none overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-type-0 focus-visible:ring-offset-2"
+        style={{ aspectRatio: ratio, width: `min(100%, ${Math.round(220 * ratio)}px)` }}
+      >
+        <img src={photo.thumb ?? photo.src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full object-cover" />
+        {/* Thirds, as a framing guide. */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,transparent_33.2%,rgba(255,255,255,.35)_33.3%,transparent_33.5%,transparent_66.5%,rgba(255,255,255,.35)_66.6%,transparent_66.8%),linear-gradient(to_bottom,transparent_33.2%,rgba(255,255,255,.35)_33.3%,transparent_33.5%,transparent_66.5%,rgba(255,255,255,.35)_66.6%,transparent_66.8%)] opacity-0 transition group-hover:opacity-100 group-active:opacity-100" />
+        <span className="pointer-events-none absolute inset-y-0 w-px bg-white/60" style={{ left: `${value.x}%` }} />
+        <span className="pointer-events-none absolute inset-x-0 h-px bg-white/60" style={{ top: `${value.y}%` }} />
+        <span
+          className="pointer-events-none absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-black/20 shadow-[0_1px_6px_rgba(0,0,0,.45)] backdrop-blur-[1px]"
+          style={{ left: `${value.x}%`, top: `${value.y}%` }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/** Color swatches. `options`: [{ id, label, bg }]. */
+export function Swatches({ options, value, onChange, label }) {
+  return (
+    <div role="radiogroup" aria-label={label} className="grid grid-cols-4 gap-2">
+      {options.map((o) => (
+        <button key={o.id} role="radio" aria-checked={value === o.id} onClick={() => onChange(o.id)} className="group flex flex-col items-center gap-1.5">
+          <span
+            className={cn('h-10 w-full rounded-lg ring-1 ring-inset ring-black/10 ring-offset-2 transition', value === o.id ? 'outline outline-2 outline-offset-2 outline-type-0' : 'group-hover:ring-black/25')}
+            style={{ background: o.bg }}
+          />
+          <span className={cn('text-12-m', value === o.id ? 'text-type-0' : 'text-type-2')}>{o.label}</span>
+        </button>
+      ))}
     </div>
   )
 }

@@ -1,12 +1,16 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowCounterClockwise, CaretDown, CaretUp, Check, CircleNotch, TextAlignCenter, TextAlignLeft, TextAlignRight, Trash, UploadSimple, X } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn } from '../../lib/utils'
-import { CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO, MARGIN_X, MARGIN_Y, TEMPLATES, TITLE_SIZE, WIDTH } from './config'
-import { Label, PositionGrid, Section, Segmented, Slider, Switch, TextField } from './controls'
-import { UPLOAD_ID, readImage } from './photo'
+import {
+  ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO, MARGIN_X, MARGIN_Y, PHOTO_SIZE,
+  SHAPES, SURFACES, TEMPLATES, TITLE_SIZE, WIDTH, isComposed, photoCount,
+} from './config'
+import { FocalPoint, Label, PositionGrid, Section, Segmented, Slider, Swatches, Switch, TextField } from './controls'
+import { CENTER, UPLOAD_ID, readImage } from './photo'
+import Composed from './Composed'
 
 const ease = [0.22, 1, 0.36, 1]
 const TABS = [
@@ -32,7 +36,7 @@ export const PEEK_H = 64
  * and as a bottom sheet on phones that can collapse to a bar to preview the full cover.
  * There's no dimming backdrop: the cover beside/above it is the live preview.
  */
-export default function CoverEditor({ open, onClose, phone, peek, onPeek, photo, cover, media, photos = [], collections = [] }) {
+export default function CoverEditor({ open, onClose, phone, peek, onPeek, gallery, photo, cover, media, photos = [], collections = [] }) {
   const [tab, setTab] = useState('templates')
 
   return (
@@ -73,10 +77,10 @@ export default function CoverEditor({ open, onClose, phone, peek, onPeek, photo,
                       transition={{ duration: 0.2, ease }}
                       className="pb-6 pt-4"
                     >
-                      {tab === 'templates' && <TemplatesTab cover={cover} photo={photo} />}
+                      {tab === 'templates' && <TemplatesTab cover={cover} photo={photo} slots={media.slots} gallery={gallery} />}
                       {tab === 'layout' && <LayoutTab cover={cover} photo={photo} />}
                       {tab === 'text' && <TextTab cover={cover} />}
-                      {tab === 'photo' && <PhotoTab media={media} photos={photos} collections={collections} />}
+                      {tab === 'photo' && <PhotoTab cover={cover} media={media} photos={photos} collections={collections} />}
                     </motion.div>
                   </AnimatePresence>
                 </div>
@@ -101,7 +105,7 @@ export default function CoverEditor({ open, onClose, phone, peek, onPeek, photo,
 }
 
 function Header({ phone, peek, onPeek, tab, onTab, template }) {
-  const name = TEMPLATES.find((t) => t.id === template)?.name ?? 'Custom'
+  const name = ALL_TEMPLATES.find((t) => t.id === template)?.name ?? 'Custom'
   return (
     <div className={cn('shrink-0 px-5', !(phone && peek) && 'border-b border-border pb-3')}>
       {phone && (
@@ -148,33 +152,53 @@ function Header({ phone, peek, onPeek, tab, onTab, template }) {
 
 // ── Templates ───────────────────────────────────────────────────────────────
 
-function TemplatesTab({ cover, photo }) {
+function TemplatesTab({ cover, photo, slots, gallery }) {
+  const card = (t, thumb) => {
+    const active = cover.template === t.id
+    return (
+      <button key={t.id} onClick={() => cover.applyTemplate(t.id)} aria-pressed={active} className="group text-left">
+        <div className={cn('relative rounded-xl p-0.5 ring-1 transition', active ? 'ring-2 ring-type-0' : 'ring-border group-hover:ring-type-3')}>
+          {thumb}
+          {active && (
+            <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-white text-type-0 shadow">
+              <Check size={12} weight="bold" />
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-13-m text-type-0">{t.name}</p>
+        <p className="text-12-r text-type-2">{t.description}</p>
+      </button>
+    )
+  }
   return (
     <div>
-      <p className="mb-3 text-12-r text-type-2">Start from a template, then fine-tune it under Layout and Text. Your words are kept.</p>
-      <div className="grid grid-cols-2 gap-3">
-        {TEMPLATES.map((t) => {
-          const active = cover.template === t.id
-          return (
-            <button
-              key={t.id}
-              onClick={() => cover.applyTemplate(t.id)}
-              aria-pressed={active}
-              className="group text-left"
-            >
-              <div className={cn('relative rounded-xl p-0.5 ring-1 transition', active ? 'ring-2 ring-type-0' : 'ring-border group-hover:ring-type-3')}>
-                <TemplateThumb template={t} photo={photo} />
-                {active && (
-                  <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-white text-type-0 shadow">
-                    <Check size={12} weight="bold" />
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-13-m text-type-0">{t.name}</p>
-              <p className="text-12-r text-type-2">{t.description}</p>
-            </button>
-          )
-        })}
+      <p className="mb-1 text-12-r text-type-2">Start from a template, then fine-tune it under Layout and Text. Your words are kept.</p>
+      <Section title="Full bleed" hint="The photo fills the screen, text on top.">
+        <div className="grid grid-cols-2 gap-3">{TEMPLATES.map((t) => card(t, <TemplateThumb template={t} photo={photo} />))}</div>
+      </Section>
+      <Section title="Composed" hint="The photo is placed on a backdrop. Pick its shape and size under Layout.">
+        <div className="grid grid-cols-2 gap-3">
+          {COMPOSED_TEMPLATES.map((t) => card(t, <ComposedThumb template={t} slots={slots} gallery={gallery} content={cover.config.content} />))}
+        </div>
+      </Section>
+    </div>
+  )
+}
+
+/** The composed cover itself, rendered at a desktop size and scaled down to fit the card. */
+const VW = 1200
+function ComposedThumb({ template, slots, gallery, content }) {
+  const ref = useRef(null)
+  const [scale, setScale] = useState(0.14)
+  useLayoutEffect(() => {
+    const ro = new ResizeObserver(([e]) => setScale(e.contentRect.width / VW))
+    ro.observe(ref.current)
+    return () => ro.disconnect()
+  }, [])
+  return (
+    <div ref={ref} inert className="relative aspect-[4/3] overflow-hidden rounded-[10px] bg-surface-2">
+      <div className="absolute left-0 top-0 origin-top-left" style={{ width: VW, height: VW * 0.75, transform: `scale(${scale})` }}>
+        <Composed gallery={gallery} slots={slots} config={{ layout: template.layout, show: template.show, content }} still />
       </div>
     </div>
   )
@@ -226,6 +250,7 @@ function LayoutTab({ cover, photo }) {
   const { layout: L, show } = cover.config
   const set = cover.setLayout
   const anyCta = show.primaryCta || show.secondaryCta
+  if (isComposed(L)) return <ComposedLayout cover={cover} photo={photo} />
   return (
     <div>
       <Section title="Text" hint="Tap where the title block should sit.">
@@ -239,21 +264,83 @@ function LayoutTab({ cover, photo }) {
         <Segmented options={LOGO} value={L.logo} onChange={(logo) => set({ logo })} />
       </Section>
 
-      <Section title="Buttons" hint={anyCta ? undefined : 'Both buttons are hidden. Turn them on under Text.'}>
-        <div className={cn('space-y-3', !anyCta && 'pointer-events-none opacity-50')}>
-          <Segmented label="Arrangement" options={CTA_LAYOUT} value={L.ctaLayout} onChange={(ctaLayout) => set({ ctaLayout })} />
-          <Segmented label="Size" options={CTA_SIZE} value={L.ctaSize} onChange={(ctaSize) => set({ ctaSize })} />
-        </div>
-      </Section>
-
-      <Section title="Margins" hint="Distance from the edges on a desktop screen. Scales down on smaller screens.">
-        <Slider label="Left & right" {...MARGIN_X} value={L.marginX} onChange={(marginX) => set({ marginX })} format={(v) => `${v}px`} />
-        <Slider label="Top & bottom" {...MARGIN_Y} value={L.marginY} onChange={(marginY) => set({ marginY })} format={(v) => `${v}px`} />
-      </Section>
+      <ButtonsSection L={L} set={set} anyCta={anyCta} />
+      <MarginsSection L={L} set={set} />
 
       <Section title="Overlay" hint="Darkens the photo behind the text so it stays readable.">
         <Slider label="Strength" min={0} max={100} step={5} value={L.overlay} onChange={(overlay) => set({ overlay })} format={(v) => `${v}%`} />
       </Section>
+    </div>
+  )
+}
+
+function ButtonsSection({ L, set, anyCta }) {
+  return (
+    <Section title="Buttons" hint={anyCta ? undefined : 'Both buttons are hidden. Turn them on under Text.'}>
+      <div className={cn('space-y-3', !anyCta && 'pointer-events-none opacity-50')}>
+        <Segmented label="Arrangement" options={CTA_LAYOUT} value={L.ctaLayout} onChange={(ctaLayout) => set({ ctaLayout })} />
+        <Segmented label="Size" options={CTA_SIZE} value={L.ctaSize} onChange={(ctaSize) => set({ ctaSize })} />
+      </div>
+    </Section>
+  )
+}
+
+function MarginsSection({ L, set }) {
+  return (
+    <Section title="Margins" hint="Distance from the edges on a desktop screen. Scales down on smaller screens.">
+      <Slider label="Left & right" {...MARGIN_X} value={L.marginX} onChange={(marginX) => set({ marginX })} format={(v) => `${v}px`} />
+      <Slider label="Top & bottom" {...MARGIN_Y} value={L.marginY} onChange={(marginY) => set({ marginY })} format={(v) => `${v}px`} />
+    </Section>
+  )
+}
+
+/** What "Flip sides" does, per composition. */
+const FLIP_HINT = {
+  banner: 'Title on the right, logo on the left',
+  split: 'Photo on the left, title on the right',
+  strip: 'Title panel on the right',
+  corner: 'Photo top left, title bottom right',
+}
+const LOGO_TOGGLE = [{ id: 'top-left', label: 'Show' }, { id: 'hidden', label: 'Hide' }]
+const orientation = (p) => (!p?.w || !p?.h ? null : p.w > p.h * 1.05 ? 'landscape' : p.h > p.w * 1.05 ? 'portrait' : 'square')
+
+/** Layout controls for composed covers: the photo's shape and size, sides, backdrop. */
+function ComposedLayout({ cover, photo }) {
+  const { layout: L, show } = cover.config
+  const set = cover.setLayout
+  const meta = COMPOSITIONS[L.composition]
+  const found = orientation(photo)
+  const shapes = SHAPES.map((s) => (s.id === 'auto' && found ? { ...s, hint: `Follows the photo — this one is ${found}` } : s))
+  return (
+    <div>
+      <Section title="Photo" hint={`${meta.name} layout. Switch layouts under Templates.`}>
+        {meta.shape && <Segmented label="Shape" options={shapes} value={L.shape} onChange={(shape) => set({ shape })} />}
+        <Segmented label={L.composition === 'split' ? 'Photo width' : 'Size'} options={PHOTO_SIZE} value={L.photoSize} onChange={(photoSize) => set({ photoSize })} />
+        {meta.flip && (
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <Label>Flip sides</Label>
+              <p className="-mt-1.5 text-12-r text-type-2">{FLIP_HINT[L.composition]}</p>
+            </div>
+            <Switch checked={L.flip} onChange={(flip) => set({ flip })} label="Flip sides" />
+          </div>
+        )}
+      </Section>
+
+      <Section title="Background">
+        <Swatches label="Background" options={SURFACES} value={L.surface} onChange={(surface) => set({ surface })} />
+      </Section>
+
+      <Section title="Text">
+        <Segmented label="Title size" options={TITLE_SIZE} value={L.titleSize} onChange={(titleSize) => set({ titleSize })} />
+      </Section>
+
+      <Section title="Logo">
+        <Segmented options={LOGO_TOGGLE} value={L.logo === 'hidden' ? 'hidden' : 'top-left'} onChange={(logo) => set({ logo })} />
+      </Section>
+
+      <ButtonsSection L={L} set={set} anyCta={show.primaryCta || show.secondaryCta} />
+      <MarginsSection L={L} set={set} />
     </div>
   )
 }
@@ -294,14 +381,19 @@ function TextTab({ cover }) {
 
 const PAGE = 36
 
-function PhotoTab({ media, photos, collections }) {
+function PhotoTab({ cover, media, photos, collections }) {
+  const count = photoCount(cover.config.layout)
+  const [picked, setSlot] = useState(0)
+  const slot = Math.min(picked, count - 1)
   const [filter, setFilter] = useState('All')
   const [limit, setLimit] = useState(PAGE)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
   const input = useRef(null)
-  const { photo, upload } = media
+  const { upload } = media
+  const photo = media.slots[slot]
+  const usedIn = (id) => media.slots.slice(0, count).findIndex((p) => p.id === id)
 
   const list = filter === 'All' ? photos : photos.filter((p) => p.collection === filter)
   const shown = list.slice(0, limit)
@@ -313,7 +405,7 @@ function PhotoTab({ media, photos, collections }) {
     setBusy(true)
     try {
       const img = await readImage(file)
-      media.setUpload({ ...img, name: file.name })
+      media.setUpload({ ...img, name: file.name }, slot)
     } catch {
       setError('We couldn’t read that image. Try another file.')
     } finally {
@@ -321,9 +413,38 @@ function PhotoTab({ media, photos, collections }) {
     }
   }
 
+  const focus = photo.focus ?? CENTER
+  const centered = focus.x === CENTER.x && focus.y === CENTER.y
+
   return (
     <div>
-      <Section title="Upload" hint="Use a photo that isn’t in this gallery. Landscape works best.">
+      {count > 1 && (
+        <Section title="Photos in this layout" hint="Pick a spot, then choose its photo below.">
+          <div role="radiogroup" aria-label="Photo spot" className="grid gap-2" style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}>
+            {media.slots.slice(0, count).map((p, i) => (
+              <button key={i} role="radio" aria-checked={slot === i} onClick={() => setSlot(i)} className="group text-left">
+                <span className={cn('relative block aspect-square overflow-hidden rounded-lg transition', slot === i ? 'ring-2 ring-type-0 ring-offset-2' : 'ring-1 ring-border group-hover:ring-type-3')}>
+                  <img src={p.thumb ?? p.src} alt="" draggable={false} className="h-full w-full object-cover" style={{ objectPosition: `${p.focus.x}% ${p.focus.y}%` }} />
+                  <span className="absolute left-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-11-sb text-type-0 shadow">{i + 1}</span>
+                </span>
+                <span className={cn('mt-1.5 block text-12-m', slot === i ? 'text-type-0' : 'text-type-2')}>{i === 0 ? 'Main' : `Photo ${i + 1}`}</span>
+              </button>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      <Section title="Focal point" hint="Tap or drag to the part that should stay in view when the photo is cropped.">
+        <FocalPoint photo={photo} value={focus} onChange={(point) => media.setFocus(photo.id, point)} />
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-12-r tabular-nums text-type-2">{focus.x}% across · {focus.y}% down</p>
+          <Button variant="ghost" size="sm" className="-mr-2" disabled={centered} onClick={() => media.setFocus(photo.id, CENTER)}>
+            <ArrowCounterClockwise size={14} /> Center
+          </Button>
+        </div>
+      </Section>
+
+      <Section title="Upload" hint={isComposed(cover.config.layout) ? 'Use a photo that isn’t in this gallery.' : 'Use a photo that isn’t in this gallery. Landscape works best.'}>
         <input
           ref={input}
           type="file"
@@ -351,7 +472,7 @@ function PhotoTab({ media, photos, collections }) {
         {upload && (
           <div className="flex items-center gap-3">
             <button
-              onClick={() => media.choose(UPLOAD_ID)}
+              onClick={() => media.choose(UPLOAD_ID, slot)}
               aria-pressed={photo.id === UPLOAD_ID}
               className={cn('relative h-14 w-20 shrink-0 overflow-hidden rounded-lg ring-offset-2 transition', photo.id === UPLOAD_ID ? 'ring-2 ring-type-0' : 'ring-1 ring-border hover:ring-type-3')}
               aria-label="Use uploaded photo"
@@ -360,7 +481,7 @@ function PhotoTab({ media, photos, collections }) {
             </button>
             <div className="min-w-0 flex-1">
               <p className="truncate text-13-m text-type-0">{upload.name}</p>
-              <p className="text-12-r text-type-2">{photo.id === UPLOAD_ID ? 'On the cover' : 'Uploaded · tap to use'}</p>
+              <p className="text-12-r text-type-2">{photo.id === UPLOAD_ID ? 'On the cover' : usedIn(UPLOAD_ID) >= 0 ? `In spot ${usedIn(UPLOAD_ID) + 1}` : 'Uploaded · tap to use'}</p>
             </div>
             <button
               onClick={media.removeUpload}
@@ -392,10 +513,11 @@ function PhotoTab({ media, photos, collections }) {
         <div className="grid grid-cols-3 gap-1.5">
           {shown.map((p) => {
             const active = photo.id === p.id
+            const elsewhere = count > 1 && !active ? usedIn(p.id) : -1
             return (
               <button
                 key={p.id}
-                onClick={() => media.choose(p.id)}
+                onClick={() => media.choose(p.id, slot)}
                 aria-pressed={active}
                 aria-label={`Use ${p.name} as cover`}
                 className={cn('relative aspect-square overflow-hidden rounded-lg bg-surface-2 transition', active ? 'ring-2 ring-type-0 ring-offset-2' : 'hover:opacity-85')}
@@ -405,6 +527,9 @@ function PhotoTab({ media, photos, collections }) {
                   <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-type-0 shadow">
                     <Check size={12} weight="bold" />
                   </span>
+                )}
+                {elsewhere >= 0 && (
+                  <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/55 text-11-sb text-white">{elsewhere + 1}</span>
                 )}
               </button>
             )

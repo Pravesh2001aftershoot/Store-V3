@@ -5,7 +5,8 @@ import { Handbag, PencilSimple } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import PhotographerLink from '../../components/PhotographerLink'
 import { cn } from '../../lib/utils'
-import { WIDTH } from './config'
+import { WIDTH, isComposed } from './config'
+import Composed, { fluid } from './Composed'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -21,12 +22,6 @@ const JUSTIFY = { left: 'justify-start', center: 'justify-center', right: 'justi
 const V_JUSTIFY = { top: 'justify-start', middle: 'justify-center', bottom: 'justify-end' }
 const H_ITEMS = { left: 'items-start', center: 'items-center', right: 'items-end' }
 
-/**
- * Margins are set for a full desktop cover (1280px) and shrink with the cover's width,
- * never below 16px (unless set lower than that).
- */
-const fluid = (px) => `clamp(${Math.min(16, px)}px, ${(px / 12.8).toFixed(2)}cqw, ${px}px)`
-
 /** Overlay darkens most where the text sits. `strength` 50 matches the original cover. */
 function overlay(strength, vertical) {
   const k = strength / 50
@@ -36,6 +31,9 @@ function overlay(strength, vertical) {
   const dir = vertical === 'top' ? 'to top' : 'to bottom'
   return `linear-gradient(${dir}, rgba(0,0,0,${far}), rgba(0,0,0,${a(0.1)}) 45%, rgba(0,0,0,${near}))`
 }
+
+/** Split, side title and corner print have a photo side; the buttons go there. */
+const composedActionsSide = (L) => (L.flip && ['split', 'strip', 'corner'].includes(L.composition) ? 'left' : 'right')
 
 /** Renders the subtitle, turning the photographer's name (if it's in there) into the portfolio link. */
 function Subtitle({ text, photographer }) {
@@ -54,17 +52,18 @@ function Subtitle({ text, photographer }) {
  * Full-screen gallery cover, laid out from `config` (see ./config.js).
  * `inset` shrinks the visible frame so the editor pane can sit beside (desktop) or below (phone) a true preview.
  */
-export default function Cover({ gallery, photo, config, inset = { left: 0, bottom: 0 }, editing, onEnter, onEdit }) {
+export default function Cover({ gallery, photo, slots = [photo], config, inset = { left: 0, bottom: 0 }, editing, onEnter, onEdit }) {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '18%'])
   const fade = useTransform(scrollYProgress, [0, 0.6], [1, 0])
 
   const { layout: L, show, content: C } = config
+  const composed = isComposed(L)
   const [vertical, horizontal] = L.position.split('-')
   const logoInBar = L.logo.startsWith('top-')
   // The store link and edit button share the side the logo isn't on.
-  const actionsSide = L.logo === 'top-right' ? 'left' : 'right'
+  const actionsSide = composed ? composedActionsSide(L) : L.logo === 'top-right' ? 'left' : 'right'
   const hasBar = logoInBar || show.storeLink || !editing
   const maxWidth = WIDTH.find((w) => w.id === L.width)?.px ?? 960
   const ctas = [show.primaryCta && C.primaryCta, show.secondaryCta && C.secondaryCta].filter(Boolean)
@@ -73,12 +72,16 @@ export default function Cover({ gallery, photo, config, inset = { left: 0, botto
     <img src={gallery.logo} alt={gallery.studio} className={cn('w-auto brightness-0 invert', className)} draggable={false} />
   )
 
+  // On composed covers the buttons may sit over the backdrop or the photo, so they get a solid pill.
   const actions = (
     <div className={cn('flex items-center gap-2', actionsSide === 'left' && 'flex-row-reverse')}>
       {!editing && onEdit && (
         <button
           onClick={onEdit}
-          className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-2 text-13-m text-white backdrop-blur-md transition hover:bg-white/25"
+          className={cn(
+            'flex items-center gap-1.5 rounded-full px-3 py-2 text-13-m backdrop-blur-md transition',
+            composed ? 'bg-white/90 text-type-0 shadow-sm hover:bg-white' : 'bg-white/15 text-white hover:bg-white/25'
+          )}
         >
           <PencilSimple size={15} /> <span className="max-sm:hidden">Edit cover</span><span className="sm:hidden">Edit</span>
         </button>
@@ -86,7 +89,10 @@ export default function Cover({ gallery, photo, config, inset = { left: 0, botto
       {show.storeLink && (
         <Link
           to="/store"
-          className="flex items-center gap-2 rounded-full border border-white/30 px-3.5 py-2 text-13-m text-white backdrop-blur-sm transition hover:bg-white/10"
+          className={cn(
+            'flex items-center gap-2 rounded-full px-3.5 py-2 text-13-m backdrop-blur-sm transition',
+            composed ? 'bg-white/90 text-type-0 shadow-sm hover:bg-white' : 'border border-white/30 text-white hover:bg-white/10'
+          )}
         >
           <Handbag size={15} /> Print store
         </Link>
@@ -105,15 +111,28 @@ export default function Cover({ gallery, photo, config, inset = { left: 0, botto
         className="@container absolute right-0 top-0 overflow-hidden transition-[left,bottom] duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{ left: inset.left, bottom: inset.bottom }}
       >
+        {composed ? (
+          <>
+            <Composed key={L.composition} gallery={gallery} slots={slots} config={config} onEnter={onEnter} />
+            {/* Buttons go on the photo side when the layout has one, clear of the logo and title. */}
+            <div
+              className={cn('absolute top-0 z-10 flex py-5', actionsSide === 'left' ? 'left-0' : 'right-0')}
+              style={{ paddingInline: `max(16px, ${fluid(Math.min(L.marginX, 32))})` }}
+            >
+              {(show.storeLink || (!editing && onEdit)) && actions}
+            </div>
+          </>
+        ) : (
+        <>
         <motion.img
           key={photo.src}
           src={photo.src}
           alt=""
-          style={{ y }}
           initial={{ scale: 1.08, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.6, ease }}
           className="absolute inset-0 h-full w-full object-cover"
+          style={{ y, objectPosition: photo.focus ? `${photo.focus.x}% ${photo.focus.y}%` : undefined }}
         />
         <div className="absolute inset-0" style={{ background: overlay(L.overlay, vertical) }} />
 
@@ -203,6 +222,8 @@ export default function Cover({ gallery, photo, config, inset = { left: 0, botto
             </motion.div>
           </motion.div>
         </div>
+        </>
+        )}
       </div>
     </section>
   )

@@ -7,6 +7,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 //   content — the words. Only edited fields are stored; the rest fall back to the gallery's own data.
 //
 // Templates are preset `layout` + `show` combinations. Choosing one never touches `content`.
+//
+// `layout.composition` picks the kind of cover:
+//   overlay  — the photo fills the screen and the text sits on top (position grid, overlay…)
+//   anything else — a composed cover: the photo is placed on a solid backdrop (see Composed.jsx),
+//                   tuned with shape, photoSize, flip and surface.
 
 /** Character limits for the text fields. */
 export const LIMITS = { eyebrow: 40, title: 40, subtitle: 80, primaryCta: 20, secondaryCta: 20 }
@@ -58,8 +63,54 @@ export const CTA_SIZE = [
 export const MARGIN_X = { min: 0, max: 120, step: 4 }
 export const MARGIN_Y = { min: 0, max: 160, step: 4 }
 
+/** Composed cover kinds. `shape`: uses the photo shape control. `flip`: can mirror sides. `photos`: how many photos it shows. */
+export const COMPOSITIONS = {
+  overlay: { name: 'Full bleed' },
+  banner: { name: 'Banner', flip: true, photos: 1 },
+  split: { name: 'Split', flip: true, photos: 1 },
+  frame: { name: 'Framed', shape: true, photos: 1 },
+  strip: { name: 'Side title', flip: true, photos: 1 },
+  triptych: { name: 'Triptych', shape: true, photos: 3 },
+  corner: { name: 'Corner print', shape: true, flip: true, photos: 1 },
+  stacked: { name: 'Stacked', shape: true, photos: 1 },
+}
+
+export const isComposed = (layout) => layout.composition !== 'overlay'
+export const photoCount = (layout) => COMPOSITIONS[layout.composition]?.photos ?? 1
+
+/** Photo shapes for composed covers. `auto` follows the photo's own orientation. */
+export const SHAPES = [
+  { id: 'auto', label: 'Auto', hint: 'Follows the photo’s own orientation' },
+  { id: 'portrait', label: 'Portrait', ratio: 2 / 3 },
+  { id: 'square', label: 'Square', ratio: 1 },
+  { id: 'landscape', label: 'Landscape', ratio: 3 / 2 },
+]
+
+/** Width ÷ height for a shape, using the photo itself when the shape is `auto`. */
+export const shapeRatio = (shape, photo) =>
+  SHAPES.find((s) => s.id === shape)?.ratio ?? (photo?.w && photo?.h ? photo.w / photo.h : 2 / 3)
+
+export const PHOTO_SIZE = [
+  { id: 's', label: 'Small' },
+  { id: 'm', label: 'Medium' },
+  { id: 'l', label: 'Large' },
+]
+
+/** Backdrops for composed covers. */
+export const SURFACES = [
+  { id: 'paper', label: 'Paper', bg: '#ebebea', ink: '#2f2f2f' },
+  { id: 'linen', label: 'Linen', bg: '#eee7dc', ink: '#3a3128' },
+  { id: 'white', label: 'White', bg: '#fbfbfa', ink: '#1f1f1f' },
+  { id: 'ink', label: 'Ink', bg: '#141414', ink: '#f1f1f1', dark: true },
+]
+
 const base = {
   layout: {
+    composition: 'overlay',
+    shape: 'auto',
+    photoSize: 'm',
+    flip: false,
+    surface: 'paper',
     position: 'bottom-center',
     align: 'center',
     logo: 'top-left',
@@ -118,6 +169,22 @@ export const TEMPLATES = [
   },
 ]
 
+// Composed covers: quiet by default (title and date), buttons can be turned on under Text.
+const quiet = { eyebrow: true, subtitle: false, primaryCta: false, secondaryCta: false, storeLink: true }
+const composed = (layout) => ({ ...base.layout, titleSize: 'm', marginX: 32, marginY: 32, ...layout })
+
+export const COMPOSED_TEMPLATES = [
+  { id: 'banner', name: 'Banner', description: 'Wide photo, title below', layout: composed({ composition: 'banner' }), show: quiet },
+  { id: 'split', name: 'Split', description: 'Title beside a tall photo', layout: composed({ composition: 'split', titleSize: 'l' }), show: quiet },
+  { id: 'framed', name: 'Framed', description: 'Centered print, title across', layout: composed({ composition: 'frame' }), show: quiet },
+  { id: 'strip', name: 'Side title', description: 'Vertical title, big photo', layout: composed({ composition: 'strip', photoSize: 'l' }), show: quiet },
+  { id: 'triptych', name: 'Triptych', description: 'Three photos in a row', layout: composed({ composition: 'triptych', shape: 'square', marginX: 88 }), show: quiet },
+  { id: 'corner', name: 'Corner print', description: 'Small print, oversized title', layout: composed({ composition: 'corner', titleSize: 'l', marginX: 40, marginY: 40 }), show: quiet },
+  { id: 'stacked', name: 'Stacked', description: 'Title over a centered print', layout: composed({ composition: 'stacked', titleSize: 's' }), show: quiet },
+]
+
+export const ALL_TEMPLATES = [...TEMPLATES, ...COMPOSED_TEMPLATES]
+
 const DEFAULT = { layout: base.layout, show: base.show, content: {} }
 
 /** The gallery's own words, used for any field the photographer hasn't edited. */
@@ -133,7 +200,7 @@ const same = (a, b) => Object.keys(a).every((k) => a[k] === b[k])
 
 /** The template the current layout matches exactly, or null once it's been customised. */
 export const matchTemplate = (config) =>
-  TEMPLATES.find((t) => same(t.layout, config.layout) && same(t.show, config.show))?.id ?? null
+  ALL_TEMPLATES.find((t) => same(t.layout, config.layout) && same(t.show, config.show))?.id ?? null
 
 const KEY = 'store-v3:gallery-cover'
 
@@ -171,7 +238,7 @@ export function useCoverConfig(defaults) {
   const setShow = useCallback((patch) => setState((s) => ({ ...s, show: { ...s.show, ...patch } })), [])
   const setContent = useCallback((patch) => setState((s) => ({ ...s, content: { ...s.content, ...patch } })), [])
   const applyTemplate = useCallback((id) => {
-    const t = TEMPLATES.find((x) => x.id === id)
+    const t = ALL_TEMPLATES.find((x) => x.id === id)
     if (t) setState((s) => ({ ...s, layout: t.layout, show: t.show }))
   }, [])
   const reset = useCallback(() => setState(DEFAULT), [])
