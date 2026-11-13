@@ -52,7 +52,12 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
               <h2 className="mt-4 text-48-sb text-type-0 md:text-72-sb">{b.title}</h2>
             </header>
           )}
-          {settings.orientation === 'vertical' ? (
+          {columns === 1 ? (
+            // One per row (large on mobile): each photo spans the full width, height follows its aspect ratio.
+            <div className="flex flex-col" style={{ gap }}>
+              {b.items.map((item, index) => tile(b.start, { item, index }, { width: '100%' }))}
+            </div>
+          ) : settings.orientation === 'vertical' ? (
             <div className="flex items-start" style={{ gap }}>
               {masonry(b.items, columns).map((col, i) => (
                 <div key={i} className="flex min-w-0 flex-1 flex-col" style={{ gap }}>
