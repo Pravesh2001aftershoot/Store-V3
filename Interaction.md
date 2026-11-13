@@ -249,17 +249,28 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Collection tab row | Active tab changes | The row scrolls sideways to centre the active tab | `row.scrollTo({ behavior: 'smooth' })` | Browser native |
 | Collection tab | Tap | The page scrolls so the section heading sits under the nav. Scroll-spy is locked until `scrollend`, wheel or touch (1.5s fallback) | `window.scrollTo({ behavior: 'smooth' })` | Browser native |
 | People button | Click | Opens the Find people pane. `surface-2` while the pane or the People view is open; the icon turns bold in the People view | Tailwind default | Tailwind |
-| Layout / Hidden / Favourites buttons | Hover / pressed | Background `→ surface-2`. Text labels show from `lg` up; below that they're icon plus count. "Shop prints" is an icon-only circle below `lg` | Tailwind default | Tailwind |
+| Layout / Hidden / Favourites buttons | Hover / pressed | Background `→ surface-2`. Text labels show from `lg` up; on tablet they're icon plus count. On phones they move to the [dock](#phone-dock) instead. "Shop prints" is an icon-only circle on tablet and a labelled "Shop" pill on phones | Tailwind default | Tailwind |
 | Hidden button | Hover / pressed | Background `→ surface-2`; the eye-slash icon turns bold while the Hidden view is open | Tailwind default | Tailwind |
 | Favourites / Hidden toggle, set tab | Click | Opens that view (or goes back to all photos if it's already open) and jumps back to the top of the grid if scrolled past it. Any selection is cleared | `scrollTo({ behavior: 'instant' })` | Browser native |
 | Set tab | Hover | Text `type-2 → type-0`. No underline: sets aren't part of scroll-spy | Tailwind default | Tailwind |
 | Bucket header (Favourites, Hidden or a set) | View opens | Replaces the tab row instantly: "‹ All photos", name and count, and Clear all / Unhide all / Delete set | n/a | n/a |
 | Delete set / Clear all / Unhide all | Click | A browser `confirm()` dialog; on OK the action runs and the gallery returns to all photos | n/a | Browser native |
-| Select / Cancel (phones, end of the collection row) | Tap | Turns selection mode on or off. Pressed state `surface-2`, the icon fills. Not shown inside a set | Tailwind default | Tailwind |
 | Layout popover (tablet and desktop) | Open / close | Drops down from the top right | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it. `origin-top-right` | framer-motion |
 | Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
 | Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides to the selected option | `layoutId="seg-{label}"`, `0.35s`, `ease` | framer-motion |
 | Photographer name | Hover / click | Text `type-2 → type-0` and an underline appears. Click opens [`/portfolio`](#portfolio-portfolio-srcportfolioportfoliopagejsx) | Tailwind default | Tailwind |
+
+#### Phone dock
+
+On phones (below 640px) the top bar keeps only the names and "Shop"; People, Favourites, Hidden, Layout and Select live in a floating dock rendered into `document.body`.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Dock | The nav sticks to the top and the grid still covers 60% of the screen / scrolling back to the cover or into the footer | Rises in, drops out | `opacity 0 → 1`, `y 24 → 0`, `0.3s`, `ease`. Exit reverses it | framer-motion |
+| Dock | Selection starts / ends | Leaves so the [selection bar](#selection-bar-srcgallerycomponentsselectionbarjsx) can take its place, and comes back | Same as above | framer-motion |
+| Dock button | Tap | Scales down while pressed. Opens the same view, pane or sheet as the desktop button; Select turns selection mode on | `active:scale-[.96]`, Tailwind default | Tailwind |
+| Dock button | View or sheet open | `surface-2` pill, text `type-2 → type-0` | Tailwind default | Tailwind |
+| Count badge | Favourites / Hidden count changes | Shown when above 0, `99+` past 99. No motion | n/a | n/a |
 
 ### Find people: [src/gallery/components/FacePane.jsx](src/gallery/components/FacePane.jsx), [faces.js](src/gallery/data/faces.js)
 
@@ -336,7 +347,7 @@ Shown while multi-selecting. Esc closes the name field if it's open, otherwise l
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
 | Toast pill | Download / share / favourite / hide / set feedback | Rises in, drops out | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`, `y → 8`. `0.2s` | framer-motion |
-| Toast stack | Selection bar shows / hides | Moves up above the bar, and back down | `bottom 24px → 96px`, `duration-300` | Tailwind |
+| Toast stack | Selection bar shows / hides | Moves up above the bar, and back down. On phones it always sits at `96px`, above the dock | `bottom 24px → 96px`, `duration-300` | Tailwind |
 
 ### Quick buy panel: [src/gallery/components/QuickBuy.jsx](src/gallery/components/QuickBuy.jsx)
 
@@ -649,5 +660,5 @@ These are observations, not changes. They are useful when tidying up motion.
 13. **The footer has no entrance motion.** The gallery grid and cover reveal on scroll; the footer simply appears.
 14. **Collection headings don't animate.** Switching heading templates, fonts or spacing swaps instantly, and the headings have no scroll reveal, while the portfolio's section headings use `SplitText`.
 15. **Delete and clear confirmations use `window.confirm`.** Deleting a set, clearing favourites and unhiding all use the browser's dialog, unlike every other dialog in the app (Radix, animated).
-16. **Selection mode has no drag-select and no entry on tablets without a long press.** The phone Select button only appears below 640px, and touch tablets don't show the hover check.
+16. **Selection mode has no drag-select and no entry on tablets without a long press.** The Select button is only in the phone dock (below 640px), and touch tablets don't show the hover check.
 17. **Hiding has no motion.** A hidden photo vanishes and the grid reflows instantly, where the selected-tile shrink and the lightbox slide are animated. A short fade or collapse would make the change easier to follow.

@@ -110,7 +110,7 @@ function LayoutSheet({ open, onClose, settings, onChange }) {
 }
 
 /** Grid properties: a popover on tablet/desktop, a bottom sheet on phones. */
-function LayoutMenu({ settings, onChange }) {
+function LayoutMenu({ settings, onChange, renderTrigger }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
@@ -128,19 +128,21 @@ function LayoutMenu({ settings, onChange }) {
   }, [open, isPhone])
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-label="Grid layout"
-        className={cn(
-          'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
-          open && 'bg-surface-2 text-type-0'
-        )}
-      >
-        <SlidersHorizontal size={18} />
-        <span className="hidden lg:inline">Layout</span>
-      </button>
+    <div ref={ref} className={cn('relative', renderTrigger && 'flex flex-1')}>
+      {renderTrigger ? renderTrigger({ open, toggle: () => setOpen((o) => !o) }) : (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-label="Grid layout"
+          className={cn(
+            'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+            open && 'bg-surface-2 text-type-0'
+          )}
+        >
+          <SlidersHorizontal size={18} />
+          <span className="hidden lg:inline">Layout</span>
+        </button>
+      )}
       {isPhone ? (
         <LayoutSheet open={open} onClose={() => setOpen(false)} settings={settings} onChange={onChange} />
       ) : (
@@ -168,6 +170,57 @@ function LayoutMenu({ settings, onChange }) {
   )
 }
 
+/** One phone-dock action: icon over a label, with an optional count badge. 56px tall, fills its share of the dock. */
+function DockButton({ icon, label, count, active, className, ...props }) {
+  return (
+    <button
+      {...props}
+      className={cn(
+        'relative flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full text-11-m text-type-2 transition active:scale-[.96]',
+        active ? 'bg-surface-2 text-type-0' : 'hover:text-type-0',
+        className
+      )}
+    >
+      <span className="relative">
+        {icon}
+        {count > 0 && (
+          <span className="absolute -right-2.5 -top-1.5 min-w-[18px] rounded-full bg-type-0 px-1 text-center text-[10px] font-semibold leading-[18px] text-surface-0 tabular-nums">
+            {count > 99 ? '99+' : count}
+          </span>
+        )}
+      </span>
+      <span className="max-w-full truncate px-0.5">{label}</span>
+    </button>
+  )
+}
+
+/**
+ * Phones: true while the gallery grid fills the screen — the nav has stuck to the top and the footer
+ * hasn't taken over yet. Keeps the dock off the cover and out of the footer.
+ */
+function useDockVisible(navRef, enabled) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (!enabled) return setVisible(false)
+    const check = () => {
+      const nav = navRef.current
+      const area = nav?.parentElement
+      if (!nav || !area) return
+      const stuck = area.getBoundingClientRect().top <= 1
+      const gridLeft = area.getBoundingClientRect().bottom > window.innerHeight * 0.6
+      setVisible(stuck && gridLeft)
+    }
+    check()
+    window.addEventListener('scroll', check, { passive: true })
+    window.addEventListener('resize', check)
+    return () => {
+      window.removeEventListener('scroll', check)
+      window.removeEventListener('resize', check)
+    }
+  }, [navRef, enabled])
+  return visible
+}
+
 /**
  * Sticky gallery nav: title, collections (+ the client's sets), select, layout, the favourites / hidden
  * buckets, and the entry to the store. A set opens like a bucket: `view` is `set:<id>`.
@@ -178,6 +231,8 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
+  // The selection bar takes the dock's place while selecting.
+  const dockVisible = useDockVisible(navRef, isPhone) && !selecting
   useEffect(() => {
     const row = tabsRef.current
     const btn = row?.querySelector('[aria-current="true"]')
@@ -281,23 +336,62 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
       </nav>
     )
 
-  // Phones only, at the end of the collections row. On tablet/desktop selection starts from a photo's
-  // hover check and ends from the selection bar, so the top bar has no Select button. A client's own
-  // set has no multi-select, so the button is left out there.
-  const selectButton = !view?.startsWith('set:') && (
-    <button
-      onClick={onSelecting}
-      aria-pressed={selecting}
-      aria-label={selecting ? 'Cancel selection' : 'Select photos'}
-      title={selecting ? 'Cancel selection' : 'Select photos'}
-      className={cn(
-        'ml-2 flex h-8 shrink-0 items-center gap-2 rounded-full px-2.5 text-13-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
-        selecting && 'bg-surface-2 text-type-0'
+  // Phone actions live in a floating dock at the bottom, in thumb reach. On tablet/desktop selection
+  // starts from a photo's hover check, so only the dock has Select. A client's own set has no multi-select.
+  const canSelect = !view?.startsWith('set:')
+  const dock = isPhone && createPortal(
+    <AnimatePresence>
+      {dockVisible && (
+        <motion.nav
+          aria-label="Gallery actions"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 24 }}
+          transition={{ duration: 0.3, ease }}
+          className="fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-40 flex items-stretch gap-0.5 rounded-full border border-border bg-surface-1/95 p-1.5 shadow-[0_20px_50px_-15px_rgba(0,0,0,.3)] backdrop-blur-xl"
+        >
+          {onFaces && (
+            <DockButton
+              onClick={onFaces}
+              aria-haspopup="dialog"
+              aria-expanded={facesOpen}
+              active={showFaces || facesOpen}
+              icon={<UserFocus size={22} weight={showFaces ? 'bold' : 'regular'} />}
+              label="People"
+            />
+          )}
+          <DockButton
+            onClick={() => onView('favs')}
+            aria-pressed={showFavs}
+            aria-label={`Favourites, ${favCount}`}
+            active={showFavs}
+            icon={<Heart size={22} weight={showFavs || favCount ? 'fill' : 'regular'} className={showFavs || favCount ? 'text-destructive' : undefined} />}
+            count={favCount}
+            label="Favourites"
+          />
+          <DockButton
+            onClick={() => onView('hidden')}
+            aria-pressed={showHidden}
+            aria-label={`Hidden, ${hiddenCount}`}
+            active={showHidden}
+            icon={<EyeSlash size={22} weight={showHidden ? 'bold' : 'regular'} />}
+            count={hiddenCount}
+            label="Hidden"
+          />
+          <LayoutMenu
+            settings={settings}
+            onChange={onSetting}
+            renderTrigger={({ open, toggle }) => (
+              <DockButton onClick={toggle} aria-expanded={open} aria-haspopup="dialog" active={open} icon={<SlidersHorizontal size={22} />} label="Layout" />
+            )}
+          />
+          {canSelect && (
+            <DockButton onClick={onSelecting} aria-pressed={selecting} icon={<CheckCircle size={22} />} label="Select" />
+          )}
+        </motion.nav>
       )}
-    >
-      <CheckCircle size={18} weight={selecting ? 'fill' : 'regular'} />
-      <span>{selecting ? 'Cancel' : 'Select'}</span>
-    </button>
+    </AnimatePresence>,
+    document.body
   )
 
   return (
@@ -319,60 +413,64 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
         {!isPhone && <div className="flex h-full min-w-0 flex-1 items-center">{tabs}</div>}
 
         <div className="flex shrink-0 items-center gap-1">
-          <LayoutMenu settings={settings} onChange={onSetting} />
-          {onFaces && (
-            <button
-              onClick={onFaces}
-              aria-haspopup="dialog"
-              aria-expanded={facesOpen}
-              aria-label="Find people"
-              title="Find people"
-              className={cn(
-                'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
-                (showFaces || facesOpen) && 'bg-surface-2 text-type-0'
+          {!isPhone && (
+            <>
+              <LayoutMenu settings={settings} onChange={onSetting} />
+              {onFaces && (
+                <button
+                  onClick={onFaces}
+                  aria-haspopup="dialog"
+                  aria-expanded={facesOpen}
+                  aria-label="Find people"
+                  title="Find people"
+                  className={cn(
+                    'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+                    (showFaces || facesOpen) && 'bg-surface-2 text-type-0'
+                  )}
+                >
+                  <UserFocus size={18} weight={showFaces ? 'bold' : 'regular'} />
+                  <span className="hidden lg:inline">People</span>
+                </button>
               )}
-            >
-              <UserFocus size={18} weight={showFaces ? 'bold' : 'regular'} />
-              <span className="hidden lg:inline">People</span>
-            </button>
+              <button
+                onClick={() => onView('hidden')}
+                aria-pressed={showHidden}
+                aria-label={showHidden ? 'Show all photos' : 'Show hidden photos'}
+                title={showHidden ? 'Show all photos' : 'Show hidden photos'}
+                className={cn(
+                  'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+                  showHidden && 'bg-surface-2 text-type-0'
+                )}
+              >
+                <EyeSlash size={18} weight={showHidden ? 'bold' : 'regular'} />
+                <span className="hidden lg:inline">Hidden</span>
+                <span className="tabular-nums">{hiddenCount}</span>
+              </button>
+              <button
+                onClick={() => onView('favs')}
+                aria-pressed={showFavs}
+                aria-label={showFavs ? 'Show all photos' : 'Show favourites'}
+                title={showFavs ? 'Show all photos' : 'Show favourites'}
+                className={cn(
+                  'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+                  showFavs && 'bg-surface-2 text-type-0'
+                )}
+              >
+                <Heart size={18} weight={showFavs || favCount ? 'fill' : 'regular'} className={showFavs || favCount ? 'text-destructive' : undefined} />
+                <span className="hidden lg:inline">Favourites</span>
+                <span className="tabular-nums">{favCount}</span>
+              </button>
+            </>
           )}
-          <button
-            onClick={() => onView('hidden')}
-            aria-pressed={showHidden}
-            aria-label={showHidden ? 'Show all photos' : 'Show hidden photos'}
-            title={showHidden ? 'Show all photos' : 'Show hidden photos'}
-            className={cn(
-              'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
-              showHidden && 'bg-surface-2 text-type-0'
-            )}
-          >
-            <EyeSlash size={18} weight={showHidden ? 'bold' : 'regular'} />
-            <span className="hidden lg:inline">Hidden</span>
-            <span className="tabular-nums">{hiddenCount}</span>
-          </button>
-          <button
-            onClick={() => onView('favs')}
-            aria-pressed={showFavs}
-            aria-label={showFavs ? 'Show all photos' : 'Show favourites'}
-            title={showFavs ? 'Show all photos' : 'Show favourites'}
-            className={cn(
-              'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
-              showFavs && 'bg-surface-2 text-type-0'
-            )}
-          >
-            <Heart size={18} weight={showFavs || favCount ? 'fill' : 'regular'} className={showFavs || favCount ? 'text-destructive' : undefined} />
-            <span className="hidden lg:inline">Favourites</span>
-            <span className="tabular-nums">{favCount}</span>
-          </button>
           <Link
             to="/store"
             aria-label="Shop prints"
             title="Shop prints"
-            // Below desktop: an icon-only circle, so the top bar keeps room for the name and collection tabs.
-            className="ml-1 flex h-10 w-10 items-center justify-center gap-2 rounded-full bg-primary text-14-m text-primary-foreground transition hover:bg-[#2c2c2c] lg:w-auto lg:justify-start lg:pl-3.5 lg:pr-4"
+            // Tablet: an icon-only circle, so the top bar keeps room for the name and tabs. Phone + desktop: labelled.
+            className="ml-1 flex h-10 items-center justify-center gap-2 rounded-full bg-primary pl-3.5 pr-4 text-14-m text-primary-foreground transition hover:bg-[#2c2c2c] sm:w-10 sm:p-0 lg:w-auto lg:justify-start lg:pl-3.5 lg:pr-4"
           >
             <Handbag size={18} />
-            <span className="hidden lg:inline">Shop prints</span>
+            <span className="sm:hidden lg:inline">{isPhone ? 'Shop' : 'Shop prints'}</span>
           </Link>
         </div>
       </div>
@@ -381,9 +479,9 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
       {isPhone && (
         <div className="flex h-11 items-center border-t border-border px-4">
           <div className="flex h-full min-w-0 flex-1 items-center">{tabs}</div>
-          {selectButton}
         </div>
       )}
+      {dock}
     </div>
   )
 }

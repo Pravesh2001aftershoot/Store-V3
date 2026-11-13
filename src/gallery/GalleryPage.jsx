@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
 import { useGridSettings } from './lib/settings'
-import { useMeasuredPhotos } from './lib/hooks'
+import { useBreakpoint, useMeasuredPhotos } from './lib/hooks'
 import CoverSection from './templates/cover/CoverSection'
 import { defaultContent as coverDefaults, useCoverConfig } from './templates/cover/config'
 import { useSectionConfig } from './templates/set-header/config'
@@ -28,6 +28,7 @@ const BATCH = 24
  */
 export default function GalleryPage() {
   const [settings, setSetting] = useGridSettings()
+  const isPhone = useBreakpoint() === 'mobile' // the phone dock sits where toasts would
   const [collection, setCollection] = useState(COLLECTIONS[0])
   const [favorites, toggleFav, clearFavs, setFavs] = useFavorites(gallery.client)
   const [hidden, toggleHidden, clearHidden] = useHidden(gallery.client)
@@ -362,7 +363,7 @@ export default function GalleryPage() {
         onSetLimit={() => notify(`You can keep up to ${MAX_SETS} sets — delete one to make another`)}
         onExit={exitSelect}
       />
-      <Toaster raised={selecting} />
+      <Toaster raised={selecting || isPhone} />
     </div>
   )
 }
