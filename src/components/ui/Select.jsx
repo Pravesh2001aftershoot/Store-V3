@@ -80,9 +80,9 @@ export function BottomSheet({ open, onClose, title, children }) {
 
 /**
  * Dropdown: native <select> on tablet/desktop, a bottom sheet of options on phones.
- * options: [{ value, label }]
+ * options: [{ value, label }] · triggerClassName restyles the trigger (both the button and the native select).
  */
-export function Select({ value, onChange, options, title, className }) {
+export function Select({ value, onChange, options, title, className, triggerClassName }) {
   const isPhone = useIsPhone()
   const [open, setOpen] = useState(false)
   const current = options.find((o) => o.value === value)
@@ -92,7 +92,7 @@ export function Select({ value, onChange, options, title, className }) {
     <div className={cn('relative flex w-full items-center md:inline-flex md:w-auto', className)}>
       {isPhone ? (
         <>
-          <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} className={cn(trigger, 'text-left text-type-0')}>
+          <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} className={cn(trigger, 'text-left text-type-0', triggerClassName)}>
             {current?.label}
           </button>
           <BottomSheet open={open} onClose={() => setOpen(false)} title={title}>
@@ -121,7 +121,7 @@ export function Select({ value, onChange, options, title, className }) {
           </BottomSheet>
         </>
       ) : (
-        <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={title} className={cn(trigger, 'appearance-none')}>
+        <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={title} className={cn(trigger, 'appearance-none', triggerClassName)}>
           {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       )}

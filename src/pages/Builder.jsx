@@ -19,6 +19,7 @@ import CropEditor from '../components/CropEditor'
 import OptionGroup from '../components/OptionGroup'
 import CroppedImage from '../components/CroppedImage'
 import ProductMockup from '../components/ProductMockup'
+import PhotographerLink from '../components/PhotographerLink'
 import { cn, money, plural } from '../lib/utils'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -630,7 +631,7 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto, loc
           )}
         </div>
         <p className="border-t border-border pt-4 text-12-r-p text-type-3">
-          {gallery.photographer} reviews every crop before your order goes to print.
+          <PhotographerLink className="hover:text-type-0" /> reviews every crop before your order goes to print.
         </p>
       </aside>
     </div>
@@ -720,7 +721,7 @@ function ReviewStep({ state, slots, goCrop, total, compareAt }) {
       })}
 
       <div className="flex items-center gap-2 rounded-xl bg-surface-2 p-4 text-13-r text-type-1">
-        <ShieldCheck size={18} className="shrink-0" /> {gallery.photographer} will review your crops and colour before printing.
+        <ShieldCheck size={18} className="shrink-0" /> <PhotographerLink className="hover:text-type-0" /> will review your crops and colour before printing.
       </div>
     </div>
   )

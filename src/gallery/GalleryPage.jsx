@@ -10,6 +10,7 @@ import Toaster from './components/Toaster'
 import QuickBuy from './components/QuickBuy'
 import { registerPhoto } from '../data/gallery'
 import { useFavorites } from './lib/actions'
+import PhotographerLink from '../components/PhotographerLink'
 
 // Every collection is a section of one continuous scroll, so there's no "All" tab.
 const COLLECTIONS = gallery.collections.filter((c) => c !== 'All')
@@ -174,7 +175,7 @@ export default function GalleryPage() {
 
       <footer className="border-t border-border px-4 py-10 text-center">
         <img src={gallery.logo} alt={gallery.studio} className="mx-auto h-6 w-auto opacity-70" draggable={false} />
-        <p className="mt-3 text-12-r text-type-3">© 2026 {gallery.studio} · {gallery.photographer}</p>
+        <p className="mt-3 text-12-r text-type-3">© 2026 {gallery.studio} · <PhotographerLink className="hover:text-type-0" /></p>
       </footer>
 
       <Lightbox

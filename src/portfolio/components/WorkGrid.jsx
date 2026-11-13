@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { CaretDown, ListBullets, MagnifyingGlass, SquaresFour, X } from '@phosphor-icons/react'
+import { ListBullets, MagnifyingGlass, SquaresFour, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
+import { Select } from '../../components/ui'
 import { useInfinite } from '../../gallery/lib/hooks'
 import { galleries, genres } from '../data/portfolio'
 import { ProjectCard, ProjectRow } from './ProjectCard'
@@ -122,19 +123,15 @@ export default function WorkGrid() {
               )}
             </label>
 
-            <label className="relative flex h-9 shrink-0 items-center">
-              <span className="sr-only">Sort</span>
-              <select
-                value={sort}
-                onChange={(e) => change('sort', e.target.value)}
-                className="h-full appearance-none rounded-full border border-input bg-surface-1 pl-3.5 pr-8 text-14-r text-type-0 outline-none transition hover:bg-surface-2 focus:border-type-0"
-              >
-                {SORTS.map((s) => (
-                  <option key={s.id} value={s.id}>{s.label}</option>
-                ))}
-              </select>
-              <CaretDown size={12} className="pointer-events-none absolute right-3 text-type-2" />
-            </label>
+            {/* Native select on tablet/desktop; a bottom sheet of options on phones. */}
+            <Select
+              value={sort}
+              onChange={(v) => change('sort', v)}
+              options={SORTS.map((s) => ({ value: s.id, label: s.label }))}
+              title="Sort by"
+              className="w-auto shrink-0 md:w-auto"
+              triggerClassName="h-9 w-auto border-input pl-3.5 pr-9 text-type-0 transition hover:bg-surface-2 focus:border-type-0"
+            />
 
             <div className="flex h-9 shrink-0 rounded-full bg-surface-2 p-0.5" role="group" aria-label="View">
               {[

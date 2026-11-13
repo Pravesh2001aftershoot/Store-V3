@@ -27,6 +27,7 @@ import { AnimatedNumber, Badge, Button } from '../../components/ui'
 import ProductMockup from '../../components/ProductMockup'
 import OptionGroup from '../../components/OptionGroup'
 import CropEditor from '../../components/CropEditor'
+import PhotographerLink from '../../components/PhotographerLink'
 import { cn, money } from '../../lib/utils'
 
 // A short list of single-photo products. The full range (sets, albums, packages) lives in the store.
@@ -446,7 +447,7 @@ function CropStep({ photo, product, variant, entry, setEntry }) {
         </Button>
       </div>
 
-      <p className="text-12-r-p text-type-3">{gallery.photographer} reviews every crop before your order goes to print.</p>
+      <p className="text-12-r-p text-type-3"><PhotographerLink className="hover:text-type-0" /> reviews every crop before your order goes to print.</p>
     </div>
   )
 }

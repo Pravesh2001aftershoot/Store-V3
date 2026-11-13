@@ -7,6 +7,7 @@ import { gallery } from '../data/gallery'
 import { useStore } from '../state/store'
 import { cn } from '../lib/utils'
 import CartDrawer from './CartDrawer'
+import PhotographerLink from './PhotographerLink'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -175,7 +176,7 @@ function Footer() {
               Printed with care for the people in the photographs.
             </p>
             <p className="mt-4 text-14-r text-white/50">
-              {gallery.studio} · {gallery.photographer}
+              {gallery.studio} · <PhotographerLink className="hover:text-white" />
             </p>
           </div>
           {[

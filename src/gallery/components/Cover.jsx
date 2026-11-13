@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Handbag } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
+import PhotographerLink from '../../components/PhotographerLink'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -60,7 +61,7 @@ export default function Cover({ gallery, photo, total, onEnter }) {
             transition={{ duration: 0.9, ease, delay: 0.55 }}
             className="mt-3 text-16-r text-white/80"
           >
-            Photographed by {gallery.photographer}
+            Photographed by <PhotographerLink className="hover:text-white" />
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}

@@ -6,6 +6,7 @@ import { categories, packages, products } from '../data/catalog'
 import { gallery, photos, getPhoto } from '../data/gallery'
 import { Accordion, Button, Eyebrow, Reveal, SplitText } from '../components/ui'
 import ProductMockup from '../components/ProductMockup'
+import PhotographerLink from '../components/PhotographerLink'
 import ProductCard from '../components/ProductCard'
 import PackageCard from '../components/PackageCard'
 import { packagePrice, packageValue } from '../lib/pricing'
@@ -45,7 +46,7 @@ function Hero() {
             transition={{ duration: 0.9, ease, delay: 0.5 }}
             className="mt-6 max-w-[460px] text-18-r text-type-2"
           >
-            Archival prints, hand-bound albums and wall art — curated by {gallery.photographer} and made from the photos in your
+            Archival prints, hand-bound albums and wall art — curated by <PhotographerLink className="hover:text-type-0" /> and made from the photos in your
             gallery.
           </motion.p>
           <motion.div
@@ -184,7 +185,7 @@ function HowItWorks() {
           <Eyebrow>How it works</Eyebrow>
           <SplitText as="h2" text="From gallery to your hands in four steps." className="mt-4 max-w-[480px] text-36-sb md:text-48-sb" />
           <p className="mt-5 max-w-[420px] text-16-r-p text-type-2">
-            Every order is reviewed by {gallery.photographer} before it goes to print, so colour and crop are exactly right.
+            Every order is reviewed by <PhotographerLink className="hover:text-type-0" /> before it goes to print, so colour and crop are exactly right.
           </p>
         </div>
         <div className="space-y-4">
