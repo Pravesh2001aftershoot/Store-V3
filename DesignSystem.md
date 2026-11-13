@@ -229,6 +229,9 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 | `CartDrawer` | Radix dialog sheet that holds the cart |
 | `CheckoutShell` | Minimal header and step indicator for checkout and payment |
 | Gallery: `Cover`, `NavBar`, `GalleryGrid`, `Photo`, `Lightbox`, `Toaster` | See `src/gallery/` |
+| `CoverEditor` | 400px left pane on tablet/desktop (`inset-y-2 left-2 rounded-2xl`), bottom sheet on phones (`58svh`, collapses to a `64px` bar). Header: `16-SB` title, `12-R type-2` template name, close and Preview/Edit pills in `surface-2`. A 4-tab pill bar, a scrolling body, and a footer with "Reset all" (ghost) and "Done" (primary). |
+| Cover editor controls (`src/gallery/cover/controls.jsx`) | `Section` (an `11-SB` uppercase `type-2` title with an optional `12-R type-3` hint, separated by hairlines), `Segmented`, `PositionGrid` (3×3 grid over a 16:9 mini cover), `Slider` (the shared `.range` input with a `tabular-nums` value), `Switch` (40×24, `type-0` when on) and `TextField` (40px input with a hint and an `n/limit` counter that turns amber, then `destructive`) |
+| Cover photo picker (Photo tab) | A dashed upload box (`rounded-xl`, `border-dashed`), an uploaded-photo row (80×56 thumbnail, name, trash icon button), collection chips and a 3-column grid of square thumbnails (`rounded-lg`, 6px gap) with "Show more" (secondary) every 36 |
 | `PortfolioHeader` | Sticky portfolio bar: back link (label hidden below `sm`), photographer name, section anchor links (`md` and up) and a small "Enquire" `mailto:` button |
 | `Hero` (portfolio) | Greeting (`text-48-sb md:text-72-sb xl:text-96-sb`), disciplines in `20-M type-2`, bio in `16-R-P` (`18-R` from `md`), CTAs, a 4:5 portrait (4:3 on `sm`–`md`), and a facts strip of `11-SB` labels over `14-M` values. "Availability" has a `success` dot. |
 | `ProjectCard` | Portfolio gallery card: 4:5 cover, title `16-M`, "Genre · Location" `13-R type-2`, photo count `13-R type-3 tabular-nums`. On hover: bottom gradient, scrub progress bars and a white arrow disc. |
@@ -238,7 +241,10 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 
 ### Common patterns
 
-- **Segmented control.** A row of pills on `surface-2`. The selected pill is `surface-1` with a shadow. Used in the gallery layout menu and in option groups.
+- **Segmented control.** A row of pills on `surface-2`. The selected pill is `surface-1` with a shadow. Used in the gallery layout menu, option groups, and the cover editor's tab bar and settings.
+- **Filter chips.** 32px pills that scroll sideways: `surface-2` with `type-1` text, and `type-0` with white text when chosen. Used for collections in the cover photo picker.
+- **Photo picker.** Square thumbnails in a 3-column grid. The chosen one gets `ring-2 ring-type-0 ring-offset-2` and a white check badge in the top-right corner, the same treatment as selected template cards.
+- **Upload drop zone.** A full-width dashed box with an icon, a `13-M` action and a `12-R type-3` "or drop an image here". The border turns `type-0` while a file is dragged over it, and the icon becomes a spinner while the file is read. Errors appear below in `12-R destructive`.
 - **Selected state.**
   - Pills: `ring-2 ring-type-0 ring-offset-2`.
   - Tabs and toggles: `bg-surface-2 text-type-0`, with `aria-pressed` or `aria-selected` set.
@@ -264,6 +270,7 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 - [ ] Portfolio genre tabs are in `<nav aria-label="Genres">` with `aria-current` on the active tab; the view toggle is `role="group" aria-label="View"` with `aria-pressed`; search and sort have accessible labels.
 - [ ] Portfolio photos use `alt=""` because they are decorative alongside the gallery title. Give them real alt text once captions exist.
 - [ ] Film strip thumbnails are buttons with `aria-label="View <name>"`; the current one has `aria-current`, and the strip is a `<nav aria-label="Film strip">`.
+- [ ] Cover editor tabs use `role="tablist"` / `role="tab"` with `aria-selected`; segmented controls and the position grid are `radiogroup`s; photo thumbnails and template cards use `aria-pressed`, and thumbnails are labelled "Use <name> as cover". The upload box is a real button, so the file picker works from the keyboard as well as by drag and drop.
 - [ ] Text contrast: `type-2` and `type-3` are for secondary text only. Don't use `type-3` for anything essential.
 
 ## Backlog
@@ -272,4 +279,4 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 - Get the proposed type tokens (display, `24-M`, `18-R`, paragraph, `16-M`) reviewed and added to Figma.
 - Add a dark theme. Tokens are already CSS variables, so this means adding a second set of values.
 - Turn the segmented control and the tab pill into shared primitives. Today they are written separately in the gallery NavBar, OptionGroup, the Builder and the portfolio WorkGrid.
-- The portfolio "Clear filters" button uses a hard-coded `hover:bg-[#ededed]`, another case for a `surface-3` token.
+- The portfolio "Clear filters" button uses a hard-coded `hover:bg-[#ededed]`, another case for a `surface-3` token. So do the cover editor's icon pills and collection chips (`hover:bg-[#ececec]`).

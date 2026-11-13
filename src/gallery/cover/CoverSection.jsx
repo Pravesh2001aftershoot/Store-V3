@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useBreakpoint } from '../lib/hooks'
 import { defaultContent, useCoverConfig } from './config'
+import { useCoverPhoto } from './photo'
 import Cover from './Cover'
 import CoverEditor, { PANE_W, PEEK_H, SHEET_H } from './CoverEditor'
 
@@ -9,9 +10,11 @@ import CoverEditor, { PANE_W, PEEK_H, SHEET_H } from './CoverEditor'
  * While editing, the cover's frame shrinks to the space beside (tablet/desktop) or above (phone)
  * the editor, so what you see is the cover at that size, live.
  */
-export default function CoverSection({ gallery, photo, total, onEnter }) {
+export default function CoverSection({ gallery, photo: defaultPhoto, photos, collections, total, onEnter }) {
   const defaults = useMemo(() => defaultContent(gallery, total), [gallery, total])
   const cover = useCoverConfig(defaults)
+  const media = useCoverPhoto(defaultPhoto, photos)
+  const photo = media.photo
   const [editing, setEditing] = useState(false)
   const [peek, setPeek] = useState(false)
   const phone = useBreakpoint() === 'mobile'
@@ -39,6 +42,9 @@ export default function CoverSection({ gallery, photo, total, onEnter }) {
         onPeek={setPeek}
         photo={photo}
         cover={cover}
+        media={media}
+        photos={photos}
+        collections={collections}
       />
     </>
   )

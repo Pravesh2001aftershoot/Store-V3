@@ -1,6 +1,6 @@
 # Store V3: Architecture
 
-This is a front-end-only prototype: a React single-page app with no backend. All data is mocked in `src/data/`, and the only state that persists is the cart and favourites in `localStorage`. This doc describes how the app is put together as of commit `b01e72f` (portfolio added).
+This is a front-end-only prototype: a React single-page app with no backend. All data is mocked in `src/data/`, and the only state that persists is the cart, favourites and the gallery cover settings in `localStorage`. This doc describes how the app is put together as of commit `8a04bec` (cover editor added), plus the cover editor's Photo tab.
 
 ## Stack
 
@@ -38,7 +38,8 @@ src/
 ├── pages/                Store routes (Home, Shop, Product, Packages, PackageDetail, Builder, Cart, Checkout, Payment)
 ├── gallery/              Client gallery module (entry page), kept self-contained
     ├── GalleryPage.jsx   Page composition, scroll-spy, tab jumps, favourites toggle
-    ├── components/       Cover, NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster
+    ├── components/       NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster, QuickBuy
+    ├── cover/            Cover, CoverSection, CoverEditor, editor controls, config.js (settings), photo.js (cover photo)
     ├── data/photos.js    Gallery photo source (local images or placeholders)
     └── lib/
         ├── settings.js   Grid options + URL-param state
@@ -203,7 +204,8 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
 - **Tile actions on touch.** `Photo.jsx` hides the hover overlay and action buttons under `@media (hover: none)`. On touch screens a tap opens the lightbox, which carries the same actions.
 - **Quick buy** (`components/QuickBuy.jsx`). The bag button on a tile, and "Buy print" in the lightbox, open a side panel that runs a short version of the store flow for that one photo: Product (framed print, canvas, metal, fine art print) → Size & finish → Crop → Added. It adds a normal product cart line, then offers Checkout, View cart or Keep browsing. Gallery photos are bridged into the store with `registerPhoto()` in `data/gallery.js`, persisted to `localStorage['lumen-store-v3:photos']` so cart lines resolve after a reload.
 - **Cover** (`cover/`). `CoverSection` renders the cover and its editor. Settings live in `config.js`: `layout` (3×3 text position, alignment, title size, text width, logo position, button arrangement and size, margins, overlay), `show` (optional pieces on/off) and `content` (only edited text is stored; the rest falls back to the gallery data). Character limits are in `LIMITS`. Templates are preset `layout` + `show` combinations and never change the text. Settings are saved to `localStorage['store-v3:gallery-cover']`.
-  - **Editor** (`CoverEditor.jsx`). A left pane on tablet/desktop, mirroring quick buy, and a bottom sheet on phones that can collapse to a bar to preview. Tabs: Templates, Layout, Text. There's no dimming backdrop: the cover's frame shrinks to the space beside or above the editor, so it is a live preview at that size.
+  - **Editor** (`CoverEditor.jsx`). A left pane on tablet/desktop, mirroring quick buy, and a bottom sheet on phones that can collapse to a bar to preview. Tabs: Templates, Layout, Text, Photo. There's no dimming backdrop: the cover's frame shrinks to the space beside or above the editor, so it is a live preview at that size. "Reset all" resets the settings and the cover photo.
+  - **Cover photo** (`photo.js`). `useCoverPhoto(fallback, library)` returns the current photo: the gallery's default cover (`coverPhoto` in `data/photos.js`), any gallery photo, or an upload. `GalleryPage` passes the ordered photo list and the collection names to `CoverSection`, which hands them to the editor's Photo tab. A gallery photo is stored by id. An upload is read in the browser with `readImage()`, shrunk to 2400px on the long side, and stored as a JPEG data URL with the id `upload`. The upload stays in the list when another photo is chosen, until it's removed. Saved to `localStorage['store-v3:gallery-cover-photo']`; if the data URL is too big for storage, only the gallery choice is saved and the upload lasts until reload. The cover image is keyed on `src`, so a new photo replays the entrance animation.
   - **Responsive sizing.** The cover frame is a CSS container. Title sizes use container-query variants (`@xl:`, `@5xl:`), and margins are set for a 1280px cover and scale with `cqw` (minimum 16px), so the preview matches what clients see at that width.
 - **Actions** (`lib/actions.js`).
   - Download fetches the image as a blob and saves it, falling back to opening it in a new tab.
@@ -248,6 +250,7 @@ These are the places that would be swapped out for real services:
 | `mailto:` enquiry buttons | Enquiry form or CRM lead capture |
 | `useInfinite` 350ms timeout | Paginated photo endpoint |
 | `localStorage` cart | Server cart / session |
+| Cover settings and photo in `localStorage` (uploads as data URLs) | Gallery settings API, with uploads going to media storage |
 | `PROMOS`, `SHIPPING`, flat 8.25% tax | Promotions, shipping-rate and tax services |
 | Payment page stops at "Make payment" | Payment provider and order creation (with photographer approval, as the copy says) |
 
@@ -256,6 +259,7 @@ These are the places that would be swapped out for real services:
 - **Two photo sets.** The store builder picks from the 28 photos in `data/gallery.js`, while the gallery page shows up to 200, or the local images. Photos dropped into `gallery/assets/photos/` do not appear in the builder.
 - **Portfolio galleries are synthetic.** They are fixed-size slices of a genre folder with mock names, places and dates, and are unrelated to the client gallery at `/`. Portfolio photos can't be opened in a lightbox or bought.
 - **Portfolio images are committed to the repo.** About 500 web-sized JPEGs live in `src/portfolio/assets/work/` and are emitted as build assets. Only their URLs are in the JS bundle; each image downloads when it renders.
+- **Cover uploads live in `localStorage`.** A data URL is roughly 0.5–1.5MB, so it shares the ~5MB browser quota with everything else and can fail to save. The cover editor is also open to every visitor; there is no photographer mode yet.
 - **No tests, linting config or TypeScript.**
 - **`Builder.jsx` is large (~960 lines).** It holds the step components, the variant-switch logic and the page. Splitting the step components into their own files would help.
 - **The `.playwright-mcp/` logs are committed.** They should probably be added to `.gitignore`.

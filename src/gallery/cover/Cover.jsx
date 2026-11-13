@@ -106,6 +106,7 @@ export default function Cover({ gallery, photo, config, inset = { left: 0, botto
         style={{ left: inset.left, bottom: inset.bottom }}
       >
         <motion.img
+          key={photo.src}
           src={photo.src}
           alt=""
           style={{ y }}

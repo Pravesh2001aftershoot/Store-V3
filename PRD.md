@@ -54,6 +54,11 @@ The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Esteban Gil
 | G10 | Download saves the full-size file. Share uses the native share sheet where available and otherwise copies a link. Both confirm with a toast. | ✅ |
 | G11 | Hover actions on each tile: favourite, download, share and buy. Hidden on touch screens, where tapping a tile opens the lightbox, which has the same actions. | ✅ (buy goes to the store without preselecting the photo) |
 | G12 | Real photos can be dropped into a folder to replace the placeholders | ✅ |
+| G13 | **Cover editor.** "Edit cover" on the cover opens an editor with a live preview: a left pane on tablet and desktop, and a bottom sheet on phones that collapses to a bar to see the whole cover. Tabs: Templates, Layout, Text, Photo. "Reset all" restores the defaults, and the choices are saved on the device. | ✅ (open to every visitor, see open question 12) |
+| G14 | **Templates.** Six presets (Classic, Centered, Editorial, Minimal, Top corner, Signature) set the layout and which pieces show. They never change the text. | ✅ |
+| G15 | **Layout.** Text position on a 3×3 grid, alignment, title size, text width, logo position (top left/centre/right, above the title, or off), button arrangement and size, margins and overlay strength | ✅ |
+| G16 | **Text.** Edit the eyebrow, title, subtitle and both button labels, each with a character limit and counter. Optional pieces and the print store link can be turned off. An empty title falls back to the client's names. | ✅ |
+| G17 | **Cover photo.** Choose any gallery photo as the cover, filtered by collection, or upload an image from the device (click or drag and drop). The upload stays available to switch back to until it's removed. | ✅ (uploads are stored on the device only) |
 
 ### 5.2 Store home and browsing (`/store`, `/shop`, `/packages`)
 
@@ -180,3 +185,5 @@ Full-screen, three steps: **Photos → Crop → Review**. A sticky top bar shows
 9. **Portfolio privacy.** Client galleries are private by default. Define consent for showing a client's photos publicly, and whether client names appear.
 10. **Enquiries.** Replace the `mailto:` buttons with an enquiry form that reaches the photographer's CRM, and decide what details it captures (date, location, genre).
 11. **Portfolio photo viewer.** Decide whether portfolio photos should open in the gallery lightbox, and whether they can be shared.
+12. **Who edits the cover.** In the prototype anyone can open the cover editor. In the product it should be photographer-only, and saved to the gallery rather than the device.
+13. **Cover photo rules.** Decide whether an uploaded cover should be added to the gallery or kept separate, the minimum size for an upload, and whether photographers can set a focal point for crops on narrow screens.

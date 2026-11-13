@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowCounterClockwise, CaretDown, CaretUp, Check, TextAlignCenter, TextAlignLeft, TextAlignRight, X } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, CaretDown, CaretUp, Check, CircleNotch, TextAlignCenter, TextAlignLeft, TextAlignRight, Trash, UploadSimple, X } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn } from '../../lib/utils'
 import { CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO, MARGIN_X, MARGIN_Y, TEMPLATES, TITLE_SIZE, WIDTH } from './config'
 import { Label, PositionGrid, Section, Segmented, Slider, Switch, TextField } from './controls'
+import { UPLOAD_ID, readImage } from './photo'
 
 const ease = [0.22, 1, 0.36, 1]
 const TABS = [
   { id: 'templates', label: 'Templates' },
   { id: 'layout', label: 'Layout' },
   { id: 'text', label: 'Text' },
+  { id: 'photo', label: 'Photo' },
 ]
 const ALIGN_ICONS = [
   { id: 'left', label: 'Align left', icon: TextAlignLeft },
@@ -30,7 +32,7 @@ export const PEEK_H = 64
  * and as a bottom sheet on phones that can collapse to a bar to preview the full cover.
  * There's no dimming backdrop: the cover beside/above it is the live preview.
  */
-export default function CoverEditor({ open, onClose, phone, peek, onPeek, photo, cover }) {
+export default function CoverEditor({ open, onClose, phone, peek, onPeek, photo, cover, media, photos = [], collections = [] }) {
   const [tab, setTab] = useState('templates')
 
   return (
@@ -74,12 +76,13 @@ export default function CoverEditor({ open, onClose, phone, peek, onPeek, photo,
                       {tab === 'templates' && <TemplatesTab cover={cover} photo={photo} />}
                       {tab === 'layout' && <LayoutTab cover={cover} photo={photo} />}
                       {tab === 'text' && <TextTab cover={cover} />}
+                      {tab === 'photo' && <PhotoTab media={media} photos={photos} collections={collections} />}
                     </motion.div>
                   </AnimatePresence>
                 </div>
                 {!(phone && peek) && (
                   <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
-                    <Button variant="ghost" size="sm" onClick={cover.reset} className="-ml-2">
+                    <Button variant="ghost" size="sm" onClick={() => { cover.reset(); media?.reset() }} className="-ml-2">
                       <ArrowCounterClockwise size={14} /> Reset all
                     </Button>
                     <span className="flex-1" />
@@ -124,7 +127,7 @@ function Header({ phone, peek, onPeek, tab, onTab, template }) {
         </Dialog.Close>
       </div>
       {!(phone && peek) && (
-        <div role="tablist" className="mt-3 grid grid-cols-3 gap-1 rounded-full bg-surface-2 p-1">
+        <div role="tablist" className="mt-3 grid grid-cols-4 gap-1 rounded-full bg-surface-2 p-1">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -282,6 +285,136 @@ function TextTab({ cover }) {
           </div>
           <Switch checked={show.storeLink} onChange={(storeLink) => cover.setShow({ storeLink })} label="Show print store link" />
         </div>
+      </Section>
+    </div>
+  )
+}
+
+// ── Photo ───────────────────────────────────────────────────────────────────
+
+const PAGE = 36
+
+function PhotoTab({ media, photos, collections }) {
+  const [filter, setFilter] = useState('All')
+  const [limit, setLimit] = useState(PAGE)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const [dragging, setDragging] = useState(false)
+  const input = useRef(null)
+  const { photo, upload } = media
+
+  const list = filter === 'All' ? photos : photos.filter((p) => p.collection === filter)
+  const shown = list.slice(0, limit)
+
+  const takeFile = async (file) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) return setError('That file isn’t an image. Try a JPG, PNG or WebP.')
+    setError(null)
+    setBusy(true)
+    try {
+      const img = await readImage(file)
+      media.setUpload({ ...img, name: file.name })
+    } catch {
+      setError('We couldn’t read that image. Try another file.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div>
+      <Section title="Upload" hint="Use a photo that isn’t in this gallery. Landscape works best.">
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { takeFile(e.target.files?.[0]); e.target.value = '' }}
+        />
+        <button
+          onClick={() => input.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => { e.preventDefault(); setDragging(false); takeFile(e.dataTransfer.files?.[0]) }}
+          disabled={busy}
+          className={cn(
+            'flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-5 text-center transition',
+            dragging ? 'border-type-0 bg-surface-2' : 'border-border hover:border-type-3 hover:bg-surface-2'
+          )}
+        >
+          {busy ? <CircleNotch size={20} className="animate-spin text-type-2" /> : <UploadSimple size={20} className="text-type-2" />}
+          <span className="text-13-m text-type-0">{busy ? 'Preparing image…' : 'Upload from computer'}</span>
+          <span className="text-12-r text-type-3">or drop an image here</span>
+        </button>
+        {error && <p className="text-12-r text-destructive">{error}</p>}
+
+        {upload && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => media.choose(UPLOAD_ID)}
+              aria-pressed={photo.id === UPLOAD_ID}
+              className={cn('relative h-14 w-20 shrink-0 overflow-hidden rounded-lg ring-offset-2 transition', photo.id === UPLOAD_ID ? 'ring-2 ring-type-0' : 'ring-1 ring-border hover:ring-type-3')}
+              aria-label="Use uploaded photo"
+            >
+              <img src={upload.thumb} alt="" className="h-full w-full object-cover" draggable={false} />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-13-m text-type-0">{upload.name}</p>
+              <p className="text-12-r text-type-2">{photo.id === UPLOAD_ID ? 'On the cover' : 'Uploaded · tap to use'}</p>
+            </div>
+            <button
+              onClick={media.removeUpload}
+              className="grid h-8 w-8 place-items-center rounded-full text-type-2 transition hover:bg-surface-2 hover:text-type-0"
+              aria-label="Remove uploaded photo"
+            >
+              <Trash size={15} />
+            </button>
+          </div>
+        )}
+      </Section>
+
+      <Section title="From this gallery" hint={`${list.length} photos`}>
+        <div className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+          {['All', ...collections].map((c) => (
+            <button
+              key={c}
+              onClick={() => { setFilter(c); setLimit(PAGE) }}
+              aria-pressed={filter === c}
+              className={cn(
+                'h-8 shrink-0 rounded-full px-3 text-12-m transition',
+                filter === c ? 'bg-type-0 text-white' : 'bg-surface-2 text-type-1 hover:bg-[#ececec]'
+              )}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {shown.map((p) => {
+            const active = photo.id === p.id
+            return (
+              <button
+                key={p.id}
+                onClick={() => media.choose(p.id)}
+                aria-pressed={active}
+                aria-label={`Use ${p.name} as cover`}
+                className={cn('relative aspect-square overflow-hidden rounded-lg bg-surface-2 transition', active ? 'ring-2 ring-type-0 ring-offset-2' : 'hover:opacity-85')}
+              >
+                <img src={p.thumb ?? p.src} alt="" loading="lazy" className="h-full w-full object-cover" draggable={false} />
+                {active && (
+                  <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-type-0 shadow">
+                    <Check size={12} weight="bold" />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+        {list.length > shown.length && (
+          <Button variant="secondary" size="sm" className="w-full" onClick={() => setLimit((l) => l + PAGE)}>
+            Show more ({list.length - shown.length})
+          </Button>
+        )}
       </Section>
     </div>
   )

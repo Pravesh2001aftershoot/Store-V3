@@ -153,13 +153,17 @@ The drawer opens from the header cart button on every store screen. It also open
 
 ## Gallery (`/`)
 
-### Cover: [src/gallery/components/Cover.jsx](src/gallery/components/Cover.jsx)
+### Cover: [src/gallery/cover/Cover.jsx](src/gallery/cover/Cover.jsx)
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
-| Cover photo | Page load | Settles in from a slight zoom | `scale 1.08 → 1`, `opacity 0 → 1`, `1.6s`, `ease` | framer-motion |
+| Cover photo | Page load, or a new cover photo chosen | Settles in from a slight zoom. The image is keyed on `src`, so a new photo replays this | `scale 1.08 → 1`, `opacity 0 → 1`, `1.6s`, `ease` | framer-motion |
 | Cover photo | Page scroll | Parallax: moves down more slowly than the page | `y 0% → 18%` across `scrollYProgress 0 → 1`. Offset `['start start', 'end start']` | framer-motion `useScroll` + `useTransform` |
 | Text block (date, name, CTAs) | Page scroll | Fades out as the cover leaves | `opacity 1 → 0` across `scrollYProgress 0 → 0.6` | framer-motion `useTransform` |
+| Text block | Position, alignment or width changes in the editor | Glides to its new place | `layout="position"`, `0.5s`, `ease` | framer-motion |
+| Cover frame | Editor opens / closes, or the phone sheet collapses | Shrinks to the space beside (desktop) or above (phone) the editor, and grows back | `left` / `bottom`, `550ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Logo ("In text" position) | Page load | Fade up | `y 12 → 0`, `0.9s`, `ease`, delay `0.2s` | framer-motion |
+| "Edit cover" button (top bar) | Hover | Background `white/15 → white/25`. Hidden while editing | Tailwind default | Tailwind |
 | Date · photo count | Page load | Fade up | `opacity 0 → 1`, `y 12 → 0`, `0.9s`, `ease`, delay `0.3s` | framer-motion |
 | Client name (H1) | Page load | Fade up | `y 24 → 0`, `1s`, `ease`, delay `0.4s` | framer-motion |
 | "Photographed by" | Page load | Fade up | `y 16 → 0`, `0.9s`, `ease`, delay `0.55s` | framer-motion |
@@ -167,6 +171,28 @@ The drawer opens from the header cart button on every store screen. It also open
 | "View gallery" button | Click | Smooth-scrolls to the grid. Also has the [Button](#button-srccomponentsuiindexjsx) press and hover effects | `scrollIntoView({ behavior: 'smooth' })` | Browser native |
 | "Shop prints" button | Hover | [Button](#button-srccomponentsuiindexjsx) arrow slide | n/a | Tailwind |
 | "Print store" link (top right) | Hover | Background `→ white/10` | Tailwind default | Tailwind |
+
+### Cover editor: [src/gallery/cover/CoverEditor.jsx](src/gallery/cover/CoverEditor.jsx), [controls.jsx](src/gallery/cover/controls.jsx)
+
+Opens from "Edit cover". It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Pane (tablet / desktop) | Open / close | Slides in from the left | `x -100% → 0`, exit `→ -110%`, `0.55s`, `ease` | framer-motion + Radix |
+| Sheet (phone) | Open / close | Slides up from the bottom | `y 100% → 0`, `0.55s`, `ease` | framer-motion + Radix |
+| Sheet (phone) | Grab handle or Preview / Edit button | Collapses to a `64px` bar to show the whole cover, and expands back to `58svh` | `height`, `500ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Tab pill (Templates / Layout / Text / Photo) | Tab changes | The white pill slides | `layoutId="cover-tab"`, `0.35s`, `ease` | framer-motion |
+| Tab body | Tab changes | Crossfade with a small rise | Enter `opacity 0 → 1`, `y 8 → 0`. Exit `y → -8`. `0.2s`, `ease`. `mode="wait"` | framer-motion |
+| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected | Tailwind default | Tailwind |
+| Segmented controls (alignment, title size, width, logo, buttons) | Option chosen | The white pill slides | `layoutId="seg-{id}"`, `0.35s`, `ease` | framer-motion |
+| Position grid cell | Hover / selected | Fill `→ white/10` on hover; selected gets `white/20`, a white ring and longer bars | Tailwind default | Tailwind |
+| Switch | Toggle | Knob slides, track `#dcdcdf → type-0` | `x 0 → 16`, `0.25s`, `ease` | framer-motion + Tailwind |
+| Text field | Focus | Border `→ type-0`, `ring-4 black/5`. Counter turns amber in the last 10% and red at the limit | Tailwind default | Tailwind |
+| Upload box (Photo tab) | Hover / drag over | Border `→ type-3` and `surface-2` fill on hover; `type-0` border while a file is dragged over | Tailwind default | Tailwind |
+| Upload box | File being read | The upload icon becomes a spinner | `animate-spin` | Tailwind keyframes |
+| Collection chips (Photo tab) | Chosen | Fill `surface-2 → type-0`, text `→ white`. No sliding pill | Tailwind default | Tailwind |
+| Photo thumbnail (Photo tab) | Hover / chosen | Hover `opacity 85%`; chosen gets `ring-2 ring-type-0 ring-offset-2` and a check badge. Thumbnails load lazily | Tailwind default | Tailwind |
+| Cover photo | Thumbnail or upload chosen | The cover replays its entrance zoom (see Cover above) | n/a | framer-motion |
 
 ### Nav bar: [src/gallery/components/NavBar.jsx](src/gallery/components/NavBar.jsx)
 
@@ -519,3 +545,4 @@ These are observations, not changes. They are useful when tidying up motion.
 8. **Portfolio photos don't fade in.** Gallery tiles fade in over `700ms` when loaded; portfolio covers and gallery-page photos appear abruptly over the grey placeholder.
 9. **Two toggle styles.** The portfolio grid/list toggle jumps between options, while the gallery layout menu's segmented control slides a pill with `layoutId`.
 10. **Portfolio header is always visible.** The store header hides on scroll down; the portfolio header stays put, and the work toolbar stacks under it, so about 170px of the viewport is chrome while browsing work on mobile (120px on desktop).
+11. **Cover editor collection chips don't slide.** They switch instantly, while the editor's tab bar and segmented controls slide a pill with `layoutId`.

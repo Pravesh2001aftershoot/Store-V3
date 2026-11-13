@@ -142,7 +142,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CoverSection gallery={gallery} photo={coverPhoto} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <CoverSection gallery={gallery} photo={coverPhoto} photos={ordered} collections={tabs} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <div ref={gridRef}>
         <NavBar
