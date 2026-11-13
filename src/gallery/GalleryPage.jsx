@@ -12,6 +12,8 @@ import Lightbox from './components/Lightbox'
 import Toaster from './components/Toaster'
 import QuickBuy from './components/QuickBuy'
 import SelectionBar from './components/SelectionBar'
+import FacePane from './components/FacePane'
+import { people, withFaces } from './data/faces'
 import { registerPhoto } from '../data/gallery'
 import { MAX_SETS, downloadPhotos, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
 import FooterSection from './templates/footer/FooterSection'
@@ -30,7 +32,9 @@ export default function GalleryPage() {
   const [favorites, toggleFav, clearFavs, setFavs] = useFavorites(gallery.client)
   const [hidden, toggleHidden, clearHidden] = useHidden(gallery.client)
   const [sets, createSet, deleteSet] = useSets(gallery.client)
-  const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden' | 'set:<id>'
+  const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden' | 'faces' | 'set:<id>'
+  const [faceFilter, setFaceFilter] = useState({ ids: [], mode: 'any' }) // the people shown in the 'faces' view
+  const [facesOpen, setFacesOpen] = useState(false) // the Find people pane
   const inBucket = view !== 'all' // a flat list (favourites / hidden / a set), not the sectioned gallery
   const [selecting, setSelecting] = useState(false) // multi-select mode
   const [selected, setSelected] = useState(() => new Set()) // selected photo ids
@@ -78,13 +82,26 @@ export default function GalleryPage() {
     const ids = new Set(openSet.ids)
     return ordered.filter((p) => ids.has(p.id))
   }, [ordered, openSet])
-  const visible = view === 'favs' ? favPhotos : view === 'hidden' ? hiddenPhotos : openSet ? setPhotos : ordered
+  const facePhotos = useMemo(() => withFaces(ordered, faceFilter.ids, faceFilter.mode), [ordered, faceFilter])
+  const visible = view === 'favs' ? favPhotos : view === 'hidden' ? hiddenPhotos : view === 'faces' ? facePhotos : openSet ? setPhotos : ordered
 
   // A set's count is what it shows: hidden photos are left out, as everywhere else in the gallery.
   const setsWithCounts = useMemo(
     () => sets.map((x) => ({ ...x, count: x.ids.filter((id) => !hidden.has(id)).length })),
     [sets, hidden]
   )
+  // Show the people chosen in the Find people pane.
+  const applyFaces = (ids, mode) => {
+    setFaceFilter({ ids, mode })
+    setFacesOpen(false)
+    setView('faces')
+    toGrid()
+  }
+  const clearFaces = () => {
+    setFaceFilter({ ids: [], mode: 'any' })
+    setView('all')
+  }
+
   // The open set was deleted: fall back to the gallery.
   useEffect(() => {
     if (view.startsWith('set:') && !openSet) setView('all')
@@ -272,6 +289,11 @@ export default function GalleryPage() {
           onView={(v) => { setView((cur) => (cur === v ? 'all' : v)); toGrid() }}
           onClearFavs={() => { clearFavs(); setView('all') }}
           onUnhideAll={() => { clearHidden(); setView('all') }}
+          onFaces={people.length ? () => setFacesOpen(true) : undefined}
+          facesOpen={facesOpen}
+          faceFilter={faceFilter}
+          faceCount={facePhotos.length}
+          onClearFaces={clearFaces}
         />
         <GalleryGrid
           photos={visible}
@@ -293,6 +315,7 @@ export default function GalleryPage() {
           emptyMessage={
             view === 'favs' ? 'No favourites yet. Tap the heart on any photo to add it here.'
             : view === 'hidden' ? 'No hidden photos. Photos you hide will wait here.'
+            : view === 'faces' ? (faceFilter.mode === 'all' ? 'No photos with all of these people together. Try showing any of them.' : 'No photos of these people right now — they may be hidden.')
             : openSet ? 'Nothing in this set right now — its photos may be hidden.'
             : undefined
           }
@@ -322,6 +345,7 @@ export default function GalleryPage() {
         photos={ordered}
         cover={cover.config}
       />
+      <FacePane open={facesOpen} onClose={() => setFacesOpen(false)} photos={ordered} filter={faceFilter} onApply={applyFaces} />
       <QuickBuy photo={buying} onClose={() => setBuying(null)} />
       <SelectionBar
         open={selecting}

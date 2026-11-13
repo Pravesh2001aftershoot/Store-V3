@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "photos:dims": "sh scripts/photo-dims.sh",
+    "photos:faces": ".venv-faces/bin/python scripts/faces.py",
     "portfolio:photos": "sh scripts/portfolio-photos.sh"
   },
   "dependencies": {

@@ -248,6 +248,7 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Collection tab text | Hover / active | Colour `type-2 → type-0` | Tailwind default | Tailwind |
 | Collection tab row | Active tab changes | The row scrolls sideways to centre the active tab | `row.scrollTo({ behavior: 'smooth' })` | Browser native |
 | Collection tab | Tap | The page scrolls so the section heading sits under the nav. Scroll-spy is locked until `scrollend`, wheel or touch (1.5s fallback) | `window.scrollTo({ behavior: 'smooth' })` | Browser native |
+| People button | Click | Opens the Find people pane. `surface-2` while the pane or the People view is open; the icon turns bold in the People view | Tailwind default | Tailwind |
 | Layout / Hidden / Favourites buttons | Hover / pressed | Background `→ surface-2`. Text labels show from `lg` up; below that they're icon plus count. "Shop prints" is an icon-only circle below `lg` | Tailwind default | Tailwind |
 | Hidden button | Hover / pressed | Background `→ surface-2`; the eye-slash icon turns bold while the Hidden view is open | Tailwind default | Tailwind |
 | Favourites / Hidden toggle, set tab | Click | Opens that view (or goes back to all photos if it's already open) and jumps back to the top of the grid if scrolled past it. Any selection is cleared | `scrollTo({ behavior: 'instant' })` | Browser native |
@@ -259,6 +260,27 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
 | Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides to the selected option | `layoutId="seg-{label}"`, `0.35s`, `ease` | framer-motion |
 | Photographer name | Hover / click | Text `type-2 → type-0` and an underline appears. Click opens [`/portfolio`](#portfolio-portfolio-srcportfolioportfoliopagejsx) | Tailwind default | Tailwind |
+
+### Find people: [src/gallery/components/FacePane.jsx](src/gallery/components/FacePane.jsx), [faces.js](src/gallery/data/faces.js)
+
+Opens from the People button in the nav, or "Change" in the People view. A modal Radix Dialog like quick buy: Esc, ✕ and taps on the overlay close it, and the gallery doesn't change until "Show N photos" or "Yes, show my photos". It reopens with the last applied choice and on the first step.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Overlay | Open / close | Fades in and out | `black/30`, `backdrop-blur-[2px]`, framer default (~0.3s) | framer-motion |
+| Pane | Open / close | Slides in from the right, and back out | `x 100% → 0`, `0.55s`, `ease` | framer-motion |
+| Steps (faces → scan → match) | Scan, back, scan result | The old step slides out and fades as the new one comes in from the side it's heading; back reverses it. The body scrolls to the top in between | `x ±24`, `opacity`, `0.3s`, `ease`, `AnimatePresence mode="wait"` | framer-motion |
+| Face avatar | Hover | Ring `border → type-3` | Tailwind default | Tailwind |
+| Face avatar | Tap | Toggles the person. Ring becomes `ring-2 type-0`, the count turns `type-0`, and the check badge pops in (and out when unchosen) | Badge `scale 0.4 → 1`, `opacity`, `0.2s`, `ease` | framer-motion + Tailwind |
+| "Show photos with" | Second person chosen / back to one | The control opens below the faces (and folds away) | `height 0 → auto`, `opacity`, `0.3s`, `ease` | framer-motion |
+| Any of them / All together | Tap | The white pill slides to the chosen option; the hint below and the count on the button update at once | `layoutId="face-match"`, `0.35s`, `ease` | framer-motion |
+| Show N photos | Tap | Applies the choice, closes the pane, opens the People view and jumps to the top of the grid. Disabled (40% opacity) with no one chosen or no photos together | `scrollTo({ behavior: 'instant' })` | Browser native |
+| Camera | Scan step opens | Asks for the front camera; the live picture fades in once it starts. Leaving the step, or taking the selfie, turns the camera off | `opacity`, `0.3s` | Tailwind + `getUserMedia` |
+| Take selfie | Tap | The frame freezes as a still, then the scan runs for 2.2s: a white band sweeps down and back up over the face and the guide ring becomes one arc spinning round. Then the match step | Band `top -20% → 100% → -20%`, `easeInOut`; arc `rotate 360`, `1.1s`, linear, repeating | framer-motion |
+| Upload a selfie / Upload a photo instead | Tap | Opens the file picker; an image starts the same scan | n/a | Browser native |
+| Match faces | Match step opens | The selfie slides in from the right and the matched face from the left until they overlap, then the green check pops in | `x ±24`, `opacity`, `0.45s`; badge `scale 0.4 → 1`, `0.3s` delay, `0.35s` | framer-motion |
+| Yes, show my photos / Add other people / That's not me | Tap | Applies just that person; or goes back to the faces with them chosen; or goes back with them unchosen and a "Tap your face below" note | Step slide as above | framer-motion |
+| People view header | View opens | Replaces the tab row instantly, like Favourites: "‹ All photos", the face stack, the label and count, "Change" (reopens the pane) and "Clear" (no confirmation; back to all photos) | n/a | n/a |
 
 ### Photo grid and tile: [GalleryGrid.jsx](src/gallery/components/GalleryGrid.jsx), [Photo.jsx](src/gallery/components/Photo.jsx)
 

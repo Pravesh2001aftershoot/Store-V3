@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretLeft, CheckCircle, EyeSlash, Handbag, Heart, SlidersHorizontal, Stack, X } from '@phosphor-icons/react'
+import { CaretLeft, CheckCircle, EyeSlash, Handbag, Heart, PencilSimple, SlidersHorizontal, Stack, UserFocus, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../lib/settings'
 import { useBreakpoint } from '../lib/hooks'
+import { FaceStack, MATCH } from './FacePane'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -170,8 +171,10 @@ function LayoutMenu({ settings, onChange }) {
 /**
  * Sticky gallery nav: title, collections (+ the client's sets), select, layout, the favourites / hidden
  * buckets, and the entry to the store. A set opens like a bucket: `view` is `set:<id>`.
+ * People (`onFaces`, left out when the gallery has no key faces) opens the face filter pane; its
+ * results open like a bucket too (`view` is `faces`), described by `faceFilter`.
  */
-export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting }) {
+export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting, onFaces, facesOpen, faceFilter, faceCount, onClearFaces }) {
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
@@ -187,8 +190,20 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
 
   const showFavs = view === 'favs'
   const showHidden = view === 'hidden'
+  const showFaces = view === 'faces'
   const openSet = view.startsWith('set:') ? sets.find((x) => `set:${x.id}` === view) : null
-  const bucket = openSet
+  const people = faceFilter?.ids.length ?? 0
+  const bucket = showFaces
+    ? {
+        label: people === 1 ? '1 person' : `${people} people${faceFilter.mode === 'all' ? ' together' : ''}`,
+        title: people > 1 ? MATCH.find((m) => m.id === faceFilter.mode)?.hint : undefined,
+        icon: <FaceStack ids={faceFilter.ids} />,
+        count: faceCount,
+        edit: onFaces,
+        action: 'Clear',
+        run: onClearFaces,
+      }
+    : openSet
     ? { label: openSet.name, count: openSet.count, action: 'Delete set', confirm: `Delete the set “${openSet.name}”? The photos stay in the gallery.`, run: () => onDeleteSet(openSet.id) }
     : showFavs
     ? { label: 'Favourites', count: favCount, action: 'Clear all', confirm: `Remove all ${favCount} favourites?`, run: onClearFavs }
@@ -205,12 +220,25 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
           <CaretLeft size={14} /> All photos
         </button>
         <span className="h-4 w-px bg-border" />
-        <p className="truncate text-14-m text-type-0">
-          {bucket.label} <span className="text-type-3">{bucket.count}</span>
+        {bucket.icon}
+        <p className={cn('truncate text-14-m text-type-0', bucket.icon && 'max-sm:shrink-0')} title={bucket.title}>
+          {/* With faces to show who it is, phones drop the words for room: avatars + count. */}
+          <span className={cn(bucket.icon && 'hidden sm:inline')}>{bucket.label} </span>
+          <span className="text-type-3">{bucket.count}</span>
         </p>
+        {bucket.edit && (
+          <button
+            onClick={bucket.edit}
+            aria-label="Change people"
+            title="Change people"
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-13-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
+          >
+            <PencilSimple size={14} /> <span className="hidden sm:inline">Change</span>
+          </button>
+        )}
         {bucket.count > 0 && (
           <button
-            onClick={() => window.confirm(bucket.confirm) && bucket.run()}
+            onClick={() => (!bucket.confirm || window.confirm(bucket.confirm)) && bucket.run()}
             className="shrink-0 rounded-full px-3 py-1.5 text-13-r text-type-2 transition hover:bg-surface-2 hover:text-type-0"
           >
             {bucket.action}
@@ -292,6 +320,22 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
 
         <div className="flex shrink-0 items-center gap-1">
           <LayoutMenu settings={settings} onChange={onSetting} />
+          {onFaces && (
+            <button
+              onClick={onFaces}
+              aria-haspopup="dialog"
+              aria-expanded={facesOpen}
+              aria-label="Find people"
+              title="Find people"
+              className={cn(
+                'flex h-10 items-center gap-2 rounded-full px-3 text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+                (showFaces || facesOpen) && 'bg-surface-2 text-type-0'
+              )}
+            >
+              <UserFocus size={18} weight={showFaces ? 'bold' : 'regular'} />
+              <span className="hidden lg:inline">People</span>
+            </button>
+          )}
           <button
             onClick={() => onView('hidden')}
             aria-pressed={showHidden}

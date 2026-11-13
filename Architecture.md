@@ -37,14 +37,15 @@ src/
 │   └── ui/index.jsx      Primitives: Button, Badge, Reveal, SplitText, AnimatedNumber, Accordion, Field
 ├── pages/                Store routes (Home, Shop, Product, Packages, PackageDetail, Builder, Cart, Checkout, Payment)
 ├── gallery/              Client gallery module (entry page), kept self-contained
-    ├── GalleryPage.jsx   Page composition, scroll-spy, tab jumps, views (favourites / hidden / sets), multi-select
-    ├── components/       NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster, QuickBuy, SelectionBar
+    ├── GalleryPage.jsx   Page composition, scroll-spy, tab jumps, views (favourites / hidden / people / sets), multi-select
+    ├── components/       NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster, QuickBuy, SelectionBar, FacePane (Find people)
     ├── templates/        Editable page templates, one folder per kind
     │   ├── cover/        Cover templates: Cover, CoverSection, CoverEditor, editor controls, config.js (settings), photo.js (cover photo)
     │   ├── set-header/   Set header templates: SectionHeader (5 templates), SectionEditor, config.js (collection heading settings)
     │   ├── footer/       Footer templates: Footer (6 templates), FooterSection, FooterEditor, config.js (settings, social platforms)
     │   └── editor/       EditorPane (the pane / phone sheet shell shared by the three editors), FitThumb
     ├── data/photos.js    Gallery photo source (local images or placeholders)
+    ├── data/faces.js     Key faces and the people in each photo, from assets/photos/faces.json
     └── lib/
         ├── settings.js   Grid options + URL-param state
         ├── layout.js     Pure layout maths (masonry, justified rows)
@@ -61,6 +62,7 @@ src/
 
 scripts/
 ├── photo-dims.sh         `npm run photos:dims`: measures the gallery photos
+├── faces.py              `npm run photos:faces`: finds and groups the faces in the gallery photos → faces.json
 └── portfolio-photos.sh   `npm run portfolio:photos`: rebuilds src/portfolio/assets/work from an export folder
 ```
 
@@ -124,6 +126,7 @@ A line stores choices only: photo IDs, variant IDs and crops. Prices are always 
 
 This state is local to `GalleryPage` and does not go through the store context.
 - **Grid settings** live in URL search params (`useGridSettings`), so a layout can be shared by link. Default values are removed from the URL.
+- **Face filter** (`faceFilter`: `{ ids, mode }`, mode `'any'` or `'all'`) and `facesOpen` (the Find people pane) are plain state in `GalleryPage`, not persisted. Leaving the People view keeps the choice, so "Change" or the People button reopens it as it was; "Clear" resets it.
 - **Favourites** are a `Set` persisted to `localStorage['gallery-favs:<client>']`. Local photo IDs are derived from file names, so saved favourites survive reordering. Hidden photos work the same way (`useHidden`, `localStorage['gallery-hidden:<client>']`).
 - **Sets** (`useSets`) are an array of `{ id, name, ids }`, at most `MAX_SETS` (2), persisted to `localStorage['gallery-sets:<client>']`. Photo ids are stored, not positions, so sets survive reordering too.
 - **Cover settings** are owned by `GalleryPage` (`useCoverConfig`, passed to `CoverSection` as `cover`) so collection headings can follow the cover's style. `CoverSection` owns the cover photo (`useCoverPhoto`). Both are persisted to `localStorage['store-v3:gallery-cover']` and `['store-v3:gallery-cover-photo']`.
@@ -204,7 +207,7 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
 - **Infinite scroll** (`useInfinite`). An `IntersectionObserver` sentinel with a 1200px look-ahead reveals 24 more photos at a time. A 350ms delay stands in for a paginated API. The `min` parameter forces enough photos to load for a tab jump to land.
 - **Scroll-spy.** A rAF-throttled scroll listener sets the active tab to the last section heading that has passed below the nav. At the very bottom of the page, the last rendered section is forced active.
 - **Tab jumps.** Tapping a tab ensures that section is loaded, then smooth-scrolls to it in a layout effect. While the scroll runs, a `lock` ref pauses the spy. The lock is released on `scrollend`, on user wheel or touch input, or after a 1.5s fallback timeout.
-- **Views.** `GalleryPage` holds `view`: `'all'` (the sectioned gallery), `'favs'`, `'hidden'` or `'set:<id>'`. Anything other than `'all'` is a flat list with no collection headings, built from the same photo order: favourites and sets leave hidden photos out, and the Hidden view shows only them. `visible` is the array the grid, lightbox and selection all index into. Opening a view that's already open goes back to `'all'`, and a deleted set falls back to `'all'`. A set's count in the nav is the photos it shows, so hidden photos aren't counted.
+- **Views.** `GalleryPage` holds `view`: `'all'` (the sectioned gallery), `'favs'`, `'hidden'`, `'faces'` or `'set:<id>'`. Anything other than `'all'` is a flat list with no collection headings, built from the same photo order: favourites and sets leave hidden photos out, and the Hidden view shows only them. `visible` is the array the grid, lightbox and selection all index into. Opening a view that's already open goes back to `'all'`, and a deleted set falls back to `'all'`. A set's count in the nav is the photos it shows, so hidden photos aren't counted.
 - **Multi-select.** `selecting` (mode on/off) and `selected` (a `Set` of photo ids) live in `GalleryPage`; `select(i, e)` toggles `visible[i]` and turns the mode on. Shift-click selects the range from the last photo toggled (`anchor` ref). Changing view clears the selection, and photos that leave the view (for example, unfavourited in Favourites) leave the selection. `SelectionBar` shows the count, Select all / Select none, and the bulk actions in `bulk`:
   - **Share** calls `sharePhotos()`: up to 10 photos go to the native share sheet as files when `navigator.canShare({ files })` allows; otherwise the share sheet gets a list of links, or the links are copied to the clipboard. Selection stays on.
   - **Favourite / Unfavourite** adds every selected photo (or removes them all, when they're all favourites already) through `setFavs(ids, on)`, toasts, and leaves selection.
@@ -214,6 +217,13 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
   - **Starting it.** On a pointer device, the check that appears on a tile's hover (`Photo.jsx`). On touch screens, a long press on a tile (`useLongPress`: 450ms, cancelled by more than 10px of movement or a scroll; it vibrates, and the click that follows is swallowed). On phones, a Select / Cancel button at the end of the collection tab row too. While selecting, a tap on a tile toggles it instead of opening the lightbox, and the hover actions and heading pencils are hidden.
   - **No multi-select in a set.** When a set is open, `GalleryPage` passes no `onSelect`, so tiles have no check and no long press, and `NavBar` drops the phone Select button. The `Toaster` is raised (`raised`) while the selection bar shows.
 - **Sets in the nav** (`NavBar.jsx`). Sets are listed after the collection tabs, behind a hairline, each with a stack icon, its name (truncated at 160px) and count. Opening one swaps the tab row for a bucket header, the same one Favourites and Hidden use: "All photos" back, the set's name and count, and "Delete set", which asks for confirmation (`window.confirm`) and leaves the photos in the gallery.
+- **Find people** (`components/FacePane.jsx`, `data/faces.js`).
+  - **Face data.** `scripts/faces.py` runs once over `src/gallery/assets/photos/`: dlib's HOG detector finds faces (scaled to 1400px), faces smaller than 6% of the short edge (background guests), blurry ones (Laplacian variance under 160) and ones dlib's CNN detector doesn't confirm (flowers, tattoos) are dropped, then 128-d face encodings are grouped with Chinese whispers clustering (distance 0.48). The 12 biggest groups with at least 5 photos become key faces, each with a cover face (its largest). It writes `faces.json`: `{ people: [{ id, photos, cover: { file, box } }], photos: { [file]: [{ person, box }] } }`, boxes as `[x, y, w, h]` fractions from the top left. It needs the `face_recognition` package in `.venv-faces` (setup in the script's header); re-run it after changing the photos.
+  - **`data/faces.js`** loads that file with `import.meta.glob` (optional, like `dims.json`) and maps file names to gallery photo ids. Exports `people` (`{ id, label, photo, box }`, most photographed first), `personById`, `facesByPhoto` (`Map<photoId, Set<personId>>`), `withFaces(photos, ids, mode)` (keeps order; `'any'` = at least one, `'all'` = every one in the same photo) and `SCAN_MATCH`, the person a scan "finds" (the first key face) — there's no in-browser matching.
+  - **`FaceAvatar`** crops a face out of the photo's `thumb` with no extra image: an absolutely positioned `<img>` sized and offset in percentages, so a square 1.7× the face box (nudged up 5% for hair) fills the container at any size. `FaceStack` overlaps up to three for the nav.
+  - **Pane.** A Radix Dialog with a dimming overlay, the same shell as quick buy (right side, `max-w-[440px]`, full width on phones). Steps `pick` → `scan` → `match`, with the same directional slide. The pane keeps a draft (`ids`, `mode`) seeded from `faceFilter` each time it opens; `onApply(ids, mode)` sets the filter, closes the pane, switches to `'faces'` and jumps to the top of the grid. Counts use the browsable photos (`ordered`), so hidden photos never count.
+  - **Scan.** `getUserMedia({ video: { facingMode: 'user' } })` into a mirrored `<video>`; "Take selfie" draws the centre square, mirrored, to a canvas and stops the camera. An `attempt` counter shuts down a stream that opens after the step has closed or restarted (StrictMode, fast back-taps). No camera or a refusal shows the upload path (`FileReader` → data URL). The scan is a 2.2s timer; the selfie lives in component state only.
+  - **Nav.** `NavBar` takes `onFaces` (omitted when `people` is empty), `facesOpen`, `faceFilter`, `faceCount` and `onClearFaces`. The People view uses the shared bucket header with two additions: an `icon` (the `FaceStack`) and an `edit` button ("Change"). Its "Clear" runs without a confirm, since nothing is lost.
 - **Layout** (`lib/layout.js`). Two pure functions:
   - `masonry` places each photo in the shortest column, so appending photos never moves ones already placed.
   - `justifiedRows` makes rows of `perRow` photos with equal heights and pads the last row with spacers.
@@ -294,6 +304,7 @@ These are the places that would be swapped out for real services:
 | `useInfinite` 350ms timeout | Paginated photo endpoint |
 | `localStorage` cart | Server cart / session |
 | Favourites, hidden photos and sets in `localStorage`, per client name | Client selections API, shared with the photographer (proofing) |
+| `faces.json` from `scripts/faces.py` (dlib, run by hand); scan always returns `SCAN_MATCH` | Face-recognition service: groups faces on upload, matches a selfie to a person |
 | Cover settings and photo in `localStorage` (uploads as data URLs) | Gallery settings API, with uploads going to media storage |
 | Footer settings and socials in `localStorage`; contact details from the mock portfolio `profile` | Photographer profile / branding API shared by galleries and the portfolio |
 | Collection heading settings and per-collection words in `localStorage` | Gallery settings API (headings), with collection names and notes from the gallery's collections |
@@ -310,6 +321,7 @@ These are the places that would be swapped out for real services:
 - **Hiding is per device and per client name.** Hidden photos aren't reported to the photographer, there's no bulk hide in the selection bar, and hidden photos still appear in the cover and footer photo pickers.
 - **Sets are per device, and capped at two.** They aren't shared with the photographer or across devices, can't be renamed, and photos can't be added to or removed from an existing set. Storage is keyed by the client's name rather than a gallery id. Multi-select has no drag-to-select.
 - **Heading settings are per device too.** The heading editor is open to every visitor, and its words are keyed by collection name, so renaming a collection loses its custom words. Webfonts for all four heading typefaces load up front, even when only Geist is used.
+- **Face matching is simulated.** A scan always "finds" the most photographed person, whoever takes the selfie. Face groups come from an offline script: they can't be named, merged or corrected in the app, the clustering can split one person into two groups or (rarely) mix two lookalikes, and faces below the size/sharpness cut-offs aren't counted. The People view can't be combined with collections, Favourites or Hidden.
 - **Two dark palettes waiting to happen.** The footer's Dark background re-maps colour tokens locally (`DARK_TOKENS`); a global dark theme should replace it.
 - **No tests, linting config or TypeScript.**
 - **`Builder.jsx` is large (~960 lines).** It holds the step components, the variant-switch logic and the page. Splitting the step components into their own files would help.
