@@ -46,12 +46,13 @@ export default function EditorPane({
       {!(phone && !inline && peek) && (
         <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
           {onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2">
+            <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2 max-sm:ml-0 max-sm:h-10 max-sm:flex-1">
               <ArrowCounterClockwise size={14} /> {resetLabel}
             </Button>
           )}
-          <span className="flex-1" />
-          <Button size="md" onClick={onClose}>
+          <span className="flex-1 max-sm:hidden" />
+          {/* Phones: Reset and Done share the row equally. */}
+          <Button size="md" onClick={onClose} className="max-sm:flex-1">
             <Check size={15} weight="bold" /> Done
           </Button>
         </div>

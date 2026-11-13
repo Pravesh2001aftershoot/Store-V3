@@ -119,9 +119,10 @@ function ProfileTab({ p }) {
   return (
     <div>
       <Section title="Portrait" hint="Shown beside your intro.">
-        <div className="flex items-center gap-4">
+        {/* Phones: the portrait sits above full-width buttons. */}
+        <div className="flex items-center gap-4 max-sm:flex-col max-sm:items-start">
           <img src={p.profile.photo} alt="" className="h-24 w-20 shrink-0 rounded-lg object-cover ring-1 ring-black/5" />
-          <div className="flex min-w-0 flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2 max-sm:w-full max-sm:flex-col max-sm:[&>*]:h-10 max-sm:[&>*]:w-full max-sm:[&>*]:justify-center">
             <button onClick={() => input.current?.click()} className="flex h-9 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-13-m text-type-0 transition hover:bg-[#ececec]">
               {busy ? <CircleNotch size={14} className="animate-spin" /> : <UploadSimple size={14} />} Upload
             </button>
@@ -129,7 +130,7 @@ function ProfileTab({ p }) {
               <Images size={14} /> From your work
             </button>
             {p.state.photo && (
-              <button onClick={() => p.setPhoto(null)} className="h-9 rounded-full px-3 text-13-m text-type-2 transition hover:bg-surface-2 hover:text-type-0">
+              <button onClick={() => p.setPhoto(null)} className="flex h-9 items-center rounded-full px-3 text-13-m text-type-2 transition hover:bg-surface-2 hover:text-type-0">
                 Use default
               </button>
             )}

@@ -1,6 +1,8 @@
 # Photographer Dashboard: Interactions
 
-How each part of the dashboard behaves, step by step. Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from 1024px, **docked** editors from 960px (the store docks its editor from 1100px).
+How each part of the dashboard behaves, step by step. On phones, every ⋯ menu, **Move to** and select opens as a bottom sheet (drag down, tap outside, ✕ or Esc to close; picking an option closes it), and action buttons span the full width.
+
+Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from 1024px, **docked** editors from 960px (the store docks its editor from 1100px).
 
 ## Shell
 
@@ -62,7 +64,7 @@ How each part of the dashboard behaves, step by step. Breakpoints: **phone** und
 Hovering a photo shows its check outline and, in All or Removed, its collection name.
 
 ### Selection bar actions
-- **Move to ▾:** a menu of collections, opening upward; the current collection is disabled. Moves the photos to the end of that collection, toasts and clears the selection.
+- **Move to ▾:** a menu of collections, opening upward (a bottom sheet on phones); the current collection is disabled. Moves the photos to the end of that collection, toasts and clears the selection.
 - **Make cover** (exactly one photo): sets it as the gallery cover. The Cover tag moves to it, and a toast confirms.
 - **Remove:** takes the photos out of the client gallery and toasts "find them under Removed". Removing the current cover returns the cover to the default.
 - In **Removed**: **Restore** puts them back, and **Delete** (only when every selected photo is an upload) asks for confirmation, then deletes them for good.

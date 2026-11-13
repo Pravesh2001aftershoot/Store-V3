@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PencilSimple } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
+import { cn } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import PreviewFrame from '../components/PreviewFrame'
 import { useDocked, usePhone, useTopOffset } from '../lib/hooks'
@@ -42,7 +43,7 @@ export default function PortfolioTab() {
             <Button
               size="lg"
               onClick={() => { setPeek(false); setOpen(true) }}
-              className="fixed left-1/2 z-30 -translate-x-1/2 shadow-[0_12px_30px_-10px_rgba(0,0,0,.5)]"
+              className={cn('fixed z-30 shadow-[0_12px_30px_-10px_rgba(0,0,0,.5)]', phone ? 'inset-x-4' : 'left-1/2 -translate-x-1/2')}
               style={{ bottom: 20 }}
             >
               <PencilSimple size={16} /> Edit portfolio

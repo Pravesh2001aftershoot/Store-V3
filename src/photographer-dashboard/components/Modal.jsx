@@ -40,7 +40,7 @@ export default function Modal({ open, onOpenChange, title, description, children
                   </Dialog.Close>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-3">{children}</div>
-                {footer && <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5">{footer}</div>}
+                {footer && <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5 max-sm:[&>*]:h-10 max-sm:[&>*]:flex-1">{footer}</div>}
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>

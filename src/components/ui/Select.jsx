@@ -35,7 +35,7 @@ export function BottomSheet({ open, onClose, title, children }) {
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[60]">
+        <div className="fixed inset-0 z-[80]">
           <motion.div
             className="absolute inset-0 bg-black/40"
             initial={{ opacity: 0 }}

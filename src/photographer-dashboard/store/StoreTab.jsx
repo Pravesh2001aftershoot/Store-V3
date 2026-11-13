@@ -103,12 +103,12 @@ function CatalogEditor({ catalogId }) {
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="w-full sm:w-[260px]">
             <Segmented options={VIEWS} value={view} onChange={setView} />
           </div>
           {view === 'packages' && (
-            <Button size="sm" className="shrink-0" onClick={() => { const pkg = s.createPackage('New package'); setOpenId(pkg.id); notify('Package added — choose what’s in it') }}>
+            <Button size="sm" className="shrink-0 max-sm:h-10 max-sm:w-full" onClick={() => { const pkg = s.createPackage('New package'); setOpenId(pkg.id); notify('Package added — choose what’s in it') }}>
               <Plus size={14} /> New package
             </Button>
           )}

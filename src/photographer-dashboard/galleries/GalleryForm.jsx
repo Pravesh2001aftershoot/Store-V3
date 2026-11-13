@@ -117,7 +117,7 @@ export default function GalleryForm({ open, onOpenChange, gallery }) {
           <div className="border-t border-border pt-4">
             <p className="text-13-m text-type-0">Delete gallery</p>
             <p className="mt-0.5 text-12-r text-type-2">{galleries.length > 1 ? 'Removes its photos, design and client link.' : 'You need at least one gallery.'}</p>
-            <Button type="button" variant="outline" size="sm" className="mt-2 text-destructive" disabled={galleries.length < 2} onClick={del}>
+            <Button type="button" variant="outline" size="sm" className="mt-2 text-destructive max-sm:h-10 max-sm:w-full" disabled={galleries.length < 2} onClick={del}>
               <Trash size={14} /> Delete gallery
             </Button>
           </div>

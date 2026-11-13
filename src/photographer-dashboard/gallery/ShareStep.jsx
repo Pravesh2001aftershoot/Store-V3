@@ -95,7 +95,7 @@ export default function ShareStep({ ws }) {
       </div>
 
       <div className="mt-10">
-        <Button as={Link} to={`${ws.base}/design`} variant="ghost" size="sm" className="-ml-2">
+        <Button as={Link} to={`${ws.base}/design`} variant="ghost" size="sm" className="-ml-2 max-sm:ml-0 max-sm:h-10 max-sm:w-full">
           <ArrowLeft size={14} /> Design
         </Button>
       </div>

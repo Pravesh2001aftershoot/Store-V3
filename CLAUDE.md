@@ -26,8 +26,8 @@ How to write them:
 
 ## Phone UI rules (under 640px)
 
-1. **Buttons are full width on phones.** Primary and secondary actions (page header actions, dialog and sheet footers, form submits, empty-state actions) span the full width of their container. Two actions side by side share the row equally (`flex-1`). Exceptions: icon-only buttons (`IconButton`, ✕, ⋯, steppers), chips and filters, toggles, and inline text links.
-2. **Dropdowns open as a bottom sheet on phones.** Any list of options (selects, menus such as ⋯ and "Move to", pickers) opens as a bottom sheet. Don't use a floating popover or the native `<select>` picker on phones. Reuse `BottomSheet` / `Select` from `src/components/ui/` (the `Select` there already switches to a sheet on phones) rather than building a new sheet. Desktop and tablet keep the popover.
+1. **Buttons are full width on phones.** Primary and secondary actions (page header actions, dialog and sheet footers, form submits, empty-state actions) span the full width of their container. Two actions side by side share the row equally (`flex-1`). Exceptions: icon-only buttons (`IconButton`, ✕, ⋯, steppers), chips and filters, toggles, inline text links, compact toolbar buttons in a header row, and a button attached to a text field (field + Add). On the dashboard, `PageHeader` actions, `Modal` footers, `Empty` actions and the `EditorPane` footer already do this; add `max-sm:w-full` (or `max-sm:flex-1` in a row) elsewhere.
+2. **Dropdowns open as a bottom sheet on phones.** Any list of options (selects, menus such as ⋯ and "Move to", pickers) opens as a bottom sheet. Don't use a floating popover or the native `<select>` picker on phones. Reuse what exists rather than building a new sheet: `BottomSheet` / `Select` from `src/components/ui/` (client pages), and `Select` / `Menu` from `src/photographer-dashboard/components/ui.jsx` (dashboard). Both switch to a sheet on phones by themselves. Desktop and tablet keep the popover.
 
 ## Conventions
 

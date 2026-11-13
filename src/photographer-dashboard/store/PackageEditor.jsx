@@ -68,7 +68,7 @@ export default function PackageEditor({ id, s, ...pane }) {
               <Button
                 variant="outline"
                 size="sm"
-                className="self-start text-destructive"
+                className="self-start text-destructive max-sm:h-10 max-sm:w-full"
                 onClick={() => {
                   if (!window.confirm(`Delete “${live.name}”? Clients can no longer order it.`)) return
                   pane.onClose()
@@ -192,7 +192,7 @@ function EditContents({ pkg, s }) {
           )
         })}
       </ul>
-      <Button variant="outline" size="sm" className="self-start" disabled={pkg.slots.length >= LIMITS.slots} onClick={() => s.addSlot(pkg.id)}>
+      <Button variant="outline" size="sm" className="self-start max-sm:h-10 max-sm:w-full" disabled={pkg.slots.length >= LIMITS.slots} onClick={() => s.addSlot(pkg.id)}>
         <Plus size={14} /> Add a product
       </Button>
     </Section>

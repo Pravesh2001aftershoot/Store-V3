@@ -9,6 +9,7 @@ The dashboard uses the app's design system as it is: tokens in `src/index.css` a
 - **One thing at a time.** Each screen has one job: a list to scan, or one editor beside its preview. Settings are grouped in titled `Section`s with a one-line hint, never a wall of fields.
 - **Defaults are visible.** Empty text fields show the value they fall back to as a placeholder, edited prices show the original struck through or as "was $X", and lists tag what's been changed.
 - **Touch first.** Targets are at least 32px, usually 36–40px. Every screen works at 390px.
+- **Phones: full-width buttons, sheets for options.** Under 640px, action buttons fill their row (two side by side share it equally, 40px tall), and every list of options (selects and ⋯ / Move to menus) opens as a bottom sheet, never a popover or the OS picker. Exceptions: icon buttons, chips, switches, steppers, the toolbar buttons in a header row (gallery ⚙ / View), and a button attached to a text field (Add speciality).
 
 ## Layout
 
@@ -52,16 +53,16 @@ Prices and counts always use `tabular-nums`.
 
 | Component | Look | Use |
 |---|---|---|
-| `Modal` (`Modal.jsx`) | Centred `surface-1` card, 520px max, `rounded-2xl`, deep shadow, over `black/40`; on phones a bottom sheet with `rounded-t-3xl`. `20-M` title, `13-R-P` description, ✕, scrolling body, footer actions right above a `border-t` | New gallery, Gallery settings, New catalog, Rename |
+| `Modal` (`Modal.jsx`) | Centred `surface-1` card, 520px max, `rounded-2xl`, deep shadow, over `black/40`; on phones a bottom sheet with `rounded-t-3xl`. `20-M` title, `13-R-P` description, ✕, scrolling body, footer actions right above a `border-t` (on phones they share the row equally) | New gallery, Gallery settings, New catalog, Rename |
 | `InlineName` | Text that shows a pencil on hover (always on phones); click swaps it for a field on `surface-2` with a soft ring | Catalog name in its header |
-| `Select` | Native select, 36px, `rounded-lg`, `border-input`, caret icon right | Catalog choice, package lines (product, size) |
-| `PageHeader` | Eyebrow, title, description; actions right (stacked under on phones) | Top of Photos, Share and Store |
+| `Select` | 36px field, `rounded-lg`, `border-input`, caret icon right. Native select on tablet and desktop; on phones a button that opens a bottom sheet (titled with its `label`) of 48px `16-R` options with a ✓ on the current one | Catalog choice, package lines (product, size) |
+| `PageHeader` | Eyebrow, title, description; actions right. On phones the actions sit under the text, fill the row and share it equally | Top of Photos, Share and Store |
 | `Stat` | `11-SB` label, `20-M` value, `12-R` hint | Store summary strip |
 | `Chip` | 36px pill. Inactive `surface-2` / `type-1`; active `primary`. Optional count in `type-3` | Collection and category filters |
 | `Tag` | 20px pill, `11-M`. Tones: muted, dark, success, warn | Hidden, Edited, Cover, New, badges |
-| `Empty` | Dashed `rounded-2xl` box, 48px icon disc, title, one line, action | Empty collections and lists |
+| `Empty` | Dashed `rounded-2xl` box, 48px icon disc, title, one line, action (full width on phones) | Empty collections and lists |
 | `IconButton` | 40px or 32px circle, `type-1`, `surface-2` on hover | Toolbar actions |
-| `Menu` | `surface-1` card, `rounded-xl`, `border`, soft shadow, 36px items | Collection options, Move to |
+| `Menu` | `surface-1` card, `rounded-xl`, `border`, soft shadow, 36px items. On phones the items open in a bottom sheet titled with the menu's `label`: 48px rows, 20px icons, `16-R`, destructive items in red, dividers kept | Card ⋯, collection options, Move to |
 | `PriceInput` | 36px field with a `$` / `+$` prefix, 104px wide; the border darkens to `type-2` when it differs from the original | Product sizes and options |
 
 ### Dashboard-specific patterns

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
-import { CaretDown } from '@phosphor-icons/react'
+import { CaretDown, Check } from '@phosphor-icons/react'
+import { BottomSheet } from '../../components/ui/Select'
+import { usePhone } from '../lib/hooks'
 
 // Small building blocks used across the dashboard tabs. Everything is built from the app's tokens
 // (surface-*, type-*, border, type tokens) and the gallery's editor controls, so the dashboard reads
@@ -18,7 +20,8 @@ export function PageHeader({ eyebrow, title, description, actions, className }) 
         <h1 className="mt-1 truncate text-30-m text-type-0 max-sm:text-24-m">{title}</h1>
         {description && <p className="mt-1.5 max-w-[620px] text-14-r-p text-type-2">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {/* Phones: actions fill the row and share it equally. */}
+      {actions && <div className="flex shrink-0 items-center gap-2 max-sm:w-full max-sm:[&>*]:h-10 max-sm:[&>*]:flex-1 sm:flex-wrap">{actions}</div>}
     </div>
   )
 }
@@ -73,7 +76,7 @@ export function Empty({ icon: Icon, title, children, action }) {
       )}
       <p className="mt-4 text-16-m text-type-0">{title}</p>
       {children && <p className="mt-1 max-w-[380px] text-14-r-p text-type-2">{children}</p>}
-      {action && <div className="mt-5">{action}</div>}
+      {action && <div className="mt-5 max-sm:w-full max-sm:[&>*]:h-10 max-sm:[&>*]:w-full">{action}</div>}
     </div>
   )
 }
@@ -101,10 +104,11 @@ export function IconButton({ label, small, className, children, ...props }) {
  * or null for a divider. Closes on outside click and Esc.
  */
 export function Menu({ trigger, items, align = 'right', side = 'bottom', label }) {
+  const phone = usePhone()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
-    if (!open) return
+    if (!open || phone) return
     const close = (e) => !ref.current?.contains(e.target) && setOpen(false)
     const esc = (e) => e.key === 'Escape' && setOpen(false)
     document.addEventListener('pointerdown', close)
@@ -113,7 +117,30 @@ export function Menu({ trigger, items, align = 'right', side = 'bottom', label }
       document.removeEventListener('pointerdown', close)
       document.removeEventListener('keydown', esc)
     }
-  }, [open])
+  }, [open, phone])
+
+  // Phones: the options open as a bottom sheet titled with the menu's label.
+  if (phone) {
+    return (
+      <div className="relative">
+        {trigger({ open, toggle: () => setOpen((o) => !o) })}
+        <BottomSheet open={open} onClose={() => setOpen(false)} title={label}>
+          <div role="menu" aria-label={label}>
+            {items.map((it, i) =>
+              it === null ? (
+                <div key={`d${i}`} className="my-1 h-px bg-border" />
+              ) : (
+                <SheetItem key={it.label} role="menuitem" icon={it.icon} danger={it.danger} disabled={it.disabled} onClick={() => { setOpen(false); it.onClick() }}>
+                  {it.label}
+                </SheetItem>
+              )
+            )}
+          </div>
+        </BottomSheet>
+      </div>
+    )
+  }
+
   return (
     <div ref={ref} className="relative">
       {trigger({ open, toggle: () => setOpen((o) => !o) })}
@@ -184,19 +211,66 @@ export function PriceInput({ value, onChange, original, label, prefix = '$', cla
   )
 }
 
-/** A native select styled like the dashboard's fields (native, so phones get their own picker). */
+/**
+ * A select styled like the dashboard's fields: native on tablet and desktop, a bottom sheet of
+ * options on phones (never the OS picker). options: [{ value, label, disabled }].
+ */
 export function Select({ value, onChange, options, label, className }) {
+  const phone = usePhone()
+  const [open, setOpen] = useState(false)
+  const field = 'h-9 w-full min-w-0 truncate rounded-lg border border-input bg-surface-0 pl-3 pr-8 text-13-r text-type-0 outline-none transition hover:border-type-3 focus-visible:border-type-0'
+  const current = options.find((o) => o.value === value)
   return (
     <span className={cn('relative inline-flex', className)}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={label}
-        className="h-9 w-full min-w-0 appearance-none truncate rounded-lg border border-input bg-surface-0 pl-3 pr-8 text-13-r text-type-0 outline-none transition hover:border-type-3 focus-visible:border-type-0"
-      >
-        {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
-      </select>
+      {phone ? (
+        <>
+          <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open} aria-label={label} className={cn(field, 'text-left')}>
+            {current?.label}
+          </button>
+          <BottomSheet open={open} onClose={() => setOpen(false)} title={label}>
+            <ul role="listbox" aria-label={label}>
+              {options.map((o) => (
+                <li key={o.value}>
+                  <SheetItem
+                    role="option"
+                    selected={o.value === value}
+                    disabled={o.disabled}
+                    onClick={() => { onChange(o.value); setOpen(false) }}
+                  >
+                    {o.label}
+                  </SheetItem>
+                </li>
+              ))}
+            </ul>
+          </BottomSheet>
+        </>
+      ) : (
+        <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className={cn(field, 'appearance-none')}>
+          {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
+        </select>
+      )}
       <CaretDown size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-type-2" />
     </span>
+  )
+}
+
+/** One 48px row in a phone bottom sheet (Select options, Menu items). */
+function SheetItem({ icon: Icon, selected, danger, disabled, onClick, role, children }) {
+  return (
+    <button
+      type="button"
+      role={role}
+      aria-selected={role === 'option' ? selected : undefined}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'flex h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-16-r transition hover:bg-surface-2 disabled:pointer-events-none disabled:opacity-40',
+        danger ? 'text-destructive' : selected ? 'text-type-0' : 'text-type-1'
+      )}
+    >
+      {Icon && <Icon size={20} className="shrink-0" />}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {selected && <Check size={18} className="shrink-0" />}
+    </button>
   )
 }
