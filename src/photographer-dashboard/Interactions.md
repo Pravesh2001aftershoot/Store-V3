@@ -46,7 +46,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 5. New photos appear at the end of the collection with a "New" tag.
 
 ### Collections
-- The chip row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New collection**, and **Removed** (only when something is removed). It scrolls sideways on phones.
+- The collection tab row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New collection**, and **Removed** (only when something is removed). It scrolls sideways on phones.
 - **New collection** turns into an inline name field. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
 - Open a collection, then use **⋯** for **Rename** (inline field, same rules), **Add photos here**, **Move earlier** / **Move later**, or **Delete collection**.
 - **Delete** asks first if the collection has photos ("Its 89 photos move to Golden Hour"), then shows All. It's disabled when only one collection is left.
@@ -71,7 +71,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 
 ### Reordering (desktop)
 - Inside a collection, drag a photo (or the whole selection, if the dragged photo is selected) onto another photo. A bar on that photo's left edge shows where they'll land, and dropping puts them before it.
-- From any view, drop dragged photos onto a collection chip to move them there.
+- From any view, drop dragged photos onto a collection tab to move them there.
 - Phones can't drag. Use Move to.
 
 ### Reset

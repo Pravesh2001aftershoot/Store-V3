@@ -58,7 +58,7 @@ Prices and counts always use `tabular-nums`.
 | `Select` | 36px field, `rounded-lg`, `border-input`, caret icon right. Native select on tablet and desktop; on phones a button that opens a bottom sheet (titled with its `label`) of 48px `16-R` options with a ✓ on the current one | Catalog choice, package lines (product, size) |
 | `PageHeader` | Eyebrow, title, description; actions right. On phones the actions sit under the text, fill the row and share it equally | Top of Photos, Share and Store |
 | `Stat` | `11-SB` label, `20-M` value, `12-R` hint | Store summary strip |
-| `Chip` | 36px pill. Inactive `surface-2` / `type-1`; active `primary`. Optional count in `type-3` | Collection and category filters |
+| `Chip` | 36px pill. Inactive `surface-2` / `type-1`; active `primary`. Optional count in `type-3` | Category filters |
 | `Tag` | 20px pill, `11-M`. Tones: muted, dark, success, warn | Hidden, Edited, Cover, New, badges |
 | `Empty` | Dashed `rounded-2xl` box, 48px icon disc, title, one line, action (full width on phones) | Empty collections and lists |
 | `IconButton` | 40px or 32px circle, `type-1`, `surface-2` on hover | Toolbar actions |
@@ -73,8 +73,9 @@ Prices and counts always use `tabular-nums`.
 - **Gallery header.** Breadcrumb `12-R type-3` (Galleries › client) over the title `14-M`, the step bar centred, ⚙ `IconButton` and an outline **View** pill on the right.
 
 - **Step bar.** Numbered 28px discs: the current step is `primary`, done steps show a tick on `type-0/10`, and a hairline connects them. The active step sits on a `surface-2` pill that slides between steps (`layoutId`).
-- **Collection bar** (Photos). A sticky row of chips on solid `surface-0` (no transparency or blur, so photos never show through) with a `border-b`; it scrolls sideways on phones.
-- **Photo tile.** Square, `rounded-lg`, `object-cover`. Selected: the photo insets to 90% with a check on `type-0`. Hover: a 10% black wash and the check outline. Tags sit top right. The drop position is a 4px `type-0` bar on the left edge.
+- **Collection bar** (Photos). A sticky row of underline tabs on solid `surface-0` (no transparency or blur, so photos never show through) with a `border-b`; it scrolls sideways on phones. Tabs are 48px tall, `13-M`, 24px apart: inactive `type-2` (hover `type-0`), active `type-0` with a 2px `type-0` bottom stroke that slides between tabs (0.3s, app curve). Counts sit in `type-3`. **New collection** is a plain `type-2` text button with a folder-plus icon; while naming, the pill name field takes its place.
+- **Collection header** (Photos, under the bar). `min-h-14`, `py-3`: title `16-SB`, `12-R type-2` summary, and on a collection a 40px ⋯ button. All photos and Removed keep an empty 40px slot there, so the header and the grid below don't jump when you switch tabs.
+- **Photo tile.** Square, `rounded-none` (sharp corners, also when selected), `object-cover`. Selected: the photo insets to 90% with a check on `type-0`. Hover: a 10% black wash and the check outline. Tags sit top right. The drop position is a 4px `type-0` bar on the left edge.
 - **Selection bar.** A floating `type-0` pill (max 720px), white text: clear ✕, count, Select all, then actions with icon and label (icon only on phones). It sits 20px from the bottom.
 - **List row** (store). `rounded-2xl`, `border`, `surface-1`: drag handle, 56px thumbnail (the store's own `ProductMockup` at 25%), title with tags, `12-R` meta, price block, chevron and switch. The open row gets a `type-0` border and a 4px `black/5` ring. Hidden rows grey out their thumbnail.
 - **Part card** (Design overview). 56px thumbnail or icon tile, a `01`–`04` index eyebrow, title and current setting, and a chevron that nudges right on hover.

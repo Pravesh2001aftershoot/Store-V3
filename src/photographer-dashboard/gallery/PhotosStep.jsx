@@ -9,7 +9,7 @@ import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { NAME_LIMIT } from '../../gallery/lib/library'
-import { Chip, Empty, IconButton, Menu, PageHeader, Tag, ease } from '../components/ui'
+import { Empty, IconButton, Menu, PageHeader, Tag, ease } from '../components/ui'
 import { usePhone, useTopOffset } from '../lib/hooks'
 
 const MIME = 'application/x-store-v3-photos' // photo ids being dragged inside the dashboard
@@ -233,15 +233,15 @@ export default function PhotosStep({ ws }) {
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
 
       {/* Collections */}
-      <div style={{ top }} className="sticky z-20 -mx-4 mt-6 border-b border-border bg-surface-0 px-4 py-3 md:-mx-6 md:px-6">
-        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
-          <Chip active={active === ALL} count={photos.length} onClick={() => setActive(ALL)}>All photos</Chip>
+      <div style={{ top }} className="sticky z-20 -mx-4 mt-6 border-b border-border bg-surface-0 px-4 md:-mx-6 md:px-6">
+        <div className="no-scrollbar flex items-center gap-6 overflow-x-auto">
+          <Tab active={active === ALL} count={photos.length} onClick={() => setActive(ALL)}>All photos</Tab>
           <span className="h-5 w-px shrink-0 bg-border" />
           {collections.map((c) =>
             naming?.mode === 'rename' && naming.from === c ? (
               <NameInput key={c} naming={naming} setNaming={setNaming} onCommit={commitName} />
             ) : (
-              <Chip
+              <Tab
                 key={c}
                 active={active === c}
                 count={counts[c]}
@@ -251,7 +251,7 @@ export default function PhotosStep({ ws }) {
                 title="Drop photos here to move them"
               >
                 {c}
-              </Chip>
+              </Tab>
             )
           )}
           {naming?.mode === 'new' ? (
@@ -259,7 +259,7 @@ export default function PhotosStep({ ws }) {
           ) : (
             <button
               onClick={() => setNaming({ mode: 'new', value: '' })}
-              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-dashed border-input px-3.5 text-13-m text-type-1 transition hover:border-type-2 hover:text-type-0"
+              className="flex h-12 shrink-0 items-center gap-1.5 text-13-m text-type-2 transition hover:text-type-0"
             >
               <FolderSimplePlus size={16} /> New collection
             </button>
@@ -267,9 +267,9 @@ export default function PhotosStep({ ws }) {
           {library.removed.length > 0 && (
             <>
               <span className="h-5 w-px shrink-0 bg-border" />
-              <Chip active={active === REMOVED} count={library.removed.length} onClick={() => setActive(REMOVED)}>
+              <Tab active={active === REMOVED} count={library.removed.length} onClick={() => setActive(REMOVED)}>
                 <EyeSlash size={14} /> Removed
-              </Chip>
+              </Tab>
             </>
           )}
         </div>
@@ -289,7 +289,8 @@ export default function PhotosStep({ ws }) {
                 : `${plural(visible.length, 'photo')} in ${plural(collections.length, 'collection')} · ${phone ? 'tap to select' : 'click to select, Shift-click for a range'}`}
           </p>
         </div>
-        {inCollection && (
+        {/* Fixed 40px slot so the row (and the grid below) keeps its height on All photos and Removed. */}
+        {inCollection ? (
           <Menu
             label={`${active} options`}
             trigger={({ toggle }) => (
@@ -307,6 +308,8 @@ export default function PhotosStep({ ws }) {
               { label: 'Delete collection', icon: Trash, danger: true, onClick: () => deleteCollection(active), disabled: collections.length < 2 },
             ]}
           />
+        ) : (
+          <span aria-hidden className="h-10 w-10 shrink-0" />
         )}
       </div>
 
@@ -385,6 +388,23 @@ export default function PhotosStep({ ws }) {
 }
 
 /** Inline name field in the collection row. Enter or leaving the field saves; Esc cancels. Commits once. */
+/** Collection tab: text with a 2px `type-0` bottom stroke that slides to the active tab. */
+function Tab({ active, count, children, ...props }) {
+  return (
+    <button
+      {...props}
+      className={cn(
+        'relative flex h-12 shrink-0 items-center gap-1.5 text-13-m transition-colors',
+        active ? 'text-type-0' : 'text-type-2 hover:text-type-0'
+      )}
+    >
+      {children}
+      {count != null && <span className="tabular-nums text-type-3">{count}</span>}
+      {active && <motion.span layoutId="collection-tab" transition={{ duration: 0.3, ease }} className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" />}
+    </button>
+  )
+}
+
 function NameInput({ naming, setNaming, onCommit }) {
   const [value, setValue] = useState(naming.value)
   const done = useRef(false)
@@ -431,14 +451,14 @@ function Tile({ photo: p, selected, selecting, cover, over, draggable, onToggle,
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className="group relative aspect-square cursor-pointer select-none overflow-hidden rounded-lg bg-surface-2 outline-none focus-visible:ring-2 focus-visible:ring-type-0 focus-visible:ring-offset-2"
+      className="group relative aspect-square cursor-pointer select-none overflow-hidden rounded-none bg-surface-2 outline-none focus-visible:ring-2 focus-visible:ring-type-0 focus-visible:ring-offset-2"
     >
       <img
         src={p.thumb}
         alt=""
         loading="lazy"
         draggable={false}
-        className={cn('h-full w-full object-cover transition duration-300', selected ? 'scale-[0.9] rounded-md' : 'group-hover:scale-[1.03]')}
+        className={cn('h-full w-full object-cover transition duration-300', selected ? 'scale-[0.9]' : 'group-hover:scale-[1.03]')}
       />
       {/* Hover / selection wash */}
       <span className={cn('pointer-events-none absolute inset-0 transition', selected ? 'bg-type-0/5' : 'bg-black/0 group-hover:bg-black/10')} />
