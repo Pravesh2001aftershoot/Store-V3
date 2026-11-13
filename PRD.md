@@ -59,6 +59,7 @@ The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Esteban Gil
 | G15 | **Layout.** Text position on a 3×3 grid, alignment, title size, text width, logo position (top left/centre/right, above the title, or off), button arrangement and size, margins and overlay strength | ✅ |
 | G16 | **Text.** Edit the eyebrow, title, subtitle and both button labels, each with a character limit and counter. Optional pieces and the print store link can be turned off. An empty title falls back to the client's names. | ✅ |
 | G17 | **Cover photo.** Choose any gallery photo as the cover, filtered by collection, or upload an image from the device (click or drag and drop). The upload stays available to switch back to until it's removed. | ✅ (uploads are stored on the device only) |
+| G18 | **Footer editor.** "Edit footer" on the footer opens an editor with a live preview, like the cover's. Six templates (Simple, Statement, Let's talk, Photo card, Grid, Wordmark). Content: logo, wordmark text, tagline, button label, email (validated), location, quick links, photographer credit and back to top, each can be turned off. Socials: add profiles from 11 platforms by handle or link, remove them, and show them as icons or names. Style: background colour and, for Photo card, the photo. All templates adapt to phone widths. Saved on the device. | ✅ (open to every visitor, like the cover editor) |
 
 ### 5.2 Store home and browsing (`/store`, `/shop`, `/packages`)
 

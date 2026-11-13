@@ -1,6 +1,6 @@
 # Store V3: Architecture
 
-This is a front-end-only prototype: a React single-page app with no backend. All data is mocked in `src/data/`, and the only state that persists is the cart, favourites and the gallery cover settings in `localStorage`. This doc describes how the app is put together as of commit `8a04bec` (cover editor added), plus the cover editor's Photo tab.
+This is a front-end-only prototype: a React single-page app with no backend. All data is mocked in `src/data/`, and the only state that persists is the cart, favourites and the gallery cover and footer settings in `localStorage`. This doc describes how the app is put together as of commit `8a04bec` (cover editor added), plus the cover editor's Photo tab and the footer editor.
 
 ## Stack
 
@@ -40,6 +40,8 @@ src/
     ├── GalleryPage.jsx   Page composition, scroll-spy, tab jumps, favourites toggle
     ├── components/       NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster, QuickBuy
     ├── cover/            Cover, CoverSection, CoverEditor, editor controls, config.js (settings), photo.js (cover photo)
+    ├── footer/           Footer (6 templates), FooterSection, FooterEditor, config.js (settings, social platforms)
+    ├── editor/           EditorPane: the pane / phone sheet shell shared by the cover and footer editors
     ├── data/photos.js    Gallery photo source (local images or placeholders)
     └── lib/
         ├── settings.js   Grid options + URL-param state
@@ -207,6 +209,10 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
   - **Editor** (`CoverEditor.jsx`). A left pane on tablet/desktop, mirroring quick buy, and a bottom sheet on phones that can collapse to a bar to preview. Tabs: Templates, Layout, Text, Photo. There's no dimming backdrop: the cover's frame shrinks to the space beside or above the editor, so it is a live preview at that size. "Reset all" resets the settings and the cover photo.
   - **Cover photo** (`photo.js`). `useCoverPhoto(fallback, library)` returns the current photo: the gallery's default cover (`coverPhoto` in `data/photos.js`), any gallery photo, or an upload. `GalleryPage` passes the ordered photo list and the collection names to `CoverSection`, which hands them to the editor's Photo tab. A gallery photo is stored by id. An upload is read in the browser with `readImage()`, shrunk to 2400px on the long side, and stored as a JPEG data URL with the id `upload`. The upload stays in the list when another photo is chosen, until it's removed. Saved to `localStorage['store-v3:gallery-cover-photo']`; if the data URL is too big for storage, only the gallery choice is saved and the upload lasts until reload. The cover image is keyed on `src`, so a new photo replays the entrance animation.
   - **Responsive sizing.** The cover frame is a CSS container. Title sizes use container-query variants (`@xl:`, `@5xl:`), and margins are set for a 1280px cover and scale with `cqw` (minimum 16px), so the preview matches what clients see at that width.
+- **Footer** (`footer/`). `FooterSection` renders the footer at the end of the page and owns its editor. Settings live in `footer/config.js`: `layout` (template, background — White `surface-1` by default, Page `surface-0`, Grey `surface-2` or Dark — social display as icons or names, the card template's photo), `show` (logo, tagline, email, location, socials, quick links, button, wordmark, credit, back to top), `content` (only edited text is stored; defaults come from the gallery and the portfolio `profile`) and `socials` (an ordered list of `{ platform, value }`, where `value` is a handle or a full URL, turned into a link by `socialUrl()`). Templates (Simple, Statement, Let's talk, Photo card, Grid, Wordmark) are preset `layout` + `show` and never change the text or socials; `SUPPORTS` lists which optional pieces each template draws, so the editor only offers those. An email that doesn't validate is hidden from the footer. Saved to `localStorage['store-v3:gallery-footer']`.
+  - **Editor** (`FooterEditor.jsx`). Same shell as the cover editor (`editor/EditorPane.jsx`), but non-modal so the preview can scroll. Tabs: Templates, Content, Socials, Style. While it's open, `FooterSection` shows a fixed preview stage beside the pane (or above the phone sheet) with the footer pinned to its bottom; clicks inside the stage don't navigate, and page scroll is locked.
+  - **Design system.** Templates use only design-system tokens (`surface-*`, `type-*`, `border`, type tokens) and `Button` / `Eyebrow`. The Dark background re-maps those colour tokens on the footer element (`DARK_TOKENS` in `Footer.jsx`), so templates never branch on it. Backgrounds saved by the first version (`paper`, `linen`, `ink`) are mapped to the closest new one on load.
+  - **Responsive.** The footer is a CSS container and every template uses container-query variants, so the stage shows the layout clients get at that width. The wordmark is an SVG `<text>` with `textLength`, so it always fills the width exactly.
 - **Actions** (`lib/actions.js`).
   - Download fetches the image as a blob and saves it, falling back to opening it in a new tab.
   - Share uses the Web Share API, with a file where `canShare` supports it, and falls back to copying a link to the clipboard.

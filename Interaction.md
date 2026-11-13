@@ -194,6 +194,23 @@ Opens from "Edit cover". It uses Radix Dialog with a transparent overlay, so the
 | Photo thumbnail (Photo tab) | Hover / chosen | Hover `opacity 85%`; chosen gets `ring-2 ring-type-0 ring-offset-2` and a check badge. Thumbnails load lazily | Tailwind default | Tailwind |
 | Cover photo | Thumbnail or upload chosen | The cover replays its entrance zoom (see Cover above) | n/a | framer-motion |
 
+### Footer and footer editor: [src/gallery/footer/Footer.jsx](src/gallery/footer/Footer.jsx), [FooterEditor.jsx](src/gallery/footer/FooterEditor.jsx), [FooterSection.jsx](src/gallery/footer/FooterSection.jsx)
+
+The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/editor/EditorPane.jsx)): same pane and sheet motion, tab pill, Reset all and Done. It's non-modal so the preview stage can scroll.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| "Edit footer" button (top right of the footer) | Hover / press | Outline [Button](#button-srccomponentsuiindexjsx): `surface-1 → surface-2`. Icon only below a `28rem` footer width. Hidden while editing | Tailwind default | Tailwind |
+| Preview stage | Editor opens / closes | Fades in beside the pane (or above the phone sheet); follows the sheet as it collapses | `opacity 0 → 1`, `0.35s`, `ease`; `left` / `bottom`, `550ms`, `cubic-bezier(.22,1,.36,1)` | framer-motion + Tailwind |
+| Links and buttons in the stage | Click | Nothing: the preview is display only | n/a | n/a |
+| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Thumbnails are real footers at 1280px, scaled to the card | Tailwind default | Tailwind |
+| Social profile row | Focus | Border `→ type-0`, `ring-4 black/5`. The resolved link shows under the input | Tailwind default | Tailwind |
+| "Add a profile" chip | Hover | Fill `surface-2 → #ececec` | Tailwind default | Tailwind |
+| Footer links and back to top | Hover | Text `type-1` / `type-3` → `type-0` | Tailwind default | Tailwind |
+| Social icon buttons, "Book a session" | Hover / press | Outline [Button](#button-srccomponentsuiindexjsx); the Let's talk button has the sliding arrow | Tailwind default | Tailwind |
+| Wordmark template email | Hover | Underline `border → type-0`, arrow nudges up-right | `translate 0.5`, Tailwind default | Tailwind |
+| "Back to top" | Click | Smooth-scrolls to the top of the page | `scrollTo({ behavior: 'smooth' })` | Browser native |
+
 ### Nav bar: [src/gallery/components/NavBar.jsx](src/gallery/components/NavBar.jsx)
 
 | Element | Trigger | Animation | Values | Library |

@@ -137,11 +137,12 @@ export function Switch({ checked, onChange, label }) {
  * Text input with a live character count. The limit is enforced (typing and pasting stop at it);
  * the counter turns amber in the last 10% and the field shows a note when a required value is empty.
  */
-export function TextField({ label, hint, value, onChange, limit, multiline, required, enabled = true, onToggle, placeholder }) {
+export function TextField({ label, hint, value, onChange, limit, multiline, required, error, enabled = true, onToggle, placeholder, type }) {
   const id = useId()
   const n = value.length
   const near = n >= limit * 0.9
   const empty = required && !value.trim()
+  const problem = enabled && (error || (empty ? 'Required — the client’s name is shown instead' : null))
   const Input = multiline ? 'textarea' : 'input'
   return (
     <div className={cn('transition-opacity', !enabled && 'opacity-60')}>
@@ -152,11 +153,12 @@ export function TextField({ label, hint, value, onChange, limit, multiline, requ
       <div
         className={cn(
           'rounded-lg border bg-surface-1 transition focus-within:border-type-0 focus-within:ring-4 focus-within:ring-black/5',
-          empty ? 'border-destructive' : 'border-input'
+          problem ? 'border-destructive' : 'border-input'
         )}
       >
         <Input
           id={id}
+          type={multiline ? undefined : type}
           value={value}
           maxLength={limit}
           disabled={!enabled}
@@ -169,7 +171,7 @@ export function TextField({ label, hint, value, onChange, limit, multiline, requ
           )}
         />
         <div className={cn('flex items-center justify-between gap-2 px-3 pb-1.5 text-11-r', multiline ? 'pt-1' : '-mt-1')}>
-          <span className={cn('truncate', empty ? 'text-destructive' : 'text-type-3')}>{empty ? 'Required — the client’s name is shown instead' : hint}</span>
+          <span className={cn('truncate', problem ? 'text-destructive' : 'text-type-3')}>{problem || hint}</span>
           <span className={cn('shrink-0 tabular-nums', n >= limit ? 'text-destructive' : near ? 'text-amber-600' : 'text-type-3')} aria-live="polite">
             {n}/{limit}
           </span>

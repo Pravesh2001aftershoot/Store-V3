@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowCounterClockwise, CaretDown, CaretLeft, CaretRight, CaretUp, Check, CircleNotch, Crosshair, Trash, UploadSimple, X } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, CircleNotch, Crosshair, Trash, UploadSimple } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn } from '../../lib/utils'
 import {
@@ -11,6 +10,7 @@ import {
 import { FocalPoint, Label, PositionGrid, Section, Segmented, Slider, Swatches, Switch, TextField } from './controls'
 import { CENTER, UPLOAD_ID, readImage } from './photo'
 import Composed from './Composed'
+import EditorPane, { PANE_W, PEEK_H, SHEET_H } from '../editor/EditorPane'
 
 const ease = [0.22, 1, 0.36, 1]
 const TABS = [
@@ -20,11 +20,7 @@ const TABS = [
   { id: 'photo', label: 'Photo' },
 ]
 
-/** Pane width on tablet/desktop. CoverSection uses it to shift the cover preview clear of the pane. */
-export const PANE_W = 400
-/** Phone: open sheet height, and the collapsed bar height when previewing. */
-export const SHEET_H = '58svh'
-export const PEEK_H = 64
+export { PANE_W, SHEET_H, PEEK_H }
 
 /**
  * Cover editor. Opens from the left like a mirrored quick buy pane on tablet/desktop,
@@ -33,115 +29,28 @@ export const PEEK_H = 64
  */
 export default function CoverEditor({ open, onClose, phone, peek, onPeek, gallery, photo, cover, media, photos = [], collections = [] }) {
   const [tab, setTab] = useState('templates')
+  const name = ALL_TEMPLATES.find((t) => t.id === cover.template)?.name ?? 'Custom'
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
-      <AnimatePresence>
-        {open && (
-          <Dialog.Portal forceMount>
-            {/* Transparent: blocks clicks on the preview without hiding it. */}
-            <Dialog.Overlay className="fixed inset-0 z-50" />
-            <Dialog.Content
-              asChild
-              aria-describedby={undefined}
-              // Taps on the preview shouldn't throw away the panel; Done / Esc / ✕ close it.
-              onInteractOutside={(e) => e.preventDefault()}
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <motion.div
-                initial={phone ? { y: '100%' } : { x: '-100%' }}
-                animate={phone ? { y: 0 } : { x: 0 }}
-                exit={phone ? { y: '100%' } : { x: '-110%' }}
-                transition={{ duration: 0.55, ease }}
-                className={cn(
-                  'fixed z-50 flex flex-col bg-surface-1 shadow-2xl outline-none',
-                  phone
-                    ? 'inset-x-0 bottom-0 rounded-t-2xl transition-[height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]'
-                    : 'inset-y-2 left-2 rounded-2xl'
-                )}
-                style={phone ? { height: peek ? PEEK_H : SHEET_H } : { width: PANE_W }}
-              >
-                <Header phone={phone} peek={peek} onPeek={onPeek} tab={tab} onTab={setTab} template={cover.template} />
-                <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5', phone && peek && 'invisible')}>
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div
-                      key={tab}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2, ease }}
-                      className="pb-6 pt-4"
-                    >
-                      {tab === 'templates' && <TemplatesTab cover={cover} photo={photo} slots={media.slots} gallery={gallery} />}
-                      {tab === 'layout' && <LayoutTab cover={cover} photo={photo} />}
-                      {tab === 'text' && <TextTab cover={cover} />}
-                      {tab === 'photo' && <PhotoTab cover={cover} media={media} photos={photos} collections={collections} />}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                {!(phone && peek) && (
-                  <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
-                    <Button variant="ghost" size="sm" onClick={() => { cover.reset(); media?.reset() }} className="-ml-2">
-                      <ArrowCounterClockwise size={14} /> Reset all
-                    </Button>
-                    <span className="flex-1" />
-                    <Button size="md" onClick={onClose}>
-                      <Check size={15} weight="bold" /> Done
-                    </Button>
-                  </div>
-                )}
-              </motion.div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        )}
-      </AnimatePresence>
-    </Dialog.Root>
-  )
-}
-
-function Header({ phone, peek, onPeek, tab, onTab, template }) {
-  const name = ALL_TEMPLATES.find((t) => t.id === template)?.name ?? 'Custom'
-  return (
-    <div className={cn('shrink-0 px-5', !(phone && peek) && 'border-b border-border pb-3')}>
-      {phone && (
-        <button onClick={() => onPeek(!peek)} className="flex w-full justify-center pb-1 pt-2.5" aria-label={peek ? 'Show settings' : 'Preview cover'}>
-          <span className="h-1 w-10 rounded-full bg-border" />
-        </button>
-      )}
-      <div className={cn('flex items-center gap-2', phone ? 'pt-0.5' : 'pt-4')}>
-        <div className="min-w-0 flex-1">
-          <Dialog.Title className="truncate text-16-sb">Customize cover</Dialog.Title>
-          <p className="truncate text-12-r text-type-2">Template: {name}</p>
-        </div>
-        {phone && (
-          <button
-            onClick={() => onPeek(!peek)}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-surface-2 px-3 text-12-m transition hover:bg-[#ececec]"
-          >
-            {peek ? <><CaretUp size={14} /> Edit</> : <><CaretDown size={14} /> Preview</>}
-          </button>
-        )}
-        <Dialog.Close className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]" aria-label="Close">
-          <X size={16} />
-        </Dialog.Close>
-      </div>
-      {!(phone && peek) && (
-        <div role="tablist" className="mt-3 grid grid-cols-4 gap-1 rounded-full bg-surface-2 p-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => onTab(t.id)}
-              className={cn('relative h-8 rounded-full text-13-m text-type-2 transition hover:text-type-0', tab === t.id && 'text-type-0')}
-            >
-              {tab === t.id && <motion.span layoutId="cover-tab" className="absolute inset-0 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]" transition={{ duration: 0.35, ease }} />}
-              <span className="relative">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <EditorPane
+      open={open}
+      onClose={onClose}
+      phone={phone}
+      peek={peek}
+      onPeek={onPeek}
+      title="Customize cover"
+      subtitle={`Template: ${name}`}
+      previewLabel="Preview cover"
+      tabs={TABS}
+      tab={tab}
+      onTab={setTab}
+      onReset={() => { cover.reset(); media?.reset() }}
+    >
+      {tab === 'templates' && <TemplatesTab cover={cover} photo={photo} slots={media.slots} gallery={gallery} />}
+      {tab === 'layout' && <LayoutTab cover={cover} photo={photo} />}
+      {tab === 'text' && <TextTab cover={cover} />}
+      {tab === 'photo' && <PhotoTab cover={cover} media={media} photos={photos} collections={collections} />}
+    </EditorPane>
   )
 }
 

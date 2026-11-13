@@ -277,6 +277,6 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 
 - Add `primary-hover` and `surface-3` tokens to replace the hard-coded hover hex values.
 - Get the proposed type tokens (display, `24-M`, `18-R`, paragraph, `16-M`) reviewed and added to Figma.
-- Add a dark theme. Tokens are already CSS variables, so this means adding a second set of values.
+- Add a dark theme. Tokens are already CSS variables, so this means adding a second set of values. The gallery footer's Dark background already does this locally (`DARK_TOKENS` in `src/gallery/footer/Footer.jsx`) and could seed the global set.
 - Turn the segmented control and the tab pill into shared primitives. Today they are written separately in the gallery NavBar, OptionGroup, the Builder and the portfolio WorkGrid.
 - The portfolio "Clear filters" button uses a hard-coded `hover:bg-[#ededed]`, another case for a `surface-3` token. So do the cover editor's icon pills and collection chips (`hover:bg-[#ececec]`).
