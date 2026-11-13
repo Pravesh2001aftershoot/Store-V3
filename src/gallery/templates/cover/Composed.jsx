@@ -1,9 +1,9 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Button } from '../../components/ui'
-import PhotographerLink from '../../components/PhotographerLink'
-import { cn } from '../../lib/utils'
+import { Button } from '../../../components/ui'
+import PhotographerLink from '../../../components/PhotographerLink'
+import { cn } from '../../../lib/utils'
 import { SURFACES, shapeRatio } from './config'
 import { CENTER } from './photo'
 

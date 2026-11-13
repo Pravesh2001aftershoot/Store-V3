@@ -1,6 +1,6 @@
 import { useId, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { cn } from '../../lib/utils'
+import { cn } from '../../../lib/utils'
 import { POSITIONS } from './config'
 
 const ease = [0.22, 1, 0.36, 1]

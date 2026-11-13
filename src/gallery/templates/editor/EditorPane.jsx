@@ -1,8 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowCounterClockwise, CaretDown, CaretUp, Check, X } from '@phosphor-icons/react'
-import { Button } from '../../components/ui'
-import { cn } from '../../lib/utils'
+import { Button } from '../../../components/ui'
+import { cn } from '../../../lib/utils'
 
 const ease = [0.22, 1, 0.36, 1]
 

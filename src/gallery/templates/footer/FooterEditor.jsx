@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Plus, Trash } from '@phosphor-icons/react'
-import { cn } from '../../lib/utils'
+import { cn } from '../../../lib/utils'
 import EditorPane from '../editor/EditorPane'
 import FitThumb from '../editor/FitThumb'
 import { Label, Section, Segmented, Swatches, Switch, TextField } from '../cover/controls'

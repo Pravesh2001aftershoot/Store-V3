@@ -3,7 +3,7 @@ import { COLUMNS, GAP, MARGIN } from '../lib/settings'
 import { useBreakpoint, useInfinite } from '../lib/hooks'
 import { justifiedRows, masonry } from '../lib/layout'
 import Photo from './Photo'
-import SectionHeader from '../sections/SectionHeader'
+import SectionHeader from '../templates/set-header/SectionHeader'
 
 /** DOM id of a collection's section heading (used for jumping and scroll-spy). */
 export const sectionId = (name) => `collection-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`

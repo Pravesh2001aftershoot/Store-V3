@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, CircleNotch, Crosshair, Trash, UploadSimple } from '@phosphor-icons/react'
-import { Button } from '../../components/ui'
-import { cn } from '../../lib/utils'
+import { Button } from '../../../components/ui'
+import { cn } from '../../../lib/utils'
 import {
   ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO_ALIGN, LOGO_PLACEMENT, MARGIN_X, MARGIN_Y, PHOTO_SIZE,
   SHAPES, SURFACES, TEMPLATES, TITLE_SIZE, WIDTH, isComposed, photoCount,

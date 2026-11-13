@@ -2,10 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
 import { useGridSettings } from './lib/settings'
 import { useMeasuredPhotos } from './lib/hooks'
-import CoverSection from './cover/CoverSection'
-import { defaultContent as coverDefaults, useCoverConfig } from './cover/config'
-import { useSectionConfig } from './sections/config'
-import SectionEditor from './sections/SectionEditor'
+import CoverSection from './templates/cover/CoverSection'
+import { defaultContent as coverDefaults, useCoverConfig } from './templates/cover/config'
+import { useSectionConfig } from './templates/set-header/config'
+import SectionEditor from './templates/set-header/SectionEditor'
 import NavBar from './components/NavBar'
 import GalleryGrid, { sectionId } from './components/GalleryGrid'
 import Lightbox from './components/Lightbox'
@@ -14,7 +14,7 @@ import QuickBuy from './components/QuickBuy'
 import SelectionBar from './components/SelectionBar'
 import { registerPhoto } from '../data/gallery'
 import { MAX_SETS, downloadPhotos, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
-import FooterSection from './footer/FooterSection'
+import FooterSection from './templates/footer/FooterSection'
 
 // Every collection is a section of one continuous scroll, so there's no "All" tab.
 const COLLECTIONS = gallery.collections.filter((c) => c !== 'All')

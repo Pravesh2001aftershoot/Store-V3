@@ -32,7 +32,7 @@ import { cn, money } from '../../lib/utils'
 
 // A short list of single-photo products. The full range (sets, albums, packages) lives in the store.
 const QUICK_PRODUCTS = ['framed-print', 'canvas', 'metal', 'fine-art-print'].map((id) => productById[id])
-const STEPS = ['Product', 'Size & finish', 'Crop']
+const STEPS = ['Product', 'Size & finish', 'Crop', 'Added to cart']
 const MAX_QTY = 20
 const ease = [0.22, 1, 0.36, 1]
 
@@ -172,24 +172,22 @@ function Flow({ photo, onClose }) {
             <X size={16} />
           </Dialog.Close>
         </div>
-        {step !== QB.ADDED && (
-          <div className="mt-3 grid grid-cols-3 gap-1.5" aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}>
-            {STEPS.map((s, i) => (
-              <div key={s}>
-                <div className="h-1 overflow-hidden rounded-full bg-surface-2">
-                  <motion.div
-                    className="h-full rounded-full bg-type-0"
-                    initial={false}
-                    animate={{ width: i <= step ? '100%' : '0%' }}
-                    transition={{ duration: 0.45, ease }}
-                  />
-                </div>
-                {/* labels drop on short screens (phone landscape) to leave room for the step itself */}
-                <p className={cn('mt-1.5 text-11-m [@media(max-height:480px)]:hidden', i === step ? 'text-type-0' : 'text-type-3')}>{s}</p>
+        <div className="mt-3 grid grid-cols-4 gap-1.5" aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}>
+          {STEPS.map((s, i) => (
+            <div key={s} className="min-w-0">
+              <div className="h-1 overflow-hidden rounded-full bg-surface-2">
+                <motion.div
+                  className="h-full rounded-full bg-type-0"
+                  initial={false}
+                  animate={{ width: i <= step ? '100%' : '0%' }}
+                  transition={{ duration: 0.45, ease }}
+                />
               </div>
-            ))}
-          </div>
-        )}
+              {/* labels drop on short screens (phone landscape) to leave room for the step itself */}
+              <p className={cn('mt-1.5 truncate text-11-m [@media(max-height:480px)]:hidden', i === step ? 'text-type-0' : 'text-type-3')}>{s}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* body */}

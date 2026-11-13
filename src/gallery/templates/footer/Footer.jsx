@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ArrowUp, ArrowUpRight, PencilSimple } from '@phosphor-icons/react'
-import { Button, Eyebrow } from '../../components/ui'
-import PhotographerLink from '../../components/PhotographerLink'
-import { cn } from '../../lib/utils'
+import { Button, Eyebrow } from '../../../components/ui'
+import PhotographerLink from '../../../components/PhotographerLink'
+import { cn } from '../../../lib/utils'
 import { SURFACES, isEmail, platform, socialUrl } from './config'
 
 // Gallery footer, laid out from `config` (see ./config.js). Six templates, each its own structure,

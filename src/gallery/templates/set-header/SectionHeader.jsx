@@ -1,5 +1,5 @@
 import { PencilSimple } from '@phosphor-icons/react'
-import { cn } from '../../lib/utils'
+import { cn } from '../../../lib/utils'
 import { font } from './config'
 
 // The heading above each collection in the grid, drawn from `style` (layout · show · type, shared by

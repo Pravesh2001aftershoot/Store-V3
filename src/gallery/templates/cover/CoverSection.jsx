@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useBreakpoint } from '../lib/hooks'
+import { useBreakpoint } from '../../lib/hooks'
 import { useCoverPhoto } from './photo'
 import Cover from './Cover'
 import CoverEditor, { PANE_W, PEEK_H, SHEET_H } from './CoverEditor'

@@ -153,7 +153,7 @@ The drawer opens from the header cart button on every store screen. It also open
 
 ## Gallery (`/`)
 
-### Cover: [src/gallery/cover/Cover.jsx](src/gallery/cover/Cover.jsx)
+### Cover: [src/gallery/templates/cover/Cover.jsx](src/gallery/templates/cover/Cover.jsx)
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -172,9 +172,9 @@ The drawer opens from the header cart button on every store screen. It also open
 | "Shop prints" button | Hover | [Button](#button-srccomponentsuiindexjsx) arrow slide | n/a | Tailwind |
 | "Print store" link (top right) | Hover | Background `→ white/10` | Tailwind default | Tailwind |
 
-### Cover editor: [src/gallery/cover/CoverEditor.jsx](src/gallery/cover/CoverEditor.jsx), [controls.jsx](src/gallery/cover/controls.jsx)
+### Cover editor: [src/gallery/templates/cover/CoverEditor.jsx](src/gallery/templates/cover/CoverEditor.jsx), [controls.jsx](src/gallery/templates/cover/controls.jsx)
 
-Opens from "Edit cover". The pane, sheet, tab pill, tab body and footer come from the shared [EditorPane.jsx](src/gallery/editor/EditorPane.jsx). It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
+Opens from "Edit cover". The pane, sheet, tab pill, tab body and footer come from the shared [EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx). It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -194,9 +194,9 @@ Opens from "Edit cover". The pane, sheet, tab pill, tab body and footer come fro
 | Photo thumbnail (Photo tab) | Hover / chosen | Hover `opacity 85%`; chosen gets `ring-2 ring-type-0 ring-offset-2` and a check badge. Thumbnails load lazily | Tailwind default | Tailwind |
 | Cover photo | Thumbnail or upload chosen | The cover replays its entrance zoom (see Cover above) | n/a | framer-motion |
 
-### Footer and footer editor: [src/gallery/footer/Footer.jsx](src/gallery/footer/Footer.jsx), [FooterEditor.jsx](src/gallery/footer/FooterEditor.jsx), [FooterSection.jsx](src/gallery/footer/FooterSection.jsx)
+### Footer and footer editor: [src/gallery/templates/footer/Footer.jsx](src/gallery/templates/footer/Footer.jsx), [FooterEditor.jsx](src/gallery/templates/footer/FooterEditor.jsx), [FooterSection.jsx](src/gallery/templates/footer/FooterSection.jsx)
 
-Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Content / Socials / Style), tab body crossfade, Reset all and Done. It's non-modal (`modal={false}`): there's no overlay, so the preview stage can scroll, and `FooterSection` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
+Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Content / Socials / Style), tab body crossfade, Reset all and Done. It's non-modal (`modal={false}`): there's no overlay, so the preview stage can scroll, and `FooterSection` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -219,9 +219,9 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 | Wordmark template email | Hover | Underline `border → type-0`, arrow nudges up-right | `translate 0.5`, Tailwind default | Tailwind |
 | "Back to top" | Click | Smooth-scrolls to the top of the page | `scrollTo({ behavior: 'smooth' })` | Browser native |
 
-### Collection headings and heading editor: [src/gallery/sections/SectionHeader.jsx](src/gallery/sections/SectionHeader.jsx), [SectionEditor.jsx](src/gallery/sections/SectionEditor.jsx)
+### Collection headings and heading editor: [src/gallery/templates/set-header/SectionHeader.jsx](src/gallery/templates/set-header/SectionHeader.jsx), [SectionEditor.jsx](src/gallery/templates/set-header/SectionEditor.jsx)
 
-Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Text / Style), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
+Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Text / Style), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -229,7 +229,7 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Edit pencil | Hover | Background `surface-1 → surface-2`, icon `type-1 → type-0` | Tailwind default | Tailwind |
 | Preview stage | Editor opens / closes | Fades in beside the pane (or above the phone sheet); follows the sheet as it collapses | `opacity 0 → 1`, `0.35s`, `ease`; `left` / `bottom`, `550ms`, `cubic-bezier(.22,1,.36,1)` | framer-motion + Tailwind |
 | "Live preview · <collection>" label | Stage scrolls | Stays pinned to the top-left of the stage | `sticky top-0` | CSS |
-| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Thumbnails are real headings at 1280px, scaled to the card ([FitThumb.jsx](src/gallery/editor/FitThumb.jsx)) | Tailwind default; `ResizeObserver` scale | Tailwind + React |
+| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Thumbnails are real headings at 1280px, scaled to the card ([FitThumb.jsx](src/gallery/templates/editor/FitThumb.jsx)) | Tailwind default; `ResizeObserver` scale | Tailwind + React |
 | Template thumbnails | Words or type change | Re-render live with the current words, font and cover match | n/a | React |
 | Collection picker (Text) | Collection chosen | The fields and the stage switch to that collection's words instantly | n/a | n/a |
 | Label / title / note fields | Typing | Same as the cover editor's text fields. The heading on the page and in the stage update as you type | Tailwind default | Tailwind |
