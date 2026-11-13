@@ -311,15 +311,15 @@ function Ctas({ show, C, L, dark, align, still, onEnter, className }) {
       initial={still ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, ease, delay: 0.6 }}
-      className={cn('gap-3', L.ctaLayout === 'stack' ? 'inline-grid' : cn('flex flex-wrap', JUSTIFY[align]), className)}
+      className={cn('gap-3 @max-xl:w-full', L.ctaLayout === 'stack' ? 'inline-grid @max-xl:grid' : cn('flex flex-wrap', JUSTIFY[align]), className)}
     >
       {primary && (
-        <Button as={still ? 'span' : 'button'} variant={dark ? 'light' : 'default'} size={L.ctaSize} onClick={still ? undefined : onEnter}>
+        <Button as={still ? 'span' : 'button'} variant={dark ? 'light' : 'default'} size={L.ctaSize} onClick={still ? undefined : onEnter} className="@max-xl:flex-1">
           {C.primaryCta}
         </Button>
       )}
       {secondary && (
-        <Button as={still ? 'span' : Link} to={still ? undefined : '/store'} size={L.ctaSize} className={outline} arrow>
+        <Button as={still ? 'span' : Link} to={still ? undefined : '/store'} size={L.ctaSize} className={cn(outline, '@max-xl:flex-1')} arrow>
           {C.secondaryCta}
         </Button>
       )}

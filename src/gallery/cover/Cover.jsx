@@ -78,19 +78,20 @@ export default function Cover({ gallery, photo, slots = [photo], config, inset =
       {!editing && onEdit && (
         <button
           onClick={onEdit}
+          aria-label="Edit cover"
           className={cn(
-            'flex items-center gap-1.5 rounded-full px-3 py-2 text-13-m backdrop-blur-md transition',
+            'flex items-center gap-1.5 rounded-full px-3 py-2 text-13-m max-sm:p-2.5 backdrop-blur-md transition',
             composed ? 'bg-white/90 text-type-0 shadow-sm hover:bg-white' : 'bg-white/15 text-white hover:bg-white/25'
           )}
         >
-          <PencilSimple size={15} /> <span className="max-sm:hidden">Edit cover</span><span className="sm:hidden">Edit</span>
+          <PencilSimple size={15} /> <span className="max-sm:hidden">Edit cover</span>
         </button>
       )}
       {show.storeLink && (
         <Link
           to="/store"
           className={cn(
-            'flex items-center gap-2 rounded-full px-3.5 py-2 text-13-m backdrop-blur-sm transition',
+            'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2 text-13-m backdrop-blur-sm transition',
             composed ? 'bg-white/90 text-type-0 shadow-sm hover:bg-white' : 'border border-white/30 text-white hover:bg-white/10'
           )}
         >
@@ -199,10 +200,10 @@ export default function Cover({ gallery, photo, slots = [photo], config, inset =
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.9, ease, delay: 0.7 }}
-                  className={cn('mt-8 gap-3', L.ctaLayout === 'stack' ? 'inline-grid' : cn('flex flex-wrap', JUSTIFY[L.align]))}
+                  className={cn('mt-8 gap-3 @max-xl:w-full', L.ctaLayout === 'stack' ? 'inline-grid @max-xl:grid' : cn('flex flex-wrap', JUSTIFY[L.align]))}
                 >
                   {show.primaryCta && C.primaryCta && (
-                    <Button variant="light" size={L.ctaSize} onClick={onEnter}>
+                    <Button variant="light" size={L.ctaSize} onClick={onEnter} className="@max-xl:flex-1">
                       {C.primaryCta}
                     </Button>
                   )}
@@ -211,7 +212,7 @@ export default function Cover({ gallery, photo, slots = [photo], config, inset =
                       as={Link}
                       to="/store"
                       size={L.ctaSize}
-                      className="border border-white/30 bg-transparent text-white shadow-none hover:bg-white/10"
+                      className="border border-white/30 bg-transparent text-white shadow-none hover:bg-white/10 @max-xl:flex-1"
                       arrow
                     >
                       {C.secondaryCta}
