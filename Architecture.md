@@ -1,6 +1,6 @@
 # Store V3: Architecture
 
-This is a front-end-only prototype: a React single-page app with no backend. All data is mocked in `src/data/`, and the only state that persists is the cart and favourites in `localStorage`. This doc describes how the app is put together as of commit `a42bab1`.
+This is a front-end-only prototype: a React single-page app with no backend. All data is mocked in `src/data/`, and the only state that persists is the cart and favourites in `localStorage`. This doc describes how the app is put together as of commit `b01e72f` (portfolio added).
 
 ## Stack
 
@@ -36,7 +36,7 @@ src/
 ├── components/           Store UI (Layout, CartDrawer, ProductMockup, CropEditor, OptionGroup…)
 │   └── ui/index.jsx      Primitives: Button, Badge, Reveal, SplitText, AnimatedNumber, Accordion, Field
 ├── pages/                Store routes (Home, Shop, Product, Packages, PackageDetail, Builder, Cart, Checkout, Payment)
-└── gallery/              Client gallery module (entry page), kept self-contained
+├── gallery/              Client gallery module (entry page), kept self-contained
     ├── GalleryPage.jsx   Page composition, scroll-spy, tab jumps, favourites toggle
     ├── components/       Cover, NavBar (+ LayoutMenu), GalleryGrid, Photo, Lightbox, Toaster
     ├── data/photos.js    Gallery photo source (local images or placeholders)
@@ -44,7 +44,19 @@ src/
         ├── settings.js   Grid options + URL-param state
         ├── layout.js     Pure layout maths (masonry, justified rows)
         ├── hooks.js      useBreakpoint, useInfinite, useMeasuredPhotos
-        └── actions.js    Toasts pub/sub, download, share, useFavorites
+│       └── actions.js    Toasts pub/sub, download, share, useFavorites
+└── portfolio/            Photographer portfolio module, kept self-contained
+    ├── PortfolioPage.jsx Page composition: header, Hero, WorkGrid, Contact; lands on a #hash on arrival
+    ├── ProjectPage.jsx   One gallery: title, details, masonry photos, "More <genre>"
+    ├── components/       PortfolioHeader, Hero, WorkGrid, ProjectCard (+ ProjectRow), Contact
+    ├── data/portfolio.js Profile, genres and galleries, built from the image folders
+    └── assets/
+        ├── profile.jpg   Photographer portrait
+        └── work/         One folder per genre (wedding, couple, family, portraits) + dims.json
+
+scripts/
+├── photo-dims.sh         `npm run photos:dims`: measures the gallery photos
+└── portfolio-photos.sh   `npm run portfolio:photos`: rebuilds src/portfolio/assets/work from an export folder
 ```
 
 ## Routing
@@ -54,6 +66,8 @@ Defined in `src/App.jsx`.
 | Path | Component | Shell |
 |---|---|---|
 | `/` | `GalleryPage` | Own layout (cover + sticky nav) |
+| `/portfolio` | `PortfolioPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
+| `/portfolio/:slug` | `ProjectPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
 | `/store` | `Home` | `Layout` (header, footer, cart drawer) |
 | `/shop`, `/shop/:categoryId` | `Shop` | `Layout` |
 | `/product/:productId` | `Product` | `Layout` |
@@ -69,6 +83,8 @@ Defined in `src/App.jsx`.
 - `edit/:lineId`: re-opens an existing cart line. It starts on the Crop step.
 
 `Payment` redirects to `/cart` when the cart is empty and to `/checkout` when no email has been entered.
+
+The portfolio is reached from the photographer's name in the gallery `NavBar`, which links to `/portfolio`. An unknown `:slug` renders a "This gallery isn't available" state with a link back to the portfolio.
 
 ## State
 
@@ -105,6 +121,13 @@ This state is local to `GalleryPage` and does not go through the store context.
 - **Grid settings** live in URL search params (`useGridSettings`), so a layout can be shared by link. Default values are removed from the URL.
 - **Favourites** are a `Set` persisted to `localStorage['gallery-favs:<client>']`. Local photo IDs are derived from file names, so saved favourites survive reordering.
 - **Toasts** use a tiny module-level pub/sub (`notify()` / `useToasts()`), so any component can show one without prop drilling.
+
+### Portfolio state
+
+Local to the portfolio pages; nothing is persisted and the store context is not used.
+- **Work filters** live in URL search params (`useWorkParams` in `WorkGrid.jsx`): `genre` (default `all`), `sort` (`newest` | `oldest` | `largest`), `view` (`grid` | `list`) and `q` (search). Defaults are removed from the URL, and updates use `replace` with `preventScrollReset`, so a filtered view can be shared by link without adding history entries.
+- **Deep links.** Other pages link to `/portfolio?genre=<id>#work`. `PortfolioPage` scrolls to the hash target once, on arrival only, so later in-page anchor clicks keep their smooth scroll.
+- **Card scrub** (`ProjectCard`) keeps the current preview frame and a hover flag in component state.
 
 ## Domain model (`src/data/catalog.js`)
 
@@ -183,6 +206,20 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
   - Download fetches the image as a blob and saves it, falling back to opening it in a new tab.
   - Share uses the Web Share API, with a file where `canShare` supports it, and falls back to copying a link to the clipboard.
 
+### Photographer portfolio (`src/portfolio/`)
+
+- **Data model** (`data/portfolio.js`).
+  - `profile`: name, studio and first name come from the gallery data (`data/gallery.js`); role, bio, disciplines, location, availability, `since`, email and Instagram are mock copy.
+  - `galleries`: `{ slug, title, genre, genreLabel, location, date, year, cover, previews, photos, count }`. `photos` are `{ id: '<genre>/<file>', src, w, h }`.
+  - `genres`: `{ id, label, count }` per folder, plus `galleryBySlug`, `totalPhotos` and `formatDate()`.
+- **Photo source.** `import.meta.glob('../assets/work/*/*.jpg')` loads every image, sorted by path with numeric ordering. Each sub-folder is a genre, so adding a folder adds a filter tab and its galleries with no code changes. Folder names map to labels through `GENRE_LABELS`; unknown folders fall back to a capitalised name. Dimensions come from `dims.json` (falling back to 3:2), so layouts know each photo's shape before it loads.
+- **Building galleries.** A genre's photos are split, in file order, into galleries whose sizes cycle through `CHUNKS` (weddings 9–28 photos, other genres 6–12). A remainder smaller than `MIN_GALLERY` (5) is folded into the previous gallery. Titles cycle through mock `CLIENTS` per genre, and places through `PLACES`. Dates step back from 18 Oct 2026 by about 23 days per gallery, interleaving genres so "Newest" mixes them. Everything is deterministic, so slugs are stable across reloads.
+- **Covers.** Cards are 4:5, so the cover is the first portrait photo in the gallery. `previews` is the cover plus the next four photos, used for the hover scrub.
+- **Selected work** (`components/WorkGrid.jsx`). Filters by genre and a free-text search over title, location, genre and year; sorts by date or photo count; shows a card grid or a compact list. Results are revealed with the gallery's `useInfinite` hook (12 per batch in grid view, 30 in list view, reset when any filter changes) and grouped under year headings with the year's full count. Sorting by "Most photos" drops the year grouping. The toolbar is sticky under the header. Changing a filter while scrolled past the section's top scrolls back up to the results.
+- **Gallery page** (`ProjectPage.jsx`). Reuses the gallery's `masonry()` and `useBreakpoint()` with 2 / 3 / 3 columns (mobile / tablet / desktop). The first 6 photos load eagerly. "More <genre>" lists up to four galleries of the same genre, nearest in date first.
+- **Header and footer.** `PortfolioHeader` takes a `back` target (Gallery from the portfolio, Portfolio from a gallery page) and optional section anchor links. `Contact` closes both pages; its "Browse galleries" button is an in-page anchor on `/portfolio` and a router link to `/portfolio#work` on gallery pages.
+- **Asset pipeline** (`scripts/portfolio-photos.sh`, macOS `sips`). Reads `<source>/<Genre>/*` (default `~/Desktop/Work Portfolio`), converts to JPEG at 1000px on the long edge and quality 72 (GIFs use their first frame), sanitises file names, and rewrites `dims.json`. It deletes and recreates `src/portfolio/assets/work/` on every run.
+
 ## Design system
 
 - **Colour tokens** are defined in `src/index.css` as CSS variables: `surface-0/1/2`, `type-0…3`, `primary`, `border`, `success`, `destructive` and others. They are exposed to Tailwind through `@theme inline`. The app is light theme only.
@@ -203,6 +240,9 @@ These are the places that would be swapped out for real services:
 |---|---|
 | `data/catalog.js` (static) | Photographer's store configuration API |
 | `data/gallery.js`, `gallery/data/photos.js` (picsum / local files) | Gallery and photo API, including original dimensions for DPI checks |
+| `portfolio/data/portfolio.js` (folders split into mock galleries, mock profile, clients, places, dates) | Photographer profile and published-galleries API |
+| `scripts/portfolio-photos.sh` (local `sips` resize) | Image CDN / resizing service |
+| `mailto:` enquiry buttons | Enquiry form or CRM lead capture |
 | `useInfinite` 350ms timeout | Paginated photo endpoint |
 | `localStorage` cart | Server cart / session |
 | `PROMOS`, `SHIPPING`, flat 8.25% tax | Promotions, shipping-rate and tax services |
@@ -211,6 +251,8 @@ These are the places that would be swapped out for real services:
 ## Known gaps / tech debt
 
 - **Two photo sets.** The store builder picks from the 28 photos in `data/gallery.js`, while the gallery page shows up to 200, or the local images. Photos dropped into `gallery/assets/photos/` do not appear in the builder.
+- **Portfolio galleries are synthetic.** They are fixed-size slices of a genre folder with mock names, places and dates, and are unrelated to the client gallery at `/`. Portfolio photos can't be opened in a lightbox or bought.
+- **Portfolio images are committed to the repo.** About 500 web-sized JPEGs live in `src/portfolio/assets/work/` and are emitted as build assets. Only their URLs are in the JS bundle; each image downloads when it renders.
 - **No tests, linting config or TypeScript.**
 - **`Builder.jsx` is large (~960 lines).** It holds the step components, the variant-switch logic and the page. Splitting the step components into their own files would help.
 - **The `.playwright-mcp/` logs are committed.** They should probably be added to `.gitignore`.

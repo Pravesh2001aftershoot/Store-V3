@@ -181,6 +181,7 @@ The drawer opens from the header cart button on every store screen. It also open
 | Layout popover (tablet and desktop) | Open / close | Drops down from the top right | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it. `origin-top-right` | framer-motion |
 | Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
 | Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides to the selected option | `layoutId="seg-{label}"`, `0.35s`, `ease` | framer-motion |
+| Photographer name | Hover / click | Text `type-2 → type-0` and an underline appears. Click opens [`/portfolio`](#portfolio-portfolio-srcportfolioportfoliopagejsx) | Tailwind default | Tailwind |
 
 ### Photo grid and tile: [GalleryGrid.jsx](src/gallery/components/GalleryGrid.jsx), [Photo.jsx](src/gallery/components/Photo.jsx)
 
@@ -229,6 +230,91 @@ The panel opens from "Buy print" on a tile or in the lightbox.
 | Crop editor (step 3) | Drag, pinch, wheel | See [CropEditor](#cropeditor-srccomponentscropeditorjsx) | n/a | n/a |
 | Orientation pill (step 3) | Toggle | The pill slides | `layoutId="qb-orient"`, `0.35s`, `ease` | framer-motion |
 | "In your cart" badge (done step) | Step appears | Pops in | `scale 0.6 → 1`, `opacity 0 → 1`, `0.4s`, `ease`, delay `0.15s` | framer-motion |
+
+---
+
+## Portfolio (`/portfolio`): [src/portfolio/PortfolioPage.jsx](src/portfolio/PortfolioPage.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Page | Arrival | Jumps to the URL hash target (for example `#work` from "View all"), or to the top. Runs once on arrival, so later in-page links keep their smooth scroll | `scrollIntoView({ behavior: 'instant' })` in a rAF, or `scrollTo({ top: 0, behavior: 'instant' })` | Browser native |
+| Section links (Work / About / Contact), "View work", "Get in touch" | Click | Smooth-scrolls to the section, which stops `64px` below the top so the sticky header doesn't cover it | `html { scroll-behavior: smooth }` + `scroll-mt-16` | Browser native |
+
+### Header: [src/portfolio/components/PortfolioHeader.jsx](src/portfolio/components/PortfolioHeader.jsx)
+
+Shared by both portfolio pages. It is sticky at `top-0` and does not hide on scroll.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Back link (Gallery / Portfolio) | Hover | Background `→ surface-2`, text `type-2 → type-0` | Tailwind default | Tailwind |
+| Section links (`md` and up) | Hover | Background `→ surface-2`, text `type-1 → type-0` | Tailwind default | Tailwind |
+| "Enquire" | Hover / press | [Button](#button-srccomponentsuiindexjsx) (`sm`). Opens `mailto:` | n/a | Tailwind |
+
+### Hero: [src/portfolio/components/Hero.jsx](src/portfolio/components/Hero.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| "Hello! I'm …" | In view | [SplitText](#splittext-srccomponentsuiindexjsx), no delay | n/a | framer-motion |
+| Disciplines line | In view | [Reveal](#reveal-srccomponentsuiindexjsx) | `y 16`, delay `0.25s` | framer-motion |
+| Bio | In view | [Reveal](#reveal-srccomponentsuiindexjsx) | `y 16`, delay `0.35s` | framer-motion |
+| CTA row | In view / hover | [Reveal](#reveal-srccomponentsuiindexjsx) `y 16`, delay `0.45s`, plus [Button](#button-srccomponentsuiindexjsx) hover. "View work" has the arrow slide | n/a | framer-motion + Tailwind |
+| Portrait | Page load | Settles in from slightly small | `scale 0.96 → 1`, `opacity 0 → 1`, `1.1s`, `ease` | framer-motion |
+| Facts strip | In view | [Reveal](#reveal-srccomponentsuiindexjsx) | `y 12`, no delay | framer-motion |
+
+### Selected work: [src/portfolio/components/WorkGrid.jsx](src/portfolio/components/WorkGrid.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Toolbar (tabs, search, sort, view) | Scroll | Sticks under the header | `sticky top-16` | CSS |
+| Genre tab underline | Genre changes | The underline slides to the new tab | `layoutId="genre-underline"`, `0.4s`, `ease` | framer-motion |
+| Genre tab text | Hover / active | Colour `type-2 → type-0` | Tailwind default | Tailwind |
+| Genre tab, sort, view toggle | Change while the toolbar is stuck | Scrolls back up so the first results sit just below the toolbar | `window.scrollTo({ top: sectionTop − 8, behavior: 'smooth' })`, only when the section's top is above the viewport | Browser native |
+| Search field | Typing | Results filter on every keystroke. No scroll jump | n/a | n/a |
+| Search field | Focus | Border `input → type-0` | Tailwind default | Tailwind |
+| Clear search (✕) | Hover | Background `→ surface-2` | Instant (no transition) | Tailwind |
+| Sort select | Hover | Background `→ surface-2`. Native `<select>` at every breakpoint | Tailwind default | Tailwind |
+| Grid / list toggle | Click | The white chip and shadow jump to the chosen icon (no sliding pill) | Tailwind default | Tailwind |
+| Gallery card (grid view) | Mounts (first batch, each new batch, filter change) | Fade up | `opacity 0 → 1`, `y 16 → 0`, `0.6s`, `ease`. No stagger. Cards that stay mounted across a filter change don't replay | framer-motion |
+| Gallery card / row | Hover | See [ProjectCard and ProjectRow](#projectcard-and-projectrow-srcportfoliocomponentsprojectcardjsx) | n/a | Tailwind |
+| Infinite scroll | Sentinel within `1200px` of the viewport | Reveals the next batch (12 in grid view, 30 in list view) after a `350ms` simulated delay. Footer text reads "Loading more galleries…", then "Showing all N galleries" | `useInfinite` from `gallery/lib/hooks.js`. Resets to one batch when genre, sort, search or view changes | IntersectionObserver |
+| "Clear filters" (no results) | Hover | Background `surface-2 → #ededed` | Tailwind default | Tailwind |
+
+### `ProjectCard` and `ProjectRow`: [src/portfolio/components/ProjectCard.jsx](src/portfolio/components/ProjectCard.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Cover image | Card hover | Slight zoom | `scale 1 → 1.03`, `700ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Cover image | Mouse moves across the cover | Scrubs through up to 5 preview photos: the cover's width is split into equal bands, one per photo | Frame `= floor(x / width × frames)`. Frames swap instantly (`opacity 0 / 100`, no transition), pre-scaled to `1.03` to match the zoomed cover. Resets to the cover on leave. Mouse only (`pointerType === 'mouse'`); the extra frames mount on first hover | Pointer events (custom) |
+| Bottom gradient, progress bars, arrow disc | Card hover | Fade in | `opacity 0 → 1`, `duration-300` | Tailwind |
+| Progress bar | Frame changes | Active bar `white/40 → white` | `transition-colors`, Tailwind default | Tailwind |
+| Card | Keyboard focus | Focus ring around the cover | `ring-2 ring-ring ring-offset-2` | Tailwind |
+| List row | Hover | Background `→ surface-2` | Tailwind default | Tailwind |
+| List row arrow (`md` and up) | Row hover | Nudges up and right, colour `type-3 → type-0` | `translate 2px, -2px`, Tailwind default | Tailwind |
+
+### Contact footer: [src/portfolio/components/Contact.jsx](src/portfolio/components/Contact.jsx)
+
+Shared by both portfolio pages.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Heading and buttons | In view | [Reveal](#reveal-srccomponentsuiindexjsx), no delay | n/a | framer-motion |
+| Details (availability, location, social) | In view | [Reveal](#reveal-srccomponentsuiindexjsx), delay `0.1s` | n/a | framer-motion |
+| Email button | Hover / press | [Button](#button-srccomponentsuiindexjsx) with arrow. Opens `mailto:` | n/a | Tailwind |
+| "Browse galleries" | Click | On `/portfolio`: smooth-scrolls to `#work`. On a gallery page: navigates to `/portfolio#work` and lands there instantly | n/a | Browser native / router |
+| "Back to top" | Click / hover | Smooth-scrolls to the top. Text `type-3 → type-0` on hover | `scrollTo({ top: 0, behavior: 'smooth' })` | Browser native + Tailwind |
+
+## Portfolio gallery (`/portfolio/:slug`): [src/portfolio/ProjectPage.jsx](src/portfolio/ProjectPage.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Page | Slug changes (including "More …" cards) | Jumps to the top | `scrollTo({ top: 0, behavior: 'instant' })` | Browser native |
+| Genre eyebrow | Hover / click | Colour `type-3 → type-0`. Opens the portfolio filtered to that genre, at `#work` | Tailwind default | Tailwind |
+| Title (H1) | Page load | Fade up | `opacity 0 → 1`, `y 16 → 0`, `0.8s`, `ease`. Not keyed on the slug, so it doesn't replay when moving between galleries | framer-motion |
+| Photo grid | Load | No animation. Each image reserves its space from `dims.json` (`aspect-ratio`) on a `surface-2` placeholder, so nothing shifts as photos load. The first 6 load eagerly | n/a | n/a |
+| Photo grid | Breakpoint changes | Re-runs `masonry()` with 2 / 3 / 3 columns. No transition | n/a | n/a |
+| "More …" cards | In view | One [Reveal](#reveal-srccomponentsuiindexjsx) for the whole row (no stagger), plus [ProjectCard](#projectcard-and-projectrow-srcportfoliocomponentsprojectcardjsx) hover | n/a | framer-motion + Tailwind |
+| "View all" | Hover | Text `type-1 → type-0`, underline appears | Tailwind default | Tailwind |
+| Contact footer | n/a | See [Contact footer](#contact-footer-srcportfoliocomponentscontactjsx) | n/a | n/a |
 
 ---
 
@@ -429,3 +515,7 @@ These are observations, not changes. They are useful when tidying up motion.
 4. **Two different lightboxes.** The gallery loupe slides horizontally (`0.25s`, `easeOut`, swipe support). The Builder lightbox crossfades with a scale (`0.3s`, no swipe) and has no overlay animation.
 5. **Some animations use framer defaults.** The cart and Quick buy overlays, the Builder flash, the bottom-bar photo chips, the checkout radio check, the Accordion plus icon and the Payment "prototype ends" note set no `transition`. They use framer's spring/tween defaults instead of the shared `ease`.
 6. **The Home hero image 3** has both an entrance `y` (`40 → 0`) and a scroll-linked `y` (`0 → -200px`) on the same element.
+7. **Portfolio hover scrub is mouse-only.** Touch visitors see only the cover, and there is no keyboard equivalent.
+8. **Portfolio photos don't fade in.** Gallery tiles fade in over `700ms` when loaded; portfolio covers and gallery-page photos appear abruptly over the grey placeholder.
+9. **Two toggle styles.** The portfolio grid/list toggle jumps between options, while the gallery layout menu's segmented control slides a pill with `layoutId`.
+10. **Portfolio header is always visible.** The store header hides on scroll down; the portfolio header stays put, and the work toolbar stacks under it, so about 170px of the viewport is chrome while browsing work on mobile (120px on desktop).

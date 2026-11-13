@@ -85,7 +85,7 @@ export default function ProjectPage() {
                   loading={index < 6 ? 'eager' : 'lazy'}
                   decoding="async"
                   style={{ aspectRatio: `${p.w} / ${p.h}` }}
-                  className="w-full rounded-sm bg-surface-2 object-cover"
+                  className="w-full bg-surface-2 object-cover"
                 />
               ))}
             </div>

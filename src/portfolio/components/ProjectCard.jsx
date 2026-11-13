@@ -21,7 +21,7 @@ export function ProjectCard({ g, eager }) {
   return (
     <Link to={`/portfolio/${g.slug}`} className="group block outline-none">
       <div
-        className="relative aspect-[4/5] overflow-hidden rounded-lg bg-surface-2 ring-ring ring-offset-2 ring-offset-surface-0 group-focus-visible:ring-2"
+        className="relative aspect-[4/5] overflow-hidden bg-surface-2 ring-ring ring-offset-2 ring-offset-surface-0 group-focus-visible:ring-2"
         onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(true)}
         onPointerMove={scrub}
         onPointerLeave={() => { setHover(false); setFrame(0) }}

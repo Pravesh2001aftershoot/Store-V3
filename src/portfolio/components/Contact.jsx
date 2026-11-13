@@ -12,11 +12,11 @@ export default function Contact({ workHref = '#work' }) {
           <Reveal className="lg:col-span-8">
             <p className="text-12-sb uppercase text-type-3">Contact</p>
             <h2 className="mt-4 text-36-sb text-type-0 md:text-60-sb">Have a day worth remembering? Let’s talk.</h2>
-            <div className="mt-8 flex flex-wrap gap-2">
-              <Button as="a" href={`mailto:${profile.email}`} size="lg" arrow>
+            <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button as="a" href={`mailto:${profile.email}`} size="lg" arrow className="w-full sm:w-auto">
                 {profile.email}
               </Button>
-              <Button as={workHref.startsWith('#') ? 'a' : Link} href={workHref} to={workHref} size="lg" variant="outline">
+              <Button as={workHref.startsWith('#') ? 'a' : Link} href={workHref} to={workHref} size="lg" variant="outline" className="w-full sm:w-auto">
                 Browse galleries
               </Button>
             </div>

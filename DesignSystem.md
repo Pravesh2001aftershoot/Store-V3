@@ -76,8 +76,8 @@ Sizes and line heights are in pixels. "Proposed" tokens were added in code to fi
 | Category | Token | Size / line height | Notes |
 |---|---|---|---|
 | Display | `96-SB` | 96 / 92, -4% tracking | Proposed. Portfolio hero only. |
-| | `72-SB` | 72 / 72, -3% tracking | Proposed. Marketing heroes only. |
-| | `60-SB` | 60 / 64, -3% tracking | Proposed |
+| | `72-SB` | 72 / 72, -3% tracking | Proposed. Marketing heroes; portfolio hero (md) and gallery page title (md). |
+| | `60-SB` | 60 / 64, -3% tracking | Proposed. Portfolio contact heading (md). |
 | Header | `48-SB` | 48 / 52 | Page titles (desktop) |
 | | `36-SB` | 36 / 40 | Page titles (mobile), section heads |
 | | `30-M` | 30 / 32 | Section heads |
@@ -137,9 +137,10 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 ## Spacing and layout
 
 - Spacing uses the standard Tailwind 4px scale.
-- **Page widths.** Store pages use `max-w-[1600px]` and the gallery uses `max-w-[1800px]`, both centred with `mx-auto`.
-- **Gutters.** Page gutters are `px-4` on mobile and `md:px-8` (gallery) or `md:px-6` (Builder) on larger screens.
-- **Sticky bars** are `h-16`, use `bg-surface-0/90 backdrop-blur-xl`, and have a bottom border.
+- **Page widths.** Store pages use `max-w-[1600px]`; the gallery and the portfolio use `max-w-[1800px]`. All are centred with `mx-auto`.
+- **Gutters.** Page gutters are `px-4` on mobile and `md:px-8` (gallery, portfolio) or `md:px-6` (Builder) on larger screens.
+- **Sticky bars** are `h-16`, use `bg-surface-0/90 backdrop-blur-xl`, and have a bottom border. The portfolio header is the exception: it is solid `bg-surface-0`, and the portfolio's work toolbar sticks directly beneath it at `top-16`.
+- **Anchor offsets.** Sections that are anchor targets under a sticky header use `scroll-mt-16` (portfolio `#about`, `#work`, `#contact`).
 - **Breakpoints.** Tailwind defaults are used: `sm` 640, `md` 768, `lg` 1024. The gallery's JavaScript layout uses three tiers through `useBreakpoint()`:
   - mobile: below 640
   - tablet: 640 to 1023
@@ -158,6 +159,16 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 | `small` | 2 / 3 / 4 |
 | `medium` (default) | 2 / 3 / 3 |
 | `large` | 1 / 2 / 2 |
+
+### Portfolio grids (`src/portfolio/`)
+
+| Grid | Columns (mobile / tablet / desktop) | Gap |
+|---|---|---|
+| Work cards (`WorkGrid`) | 1 below 480px, 2 from 480px, 3 from `lg`, 4 from `2xl` | `gap-x-4 gap-y-8`, `lg:gap-x-6 lg:gap-y-10` |
+| Gallery photos (`ProjectPage`, masonry) | 2 / 3 / 3 | 4px, 8px from `md` |
+| "More <genre>" cards | 2, 4 from `lg` | `gap-x-4 gap-y-8`, `lg:gap-x-6` |
+
+Portfolio cards and photos are square-cornered: work is shown edge to edge, like the gallery grid. The portrait (`rounded-lg`) and list-row thumbnails (`rounded-md`) are the only rounded images.
 
 ## Iconography
 
@@ -218,6 +229,12 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 | `CartDrawer` | Radix dialog sheet that holds the cart |
 | `CheckoutShell` | Minimal header and step indicator for checkout and payment |
 | Gallery: `Cover`, `NavBar`, `GalleryGrid`, `Photo`, `Lightbox`, `Toaster` | See `src/gallery/` |
+| `PortfolioHeader` | Sticky portfolio bar: back link (label hidden below `sm`), photographer name, section anchor links (`md` and up) and a small "Enquire" `mailto:` button |
+| `Hero` (portfolio) | Greeting (`text-48-sb md:text-72-sb xl:text-96-sb`), disciplines in `20-M type-2`, bio in `16-R-P` (`18-R` from `md`), CTAs, a 4:5 portrait (4:3 on `sm`–`md`), and a facts strip of `11-SB` labels over `14-M` values. "Availability" has a `success` dot. |
+| `ProjectCard` | Portfolio gallery card: 4:5 cover, title `16-M`, "Genre · Location" `13-R type-2`, photo count `13-R type-3 tabular-nums`. On hover: bottom gradient, scrub progress bars and a white arrow disc. |
+| `ProjectRow` | List-view row: 56px (72px from `md`) square thumbnail, title, genre, location, photo count and an arrow. Collapses to thumbnail, title and year on mobile. |
+| `WorkGrid` | "Selected work" section: genre tabs, search, sort select, grid/list toggle, year group headings (`24-M` + count + hairline rule) |
+| `Contact` | Footer CTA on `surface-1` with a top border: `36-SB` / `60-SB` heading, email and "Browse galleries" buttons (full width below `sm`), and key–value rows |
 
 ### Common patterns
 
@@ -226,10 +243,13 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
   - Pills: `ring-2 ring-type-0 ring-offset-2`.
   - Tabs and toggles: `bg-surface-2 text-type-0`, with `aria-pressed` or `aria-selected` set.
 - **Lightbox film strip.** A horizontal row of thumbnails below the photo at every breakpoint (56px tall on mobile, 80px from `md`), with an 8px gap, centred when it fits and scrolling sideways otherwise. Inactive thumbnails sit at 50% opacity (80% on hover). The current one is fully opaque with `ring-2 ring-white ring-offset-2 ring-offset-type-0`. Keep padding inside the scroll container so the ring isn't clipped.
+- **Underline tabs.** Text tabs with a 2px `type-0` underline that slides between tabs (`layoutId`). Inactive `type-2`, active `type-0`, counts in `type-3 tabular-nums`. Used for gallery collections and portfolio genres.
+- **Toolbar inputs (portfolio).** Search and sort are 36px (`h-9`) pills with an `input` border on `surface-1`; the border turns `type-0` on focus. The grid/list toggle is a segmented control with icon buttons.
+- **Key–value details.** An `11-SB` uppercase `type-3` label over a `14-M` `type-0` value, laid out in a 2- or 4-column grid. Used in the portfolio hero facts and on the gallery page.
 - **Tile hover actions.** Shown on hover or focus only. Hidden on touch devices (`[@media(hover:none)]:hidden`); the lightbox is the touch path to the same actions.
 - **Quality tones.** `good` uses success colours, `ok` is neutral, and `low` uses amber. Low resolution is a warning and never blocks the order.
 - **Prices.** Format with `money()`, which drops the decimals for whole dollars. Strike-through compare-at prices use `type-3`, and savings use `success`.
-- **Empty states.** Title in `20-M` or `30-M`, a one-line `type-2` explanation, and one or two calls to action.
+- **Empty states.** Title in `20-M` or `30-M`, a one-line `type-2` explanation, and one or two calls to action. The portfolio's no-results state is smaller (`16-M` title, `14-R` hint, one "Clear filters" pill).
 - **Toasts.**
   - Gallery: `notify(message)` from `gallery/lib/actions.js`.
   - Builder: its own flash bar.
@@ -241,6 +261,8 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 - [ ] Focus is visible: buttons use `focus-visible:ring-2 ring-ring` and fields use `focus:ring-4 ring-black/5`.
 - [ ] Dialogs and sheets use Radix Dialog for focus trapping and Esc handling.
 - [ ] The lightbox supports the arrow keys and Esc.
+- [ ] Portfolio genre tabs are in `<nav aria-label="Genres">` with `aria-current` on the active tab; the view toggle is `role="group" aria-label="View"` with `aria-pressed`; search and sort have accessible labels.
+- [ ] Portfolio photos use `alt=""` because they are decorative alongside the gallery title. Give them real alt text once captions exist.
 - [ ] Film strip thumbnails are buttons with `aria-label="View <name>"`; the current one has `aria-current`, and the strip is a `<nav aria-label="Film strip">`.
 - [ ] Text contrast: `type-2` and `type-3` are for secondary text only. Don't use `type-3` for anything essential.
 
@@ -249,4 +271,5 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 - Add `primary-hover` and `surface-3` tokens to replace the hard-coded hover hex values.
 - Get the proposed type tokens (display, `24-M`, `18-R`, paragraph, `16-M`) reviewed and added to Figma.
 - Add a dark theme. Tokens are already CSS variables, so this means adding a second set of values.
-- Turn the segmented control and the tab pill into shared primitives. Today they are written separately in the gallery NavBar, OptionGroup and the Builder.
+- Turn the segmented control and the tab pill into shared primitives. Today they are written separately in the gallery NavBar, OptionGroup, the Builder and the portfolio WorkGrid.
+- The portfolio "Clear filters" button uses a hard-coded `hover:bg-[#ededed]`, another case for a `surface-3` token.

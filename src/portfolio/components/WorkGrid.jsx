@@ -81,12 +81,12 @@ export default function WorkGrid() {
     <section id="work" ref={sectionRef} className="mx-auto max-w-[1800px] scroll-mt-16 px-4 pt-16 md:px-8 md:pt-24">
       <div className="flex items-end justify-between gap-6">
         <h2 className="text-36-sb text-type-0 md:text-48-sb">
-          Selected work<span className="ml-2 align-top text-16-m text-type-3 md:text-20-m">({galleries.length})</span>
+          Selected work<span className="ml-2 align-baseline text-16-m text-type-3 md:text-20-m">({galleries.length})</span>
         </h2>
       </div>
 
       {/* Toolbar */}
-      <div className="sticky top-16 z-30 -mx-4 mt-6 border-b border-border bg-surface-0 px-4 md:-mx-8 md:px-8">
+      <div className="sticky top-16 z-30 -mx-4 mt-6 bg-surface-0 px-4 md:-mx-8 md:px-8">
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:gap-6">
           {/* Bottom-stroke tabs, same pattern as the gallery's collection tabs. The stroke sits on the toolbar's bottom border. */}
           <nav aria-label="Genres" className="no-scrollbar -mx-4 flex h-12 min-w-0 flex-1 gap-6 overflow-x-auto border-b border-border px-4 md:-mx-8 md:px-8 lg:mx-0 lg:h-14 lg:border-0 lg:px-0">

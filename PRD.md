@@ -1,18 +1,19 @@
 # Store V3: Product Requirements (Prototype)
 
 **Status:** Interactive prototype (front end only, mocked data)
-**Last updated:** 12 Nov 2026
+**Last updated:** 13 Nov 2026
 
 ## 1. Summary
 
 Store V3 is a print store that a photographer configures and their clients use. A client opens the gallery the photographer delivered, browses and favourites photos, and turns them into physical products: wall art, prints, albums or discounted packages. Product previews use the client's own photos and crops. The flow ends at payment, and orders are approved by the photographer before the client is charged.
 
-This prototype covers the full client journey, **Gallery → Store → Product → Builder → Cart → Checkout → Payment**, so the experience can be tested before back-end work starts.
+This prototype covers the full client journey, **Gallery → Store → Product → Builder → Cart → Checkout → Payment**, so the experience can be tested before back-end work starts. It also includes the photographer's public **Portfolio**, opened from the gallery, so a client (or someone they share the gallery with) can see the photographer's other work and get in touch.
 
 ## 2. Problem
 
 - **Clients can't see what they'll get.** Most client galleries treat print sales as an add-on: a generic product list and a cropped thumbnail. Clients struggle to judge what a piece will look like, which photos suit which product, and whether the photos will print well.
 - **Photographers can't sell bundles well.** They want to sell bundles, such as an album with wall art, without the client having to work through each item separately.
+- **Galleries are a missed referral channel.** A delivered gallery is seen by the couple, their family and their guests, but it doesn't lead anywhere: there's no way to see what else the photographer shoots or to book them.
 
 ## 3. Goals
 
@@ -21,6 +22,7 @@ This prototype covers the full client journey, **Gallery → Store → Product �
 3. **Photo-led building.** The client picks photos first and quantity follows: one photo makes one print, three make a triptych, and an album holds a range.
 4. **Confidence before paying.** Crops can be adjusted per photo, each crop gets a print-quality warning, and a review step comes before the cart.
 5. **Packages drive order value.** Curated bundles are offered at up to 22% off, with the savings shown clearly.
+6. **Every gallery markets the photographer.** One tap from the gallery leads to a portfolio of all published work, filterable by genre, with a clear way to enquire.
 
 **Non-goals for this prototype:** the photographer-side store configuration UI, real payments, order management, accounts and authentication, and the backend APIs.
 
@@ -29,7 +31,8 @@ This prototype covers the full client journey, **Gallery → Store → Product �
 | User | Need |
 |---|---|
 | **Client** (couple, family, event guest) | Relive the photos, save favourites, share and download, and order prints and albums without friction |
-| **Photographer** (indirect) | Branded store, configurable catalogue and packages, higher order value, approval before charge |
+| **Photographer** (indirect) | Branded store, configurable catalogue and packages, higher order value, approval before charge, and new bookings from people who see a gallery |
+| **Prospective client** (guest, friend of the couple) | See the photographer's work in their style of shoot, and enquire |
 
 The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Esteban Gill*, Aftershoot.
 
@@ -111,6 +114,27 @@ Full-screen, three steps: **Photos → Crop → Review**. A sticky top bar shows
 | K3 | Payment methods: card (with a live card preview and input formatting), PayPal, Apple Pay. Billing address can match shipping. | ✅ (UI only) |
 | K4 | "Make payment" ends the prototype with a notice that no payment was processed. The copy states that the client isn't charged until the photographer approves the order. | ✅ |
 
+### 5.7 Photographer portfolio (`/portfolio`, `/portfolio/:slug`)
+
+| # | Requirement | Status |
+|---|---|---|
+| F1 | The photographer's name in the gallery nav links to the portfolio | ✅ |
+| F2 | Sticky header with a way back (to the gallery, or to the portfolio from a gallery page), the photographer's name, section links (Work, About, Contact) and an "Enquire" button | ✅ |
+| F3 | Intro: greeting, disciplines, short bio, portrait, "View work" and "Get in touch", and a facts strip (availability, focus, location, experience) | ✅ |
+| F4 | "Selected work" lists every published gallery with its total count, as cards (cover, title, genre, location, photo count) or a compact list | ✅ |
+| F5 | Filter by genre with tabs and counts. Genres come from the photographer's work folders, so a new genre needs no code change. | ✅ |
+| F6 | Search by client name, place, genre or year, with a no-results state and "Clear filters" | ✅ |
+| F7 | Sort by newest, oldest or most photos. Date sorts group galleries under year headings with counts. | ✅ |
+| F8 | Filters, sort, view and search are stored in the URL, so a filtered portfolio can be shared by link | ✅ |
+| F9 | Galleries load progressively as the visitor scrolls (infinite scroll), with a "Showing all N galleries" end state | ✅ |
+| F10 | Hovering a card with a mouse scrubs through a few of the gallery's photos, so a shoot can be previewed without opening it | ✅ (not available on touch) |
+| F11 | Gallery page: title, category (links to that genre in the portfolio), location, date and photo count, then all photos in a masonry grid | ✅ |
+| F12 | Gallery page ends with up to four more galleries of the same genre, nearest in date first, plus "View all" | ✅ |
+| F13 | Contact footer on both pages: headline, email, "Browse galleries", availability, location and Instagram | ✅ (email opens `mailto:`; no form) |
+| F14 | Photos are rebuilt from the photographer's export folder with one command (`npm run portfolio:photos`) | ✅ |
+
+**Portfolio content in the prototype:** about 500 photos across 4 genres (Weddings, Couples, Families, Portraits), split into mock galleries with placeholder client names, places and dates. Profile copy and the contact email are placeholders.
+
 ## 6. Business rules
 
 **Pricing**
@@ -141,6 +165,7 @@ Full-screen, three steps: **Photos → Crop → Review**. A sticky top bar shows
 - Builder completion rate (Photos → Review → Cart)
 - Share of cart items with a low-resolution warning, and the reprint or complaint rate
 - Photographer approval time
+- Gallery to portfolio click-through rate, and portfolio to enquiry rate
 
 ## 9. Open questions and next steps
 
@@ -151,3 +176,7 @@ Full-screen, three steps: **Photos → Crop → Review**. A sticky top bar shows
 5. **Tax and shipping.** Replace the flat rates with real tax and shipping-rate services.
 6. **Favourites and the store.** Decide whether favourites should be offered first, or pre-filtered, in the Builder's photo step.
 7. **Sync.** Decide whether favourites and the cart should sync across devices, which would require client identity.
+8. **Portfolio source.** Decide where portfolio galleries come from in production: the photographer's real published galleries (with privacy controls per client) or a curated selection. Today they are slices of a folder with mock details.
+9. **Portfolio privacy.** Client galleries are private by default. Define consent for showing a client's photos publicly, and whether client names appear.
+10. **Enquiries.** Replace the `mailto:` buttons with an enquiry form that reaches the photographer's CRM, and decide what details it captures (date, location, genre).
+11. **Portfolio photo viewer.** Decide whether portfolio photos should open in the gallery lightbox, and whether they can be shared.
