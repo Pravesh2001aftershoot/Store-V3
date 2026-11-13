@@ -11,12 +11,12 @@ export const sectionId = (name) => `collection-${name.toLowerCase().replace(/[^a
 /**
  * Gallery grid with infinite scroll.
  * `photos` is one flat list; optional `sections` ({ title, start, end } ranges into it) split it into
- * titled blocks so the whole gallery reads as one continuous scroll. Indexes passed to `onOpen` are into `photos`.
+ * titled blocks so the whole gallery reads as one continuous scroll. Indexes passed to `onOpen` / `onSelect` are into `photos`.
  *  orientation  vertical → masonry columns · horizontal → justified rows
  *  size         small 4 · medium 3 · large 2 per row (desktop; fewer on smaller screens)
  *  spacing      airy · thin · none
  */
-export default function GalleryGrid({ photos, sections, settings, favorites, onFavorite, hidden, onHide, onOpen, onBuy, resetKey, minCount = 0, emptyMessage = 'No photos here yet' }) {
+export default function GalleryGrid({ photos, sections, settings, favorites, onFavorite, hidden, onHide, onOpen, onBuy, selecting = false, selected, onSelect, resetKey, minCount = 0, emptyMessage = 'No photos here yet' }) {
   const bp = useBreakpoint()
   const columns = COLUMNS[settings.size][bp]
   const gap = GAP[settings.spacing][bp]
@@ -41,6 +41,9 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       onHide={() => onHide(item.id)}
       onOpen={() => onOpen(offset + index)}
       onBuy={() => onBuy(item)}
+      selecting={selecting}
+      selected={selected?.has(item.id)}
+      onSelect={(e) => onSelect?.(offset + index, e)}
     />
   )
 

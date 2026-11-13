@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToasts } from '../lib/actions'
 
-export default function Toaster() {
+/** `raised` lifts the toasts above the selection bar while it's showing. */
+export default function Toaster({ raised = false }) {
   const toasts = useToasts()
   return (
-    <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex flex-col items-center gap-2 px-4">
+    <div aria-live="polite" className={`pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 transition-[bottom] duration-300 ${raised ? 'bottom-24' : 'bottom-6'}`}>
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div

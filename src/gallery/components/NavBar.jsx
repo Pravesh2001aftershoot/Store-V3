@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretLeft, EyeSlash, Handbag, Heart, SlidersHorizontal, X } from '@phosphor-icons/react'
+import { CaretLeft, CheckCircle, EyeSlash, Handbag, Heart, SlidersHorizontal, Stack, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../lib/settings'
 import { useBreakpoint } from '../lib/hooks'
@@ -167,8 +167,11 @@ function LayoutMenu({ settings, onChange }) {
   )
 }
 
-/** Sticky gallery nav: title, collections, layout, the favourites / hidden buckets, and the entry to the store. */
-export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, view, onView, onClearFavs, onUnhideAll }) {
+/**
+ * Sticky gallery nav: title, collections (+ the client's sets), select, layout, the favourites / hidden
+ * buckets, and the entry to the store. A set opens like a bucket: `view` is `set:<id>`.
+ */
+export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting }) {
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
@@ -184,7 +187,10 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
 
   const showFavs = view === 'favs'
   const showHidden = view === 'hidden'
-  const bucket = showFavs
+  const openSet = view.startsWith('set:') ? sets.find((x) => `set:${x.id}` === view) : null
+  const bucket = openSet
+    ? { label: openSet.name, count: openSet.count, action: 'Delete set', confirm: `Delete the set “${openSet.name}”? The photos stay in the gallery.`, run: () => onDeleteSet(openSet.id) }
+    : showFavs
     ? { label: 'Favourites', count: favCount, action: 'Clear all', confirm: `Remove all ${favCount} favourites?`, run: onClearFavs }
     : showHidden
       ? { label: 'Hidden', count: hiddenCount, action: 'Unhide all', confirm: `Show all ${hiddenCount} hidden photos in the gallery again?`, run: onUnhideAll }
@@ -231,8 +237,39 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
             </span>
           </button>
         ))}
+        {sets.length > 0 && <span aria-hidden className="my-auto h-4 w-px shrink-0 bg-border" />}
+        {sets.map((x) => (
+          <button
+            key={x.id}
+            onClick={() => onView(`set:${x.id}`)}
+            title={`Open the set “${x.name}”`}
+            className="flex h-full shrink-0 items-center gap-1.5 text-14-r text-type-2 transition hover:text-type-0"
+          >
+            <Stack size={15} />
+            <span className="max-w-[160px] truncate">{x.name}</span>
+            <span className="text-type-3 tabular-nums">{x.count}</span>
+          </button>
+        ))}
       </nav>
     )
+
+  // Phones only, at the end of the collections row. On tablet/desktop selection starts from a photo's
+  // hover check and ends from the selection bar, so the top bar has no Select button.
+  const selectButton = (
+    <button
+      onClick={onSelecting}
+      aria-pressed={selecting}
+      aria-label={selecting ? 'Cancel selection' : 'Select photos'}
+      title={selecting ? 'Cancel selection' : 'Select photos'}
+      className={cn(
+        'ml-2 flex h-8 shrink-0 items-center gap-2 rounded-full px-2.5 text-13-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+        selecting && 'bg-surface-2 text-type-0'
+      )}
+    >
+      <CheckCircle size={18} weight={selecting ? 'fill' : 'regular'} />
+      <span>{selecting ? 'Cancel' : 'Select'}</span>
+    </button>
+  )
 
   return (
     <div ref={navRef} className="sticky top-0 z-40 border-b border-border bg-surface-0">
@@ -284,18 +321,24 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
           </button>
           <Link
             to="/store"
-            className="ml-1 flex h-10 items-center gap-2 rounded-full bg-primary pl-3.5 pr-4 text-14-m text-primary-foreground transition hover:bg-[#2c2c2c]"
+            aria-label="Shop prints"
+            title="Shop prints"
+            // Phones: an icon-only circle, so the top bar keeps room for the client's name.
+            className="ml-1 flex h-10 w-10 items-center justify-center gap-2 rounded-full bg-primary text-14-m text-primary-foreground transition hover:bg-[#2c2c2c] sm:w-auto sm:justify-start sm:pl-3.5 sm:pr-4"
           >
             <Handbag size={18} />
-            <span>
-              Shop<span className="hidden sm:inline"> prints</span>
-            </span>
+            <span className="hidden sm:inline">Shop prints</span>
           </Link>
         </div>
       </div>
 
       {/* Phone: collections get their own row under the bar. */}
-      {isPhone && <div className="flex h-11 items-center border-t border-border px-4">{tabs}</div>}
+      {isPhone && (
+        <div className="flex h-11 items-center border-t border-border px-4">
+          <div className="flex h-full min-w-0 flex-1 items-center">{tabs}</div>
+          {selectButton}
+        </div>
+      )}
     </div>
   )
 }

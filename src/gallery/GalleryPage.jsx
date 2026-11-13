@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
 import { useGridSettings } from './lib/settings'
 import { useMeasuredPhotos } from './lib/hooks'
@@ -8,8 +8,9 @@ import GalleryGrid, { sectionId } from './components/GalleryGrid'
 import Lightbox from './components/Lightbox'
 import Toaster from './components/Toaster'
 import QuickBuy from './components/QuickBuy'
+import SelectionBar from './components/SelectionBar'
 import { registerPhoto } from '../data/gallery'
-import { notify, useFavorites, useHidden } from './lib/actions'
+import { MAX_SETS, downloadPhotos, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
 import FooterSection from './footer/FooterSection'
 
 // Every collection is a section of one continuous scroll, so there's no "All" tab.
@@ -23,10 +24,14 @@ const BATCH = 24
 export default function GalleryPage() {
   const [settings, setSetting] = useGridSettings()
   const [collection, setCollection] = useState(COLLECTIONS[0])
-  const [favorites, toggleFav, clearFavs] = useFavorites(gallery.client)
+  const [favorites, toggleFav, clearFavs, setFavs] = useFavorites(gallery.client)
   const [hidden, toggleHidden, clearHidden] = useHidden(gallery.client)
-  const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden'
-  const inBucket = view !== 'all' // a flat list (favourites / hidden), not the sectioned gallery
+  const [sets, createSet, deleteSet] = useSets(gallery.client)
+  const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden' | 'set:<id>'
+  const inBucket = view !== 'all' // a flat list (favourites / hidden / a set), not the sectioned gallery
+  const [selecting, setSelecting] = useState(false) // multi-select mode
+  const [selected, setSelected] = useState(() => new Set()) // selected photo ids
+  const anchor = useRef(null) // id of the last photo toggled — the start of a Shift-click range
   const [lightboxId, setLightboxId] = useState(null) // id of the photo open in the lightbox
   const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
   const [minCount, setMinCount] = useState(0)
@@ -58,7 +63,83 @@ export default function GalleryPage() {
 
   const favPhotos = useMemo(() => ordered.filter((p) => favorites.has(p.id)), [ordered, favorites])
   const hiddenPhotos = useMemo(() => everything.filter((p) => hidden.has(p.id)), [everything, hidden])
-  const visible = view === 'favs' ? favPhotos : view === 'hidden' ? hiddenPhotos : ordered
+  const openSet = view.startsWith('set:') ? sets.find((x) => `set:${x.id}` === view) : null
+  const setPhotos = useMemo(() => {
+    if (!openSet) return []
+    const ids = new Set(openSet.ids)
+    return ordered.filter((p) => ids.has(p.id))
+  }, [ordered, openSet])
+  const visible = view === 'favs' ? favPhotos : view === 'hidden' ? hiddenPhotos : openSet ? setPhotos : ordered
+
+  // A set's count is what it shows: hidden photos are left out, as everywhere else in the gallery.
+  const setsWithCounts = useMemo(
+    () => sets.map((x) => ({ ...x, count: x.ids.filter((id) => !hidden.has(id)).length })),
+    [sets, hidden]
+  )
+  // The open set was deleted: fall back to the gallery.
+  useEffect(() => {
+    if (view.startsWith('set:') && !openSet) setView('all')
+  }, [view, openSet])
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  const selectedPhotos = useMemo(() => visible.filter((p) => selected.has(p.id)), [visible, selected])
+  const exitSelect = useCallback(() => {
+    setSelecting(false)
+    setSelected(new Set())
+    anchor.current = null
+  }, [])
+  const selectAll = useCallback(() => setSelected(new Set(visible.map((p) => p.id))), [visible])
+  // Switching views starts a fresh selection.
+  useEffect(() => { exitSelect() }, [view, exitSelect])
+  // Photos that leave the view (e.g. unfavourited in Favourites) leave the selection too.
+  useEffect(() => {
+    setSelected((s) => (selectedPhotos.length === s.size ? s : new Set(selectedPhotos.map((p) => p.id))))
+  }, [selectedPhotos])
+
+  /** Toggles the photo at `i` in `visible` (entering selection mode). Shift extends from the last one toggled. */
+  const select = (i, e) => {
+    const id = visible[i]?.id
+    if (id == null) return
+    setSelecting(true)
+    const from = e?.shiftKey && anchor.current != null ? visible.findIndex((p) => p.id === anchor.current) : -1
+    if (from !== -1) {
+      const [lo, hi] = from < i ? [from, i] : [i, from]
+      setSelected((s) => {
+        const n = new Set(s)
+        visible.slice(lo, hi + 1).forEach((p) => n.add(p.id))
+        return n
+      })
+    } else {
+      setSelected((s) => {
+        const n = new Set(s)
+        n.has(id) ? n.delete(id) : n.add(id)
+        return n
+      })
+    }
+    anchor.current = id
+  }
+
+  const allFavorite = selectedPhotos.length > 0 && selectedPhotos.every((p) => favorites.has(p.id))
+  const plural = (n) => `${n} photo${n === 1 ? '' : 's'}`
+  const bulk = {
+    share: () => sharePhotos(selectedPhotos),
+    favorite: () => {
+      const n = selectedPhotos.length
+      setFavs(selectedPhotos.map((p) => p.id), !allFavorite)
+      notify(allFavorite ? `Removed ${plural(n)} from favourites` : `Added ${plural(n)} to favourites`)
+      exitSelect()
+    },
+    download: () => {
+      downloadPhotos(selectedPhotos)
+      exitSelect()
+    },
+    createSet: (name) => {
+      const made = createSet(name, selectedPhotos.map((p) => p.id))
+      if (!made) return notify(`You can keep up to ${MAX_SETS} sets — delete one to make another`)
+      notify(`Created “${made.name}” with ${plural(selectedPhotos.length)}`)
+      exitSelect()
+    },
+  }
 
   // The lightbox tracks a photo id, not a position, so it can't drift onto another photo when `visible` changes.
   const lightboxIndex = lightboxId == null ? -1 : visible.findIndex((p) => p.id === lightboxId)
@@ -174,6 +255,10 @@ export default function GalleryPage() {
           onSetting={setSetting}
           favCount={favPhotos.length}
           hiddenCount={hidden.size}
+          sets={setsWithCounts}
+          onDeleteSet={(id) => { deleteSet(id); setView('all') }}
+          selecting={selecting}
+          onSelecting={() => (selecting ? exitSelect() : setSelecting(true))}
           view={view}
           onView={(v) => { setView((cur) => (cur === v ? 'all' : v)); toGrid() }}
           onClearFavs={() => { clearFavs(); setView('all') }}
@@ -189,11 +274,15 @@ export default function GalleryPage() {
           onHide={toggleHide}
           onOpen={openAt}
           onBuy={buy}
+          selecting={selecting}
+          selected={selected}
+          onSelect={select}
           resetKey={view}
           minCount={inBucket ? 0 : minCount}
           emptyMessage={
             view === 'favs' ? 'No favourites yet. Tap the heart on any photo to add it here.'
             : view === 'hidden' ? 'No hidden photos. Photos you hide will wait here.'
+            : openSet ? 'Nothing in this set right now — its photos may be hidden.'
             : undefined
           }
         />
@@ -213,7 +302,22 @@ export default function GalleryPage() {
         onBuy={buy}
       />
       <QuickBuy photo={buying} onClose={() => setBuying(null)} />
-      <Toaster />
+      <SelectionBar
+        open={selecting}
+        count={selectedPhotos.length}
+        total={visible.length}
+        allFavorite={allFavorite}
+        setCount={sets.length}
+        onSelectAll={selectAll}
+        onSelectNone={() => setSelected(new Set())}
+        onShare={bulk.share}
+        onFavorite={bulk.favorite}
+        onDownload={bulk.download}
+        onCreateSet={bulk.createSet}
+        onSetLimit={() => notify(`You can keep up to ${MAX_SETS} sets — delete one to make another`)}
+        onExit={exitSelect}
+      />
+      <Toaster raised={selecting} />
     </div>
   )
 }
