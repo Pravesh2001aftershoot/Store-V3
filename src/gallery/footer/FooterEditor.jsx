@@ -1,7 +1,8 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Check, Plus, Trash } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import EditorPane from '../editor/EditorPane'
+import FitThumb from '../editor/FitThumb'
 import { Label, Section, Segmented, Swatches, Switch, TextField } from '../cover/controls'
 import { LIMITS, PLATFORMS, SOCIAL_STYLE, SURFACES, TEMPLATES, isEmail, platform, socialUrl, supports } from './config'
 import Footer from './Footer'
@@ -78,29 +79,6 @@ function TemplatesTab({ footer, gallery, photo }) {
             </div>
           )
         })}
-      </div>
-    </div>
-  )
-}
-
-/** Renders a footer at desktop width and scales it to the card, at its true height. */
-const VW = 1280
-function FitThumb({ children }) {
-  const box = useRef(null)
-  const inner = useRef(null)
-  const [size, setSize] = useState({ scale: 0.27, h: 600 })
-  useLayoutEffect(() => {
-    const ro = new ResizeObserver(() => {
-      setSize({ scale: box.current.offsetWidth / VW, h: inner.current.offsetHeight })
-    })
-    ro.observe(box.current)
-    ro.observe(inner.current)
-    return () => ro.disconnect()
-  }, [])
-  return (
-    <div ref={box} inert className="relative overflow-hidden rounded-[10px] bg-surface-2" style={{ height: size.h * size.scale }}>
-      <div ref={inner} className="absolute left-0 top-0 origin-top-left" style={{ width: VW, transform: `scale(${size.scale})` }}>
-        {children}
       </div>
     </div>
   )

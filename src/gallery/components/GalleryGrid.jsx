@@ -3,7 +3,7 @@ import { COLUMNS, GAP, MARGIN } from '../lib/settings'
 import { useBreakpoint, useInfinite } from '../lib/hooks'
 import { justifiedRows, masonry } from '../lib/layout'
 import Photo from './Photo'
-import { Eyebrow } from '../../components/ui'
+import SectionHeader from '../sections/SectionHeader'
 
 /** DOM id of a collection's section heading (used for jumping and scroll-spy). */
 export const sectionId = (name) => `collection-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
@@ -15,8 +15,9 @@ export const sectionId = (name) => `collection-${name.toLowerCase().replace(/[^a
  *  orientation  vertical → masonry columns · horizontal → justified rows
  *  size         small 4 · medium 3 · large 2 per row (desktop; fewer on smaller screens)
  *  spacing      airy · thin · none
+ * `headings` (from `useSectionConfig`) styles each section's heading; `onEditHeading(title)` adds its pencil.
  */
-export default function GalleryGrid({ photos, sections, settings, favorites, onFavorite, hidden, onHide, onOpen, onBuy, selecting = false, selected, onSelect, resetKey, minCount = 0, emptyMessage = 'No photos here yet' }) {
+export default function GalleryGrid({ photos, sections, settings, favorites, onFavorite, hidden, onHide, onOpen, onBuy, selecting = false, selected, onSelect, headings, onEditHeading, resetKey, minCount = 0, emptyMessage = 'No photos here yet' }) {
   const bp = useBreakpoint()
   const columns = COLUMNS[settings.size][bp]
   const gap = GAP[settings.spacing][bp]
@@ -26,7 +27,7 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
   const blocks = useMemo(() => {
     const ranges = sections ?? [{ start: 0, end: photos.length }]
     return ranges
-      .map((r) => ({ ...r, items: photos.slice(r.start, Math.min(r.end, count)) }))
+      .map((r, index) => ({ ...r, index, items: photos.slice(r.start, Math.min(r.end, count)) }))
       .filter((b) => b.items.length > 0)
   }, [photos, sections, count])
 
@@ -52,10 +53,13 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
       {blocks.map((b, i) => (
         <div key={b.title ?? 'all'}>
           {b.title && (
-            <header id={sectionId(b.title)} className="px-1 py-5 md:py-16">
-              <Eyebrow>{b.end - b.start} photos</Eyebrow>
-              <h2 className="mt-4 text-48-sb text-type-0 md:text-72-sb">{b.title}</h2>
-            </header>
+            <SectionHeader
+              id={sectionId(b.title)}
+              style={headings.style}
+              words={headings.words(b.title, b.end - b.start)}
+              index={b.index}
+              onEdit={onEditHeading && (() => onEditHeading(b.title))}
+            />
           )}
           {columns === 1 ? (
             // One per row (large on mobile): each photo spans the full width, height follows its aspect ratio.

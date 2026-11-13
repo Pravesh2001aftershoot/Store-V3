@@ -1,18 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useBreakpoint } from '../lib/hooks'
-import { defaultContent, useCoverConfig } from './config'
 import { useCoverPhoto } from './photo'
 import Cover from './Cover'
 import CoverEditor, { PANE_W, PEEK_H, SHEET_H } from './CoverEditor'
 
 /**
- * The gallery cover plus its editor. Owns the cover settings and whether the editor is open.
+ * The gallery cover plus its editor. Owns whether the editor is open; the settings (`cover`, from
+ * `useCoverConfig`) live with the page, since collection headings can match the cover's style.
  * While editing, the cover's frame shrinks to the space beside (tablet/desktop) or above (phone)
  * the editor, so what you see is the cover at that size, live.
  */
-export default function CoverSection({ gallery, photo: defaultPhoto, photos, collections, total, onEnter }) {
-  const defaults = useMemo(() => defaultContent(gallery, total), [gallery, total])
-  const cover = useCoverConfig(defaults)
+export default function CoverSection({ gallery, cover, photo: defaultPhoto, photos, collections, onEnter }) {
   const media = useCoverPhoto(defaultPhoto, photos)
   const photo = media.photo
   const [editing, setEditing] = useState(false)

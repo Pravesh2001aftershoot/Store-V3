@@ -138,7 +138,7 @@ function LayoutMenu({ settings, onChange }) {
         )}
       >
         <SlidersHorizontal size={18} />
-        <span className="hidden md:inline">Layout</span>
+        <span className="hidden lg:inline">Layout</span>
       </button>
       {isPhone ? (
         <LayoutSheet open={open} onClose={() => setOpen(false)} settings={settings} onChange={onChange} />
@@ -302,7 +302,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
             )}
           >
             <EyeSlash size={18} weight={showHidden ? 'bold' : 'regular'} />
-            <span className="hidden md:inline">Hidden</span>
+            <span className="hidden lg:inline">Hidden</span>
             <span className="tabular-nums">{hiddenCount}</span>
           </button>
           <button
@@ -316,18 +316,18 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
             )}
           >
             <Heart size={18} weight={showFavs || favCount ? 'fill' : 'regular'} className={showFavs || favCount ? 'text-destructive' : undefined} />
-            <span className="hidden md:inline">Favourites</span>
+            <span className="hidden lg:inline">Favourites</span>
             <span className="tabular-nums">{favCount}</span>
           </button>
           <Link
             to="/store"
             aria-label="Shop prints"
             title="Shop prints"
-            // Phones: an icon-only circle, so the top bar keeps room for the client's name.
-            className="ml-1 flex h-10 w-10 items-center justify-center gap-2 rounded-full bg-primary text-14-m text-primary-foreground transition hover:bg-[#2c2c2c] sm:w-auto sm:justify-start sm:pl-3.5 sm:pr-4"
+            // Below desktop: an icon-only circle, so the top bar keeps room for the name and collection tabs.
+            className="ml-1 flex h-10 w-10 items-center justify-center gap-2 rounded-full bg-primary text-14-m text-primary-foreground transition hover:bg-[#2c2c2c] lg:w-auto lg:justify-start lg:pl-3.5 lg:pr-4"
           >
             <Handbag size={18} />
-            <span className="hidden sm:inline">Shop prints</span>
+            <span className="hidden lg:inline">Shop prints</span>
           </Link>
         </div>
       </div>

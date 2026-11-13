@@ -3,6 +3,9 @@ import { coverPhoto, gallery, photos as allPhotos } from './data/photos'
 import { useGridSettings } from './lib/settings'
 import { useMeasuredPhotos } from './lib/hooks'
 import CoverSection from './cover/CoverSection'
+import { defaultContent as coverDefaults, useCoverConfig } from './cover/config'
+import { useSectionConfig } from './sections/config'
+import SectionEditor from './sections/SectionEditor'
 import NavBar from './components/NavBar'
 import GalleryGrid, { sectionId } from './components/GalleryGrid'
 import Lightbox from './components/Lightbox'
@@ -43,6 +46,12 @@ export default function GalleryPage() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
 
   const photos = useMeasuredPhotos(allPhotos)
+
+  // Cover settings live here (not in CoverSection) so collection headings can match the cover's style.
+  const coverText = useMemo(() => coverDefaults(gallery, photos.length), [photos.length])
+  const cover = useCoverConfig(coverText)
+  const headings = useSectionConfig(cover.config)
+  const [editingHeading, setEditingHeading] = useState(null) // collection whose heading is being edited
 
   // All photos in collection (tab order) — the cover and footer use the full set, hidden or not.
   const everything = useMemo(() => COLLECTIONS.flatMap((title) => photos.filter((p) => p.collection === title)), [photos])
@@ -241,7 +250,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CoverSection gallery={gallery} photo={coverPhoto} photos={everything} collections={tabs} total={photos.length} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+      <CoverSection gallery={gallery} cover={cover} photo={coverPhoto} photos={everything} collections={tabs} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <div ref={gridRef}>
         <NavBar
@@ -277,6 +286,8 @@ export default function GalleryPage() {
           selecting={selecting}
           selected={selected}
           onSelect={select}
+          headings={headings}
+          onEditHeading={selecting ? undefined : setEditingHeading}
           resetKey={view}
           minCount={inBucket ? 0 : minCount}
           emptyMessage={
@@ -300,6 +311,16 @@ export default function GalleryPage() {
         hidden={hidden}
         onHide={toggleHide}
         onBuy={buy}
+      />
+      <SectionEditor
+        open={editingHeading != null}
+        onClose={() => setEditingHeading(null)}
+        collection={editingHeading ?? sections[0]?.title}
+        onCollection={setEditingHeading}
+        sections={sections}
+        headings={headings}
+        photos={ordered}
+        cover={cover.config}
       />
       <QuickBuy photo={buying} onClose={() => setBuying(null)} />
       <SelectionBar
