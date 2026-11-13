@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { ArrowDown, Handbag } from '@phosphor-icons/react'
+import { Handbag } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -69,7 +69,7 @@ export default function Cover({ gallery, photo, total, onEnter }) {
             className="mt-8 flex flex-wrap justify-center gap-3"
           >
             <Button variant="light" size="lg" onClick={onEnter}>
-              View gallery <ArrowDown size={16} weight="bold" />
+              View gallery
             </Button>
             <Button
               as={Link}

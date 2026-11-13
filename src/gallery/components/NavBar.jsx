@@ -231,7 +231,13 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
       <div className="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-4 md:gap-6 md:px-8">
         <div className={cn('min-w-0', isPhone ? 'flex-1' : 'max-w-[40%] shrink-0 md:max-w-[240px]')}>
           <p className="truncate text-16-sb text-type-0">{gallery.client}</p>
-          <p className="truncate text-12-r text-type-2">{gallery.photographer}</p>
+          <Link
+            to="/portfolio"
+            title={`View ${gallery.photographer}’s portfolio`}
+            className="block truncate text-12-r text-type-2 underline-offset-2 transition hover:text-type-0 hover:underline"
+          >
+            {gallery.photographer}
+          </Link>
         </div>
 
         {!isPhone && <span className="h-6 w-px shrink-0 bg-border" />}

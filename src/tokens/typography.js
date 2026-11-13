@@ -45,6 +45,7 @@ const upper = { textTransform: 'uppercase' }
 export const typography = {
   // ── Display (proposed) — marketing heroes only. Tight tracking keeps Geist
   //    from looking loose at very large sizes.
+  '96-SB': t('display', 96, 'SB', 92, -4, proposed), // portfolio hero
   '72-SB': t('display', 72, 'SB', 72, -3, proposed),
   '60-SB': t('display', 60, 'SB', 64, -3, proposed),
 

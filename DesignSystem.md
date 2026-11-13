@@ -75,7 +75,8 @@ Sizes and line heights are in pixels. "Proposed" tokens were added in code to fi
 
 | Category | Token | Size / line height | Notes |
 |---|---|---|---|
-| Display | `72-SB` | 72 / 72, -3% tracking | Proposed. Marketing heroes only. |
+| Display | `96-SB` | 96 / 92, -4% tracking | Proposed. Portfolio hero only. |
+| | `72-SB` | 72 / 72, -3% tracking | Proposed. Marketing heroes only. |
 | | `60-SB` | 60 / 64, -3% tracking | Proposed |
 | Header | `48-SB` | 48 / 52 | Page titles (desktop) |
 | | `36-SB` | 36 / 40 | Page titles (mobile), section heads |
