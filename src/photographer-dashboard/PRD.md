@@ -6,7 +6,7 @@ The client-facing side of Store V3 (the gallery, portfolio and print store) is b
 
 | Section | The photographer can… |
 |---|---|
-| **Galleries** | Create a gallery per client. In each one: add photos, sort them into collections, set the order and the cover, design the cover, grid, collection headings and footer against a live preview, and share the link. Each gallery picks the store catalog its clients buy from. |
+| **Galleries** | Create a gallery per client. In each one: add photos, sort them into collections, set the order and the cover, design the cover, grid, collection headings and footer against a live preview, share the link, and see who visited and what they downloaded, shared, favourited, commented on and bought. Each gallery picks the store catalog its clients buy from. |
 | **Portfolio** | Edit their profile, portrait, intro, which galleries and categories appear, and the contact section. |
 | **Store** | Create catalogs (for example Weddings, Newborns). In each one: show or hide products and packages, put them in order, rename them, set sizes, prices, option add-ons and package discounts, and build their own packages. |
 
@@ -24,7 +24,8 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 - Accounts, sign-in, or a client list. A gallery's "client" is just a name on the gallery.
 - A server. Settings live in this browser (see [Architecture.md](Architecture.md)).
-- Sending the gallery (email, client list), analytics, orders and fulfilment.
+- Sending the gallery (email, client list), order management and fulfilment.
+- Real event tracking. Gallery analytics show sample data (see Gallery: Analytics).
 - New categories, and products that aren't made from the client's photos (every product takes at least one gallery photo). Photographers can create products and packages, but only in the delivered categories.
 
 ## Users
@@ -70,6 +71,15 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R15. The client link, with Copy link and Open.
 - R16. A "Before you send" checklist (photos, cover photo, title, footer), each item linking to where it's fixed.
 - R17. Links on to the Portfolio and to this gallery's store catalog.
+
+### Gallery: Analytics (step 4)
+
+- R17a. Totals for the gallery: **Visitors** (with how many gave an email and how many are anonymous), **Downloads** (single photos and full gallery), **Revenue** (orders and average order) and **Favourites** (with shares and comments).
+- R17b. **How people download:** a bar splitting downloads into single photos and full gallery, with each side's download count and how many people did it.
+- R17c. **People:** everyone who opened the gallery with an email, with their downloads, favourites, shares, comments, amount spent and when they were last active. The client is tagged "Client". Search by email or name; sort by Most recent, Most downloads, Most favourites, Most shares or Highest spend.
+- R17d. Opening a person shows their activity by kind, down to the photo: **Downloads** (full gallery downloads with their size, then each photo), **Favourites**, **Shares** (with the channel: Link, Email, WhatsApp, Facebook), **Comments** (the text and the photo) and **Orders** (each item with its photo, size, quantity and price). Copy email and Email (mailto) are in the footer.
+- R17e. **Export CSV** downloads the people list as shown (one row per person).
+- R17f. The prototype shows sample activity, generated per gallery and stable between visits; the page says so. A gallery with no photos shows "No activity yet".
 
 ### Portfolio
 
@@ -119,4 +129,6 @@ Every change saves as it's made and shows on the client pages straight away. The
 - **Per-gallery or account-wide?** Now explicit: the portfolio, footer contact details and catalogs are photographer-wide; cover, headings, grid, photos and the choice of catalog are per gallery. Open: should a gallery be able to override a single price without a whole catalog?
 - **Projects vs galleries.** A gallery is one client delivery. Some photographers will want a project (a wedding) holding several galleries (engagement, wedding day). Not modelled yet.
 - **Catalog per client in a gallery?** Today one catalog per gallery. Schools and events may need different catalogs for different viewers of one gallery.
+- **Analytics: what counts as a visitor?** Today a person is an email. Should guests without an email be tracked per device, and should the client see who else viewed their gallery?
+- **Analytics date range.** All time only for now. Photographers may want last 7 / 30 days, or activity since the link was sent.
 - **Should clients still see edit pencils?** The gallery's own pencils remain for now, but are hidden in the dashboard preview. Once there's a photographer login they should only show to the photographer.

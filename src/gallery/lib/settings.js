@@ -70,7 +70,8 @@ export function useGridDefaults() {
  */
 export function useGridSettings() {
   const [params, setParams] = useSearchParams()
-  const [base] = gridDefaults(useGalleryId()).use()
+  const defaults = gridDefaults(useGalleryId())
+  const [base] = defaults.use()
   const settings = {
     spacing: valid(SPACING, params.get('spacing'), base.spacing),
     orientation: valid(ORIENTATION, params.get('orientation'), base.orientation),
@@ -81,13 +82,13 @@ export function useGridSettings() {
       setParams(
         (p) => {
           const next = new URLSearchParams(p)
-          if (value === gridDefaults.get()[key]) next.delete(key)
+          if (value === defaults.get()[key]) next.delete(key)
           else next.set(key, value)
           return next
         },
         { replace: true, preventScrollReset: true }
       ),
-    [setParams]
+    [setParams, defaults]
   )
   return [settings, set]
 }

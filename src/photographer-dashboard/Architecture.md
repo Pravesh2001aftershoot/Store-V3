@@ -23,7 +23,9 @@ src/photographer-dashboard/
 │   ├── PhotosStep.jsx         Upload, collections, selection, drag to reorder or move, selection bar
 │   ├── DesignStep.jsx         Preview + right column of part tabs over the open editor (chips + sheets when narrow)
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
-│   └── ShareStep.jsx          Link, checklist, next steps
+│   ├── ShareStep.jsx          Link, checklist, next steps
+│   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
+│   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
 ├── portfolio/
 │   ├── PortfolioTab.jsx       /portfolio preview with the editor docked on its right
 │   └── PortfolioEditor.jsx    Profile, Intro, Work, Contact tabs
@@ -59,7 +61,7 @@ Settings modules (outside this folder, owned by their module):
 |---|---|
 | `/dashboard` | Redirects to `/dashboard/galleries` |
 | `/dashboard/galleries` | `GalleriesPage` |
-| `/dashboard/galleries/:galleryId/:step?` | `GalleryTab`; `step` is `photos` (default), `design` or `share`. An unknown gallery redirects to the list, an unknown step to Photos. |
+| `/dashboard/galleries/:galleryId/:step?` | `GalleryTab`; `step` is `photos` (default), `design`, `share` or `analytics`. An unknown gallery redirects to the list, an unknown step to Photos. |
 | `/dashboard/portfolio` | `PortfolioTab` |
 | `/dashboard/store` | `CatalogsPage` |
 | `/dashboard/store/:catalogId` | `StoreTab`; an unknown catalog redirects to the list |
@@ -136,6 +138,14 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 
 `CoverEditor`, `FooterEditor` and `SectionEditor` accept `inline` and pass it through. With `inline`, `SectionEditor` drops its own preview stage and its scroll lock, because the dashboard's iframe is the preview. When not docked (under 960px), the dashboard passes `phone` to the panes so they open as bottom sheets. `SectionEditor` decides that itself, keeping its own stage.
 
+### Analytics (`analytics.js`, `AnalyticsStep.jsx`)
+
+There's no tracking backend, so `buildAnalytics(galleryId, client, photos)` generates sample activity with a seeded PRNG (mulberry32 over the gallery id). The same gallery always shows the same people; every event points at a photo in `ws.photos`, so thumbnails are real. It's recomputed when the photo ids change and nothing is saved (no storage key). A gallery with no photos returns `null` (empty state).
+
+Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name, isClient, visits, firstVisit, lastActive, downloads: [{ photoId, at }], fullDownloads: [{ at, size }], shares: [{ photoId, at, via }], favourites: [{ photoId, at }], comments: [{ photoId, at, text }], orders: [{ id, at, items: [{ name, size, qty, price, photoId }], total }], spent }` (dates are ms timestamps). The first person is the gallery's client (`isClient`), always the most active. `totals` has `visitors` (people + anonymous), `identified`, `downloads`, `singleDownloads`, `fullDownloads`, `singleDownloaders`, `fullDownloaders`, `revenue`, `orders`, `favourites`, `shares`, `comments`. Order items use the bundled catalog's base size prices (`src/data/catalog.js`), not the gallery's catalog overrides.
+
+`toCSV(people)` builds the export (one row per person, in the list's current filter and sort); `AnalyticsStep` downloads it as `<gallery id>-analytics.csv`.
+
 ### Grid defaults
 
 `useGridSettings()` (client) now starts from `useGridDefaults()`, the photographer's choice, and the URL only carries values that differ from it. The Layout menu and shared links behave as before.
@@ -174,10 +184,12 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | `apply()` mutating the catalog in place | Catalog served already resolved for the client; the dashboard edits a photographer catalog resource |
 | Gallery registry in localStorage, slug ids | Gallery records with server ids, a share token per client link, and a `catalog_id` |
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
+| `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 
 ## Known gaps
 
+- **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
 - **Per device.** All settings are local to the browser. Opening the gallery on another device shows the defaults.
 - **No drafts.** Every edit is live immediately (see the PRD's open questions).
 - **No touch reorder for photos.** HTML5 drag-and-drop doesn't fire on touch screens, so phones can move photos between collections but can't reorder them. Products, packages and portfolio categories do reorder on touch.

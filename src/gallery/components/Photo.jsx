@@ -9,8 +9,12 @@ import { cn } from '../../lib/utils'
  * parent can read Shift for range selection) instead of opening the loupe, and the hover actions step aside.
  * On touch screens a long press selects the photo, which is how multi-select starts there.
  */
+// Images that have already loaded once. Changing the grid's orientation or size moves every tile to a
+// new column or row, which remounts it; without this each one would blank and fade in again.
+const seen = new Set()
+
 export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onOpen, onBuy, selecting, selected, onSelect, style, className }) {
-  const [loaded, setLoaded] = useState(false)
+  const [loaded, setLoaded] = useState(() => seen.has(photo.thumb))
   const press = useLongPress(onSelect)
   return (
     <figure
@@ -30,7 +34,7 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
           loading="lazy"
           decoding="async"
           draggable={false}
-          onLoad={() => setLoaded(true)}
+          onLoad={() => { seen.add(photo.thumb); setLoaded(true) }}
           className={cn(
             'h-full w-full select-none object-cover [-webkit-touch-callout:none] transition-[opacity,transform,border-radius] duration-500 ease-out',
             !selecting && 'group-hover:scale-[1.02]',

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowSquareOut, CaretRight, GearSix, Images, PaintBrush, ShareNetwork } from '@phosphor-icons/react'
+import { ArrowSquareOut, CaretRight, ChartBar, GearSix, Images, PaintBrush, ShareNetwork } from '@phosphor-icons/react'
 import { GalleryProvider, galleryPath } from '../../data/galleries'
 import { useGalleryData } from '../../gallery/lib/useGalleryData'
 import GalleryForm from '../galleries/GalleryForm'
@@ -13,15 +13,17 @@ import { useGalleryWorkspace } from './useGalleryWorkspace'
 import PhotosStep from './PhotosStep'
 import DesignStep from './DesignStep'
 import ShareStep from './ShareStep'
+import AnalyticsStep from './AnalyticsStep'
 
 export const STEPS = [
   { id: 'photos', label: 'Photos', icon: Images, hint: 'Add and arrange' },
   { id: 'design', label: 'Design', icon: PaintBrush, hint: 'Cover, grid, headings, footer' },
   { id: 'share', label: 'Share', icon: ShareNetwork, hint: 'Send to your client' },
+  { id: 'analytics', label: 'Analytics', icon: ChartBar, hint: 'Visitors, downloads, revenue' },
 ]
 
 /**
- * Gallery editor: a three-step flow over one client gallery — Photos → Design → Share.
+ * Gallery editor: one client gallery in four tabs — Photos, Design, Share and Analytics.
  * The gallery and step are in the URL (/dashboard/galleries/<id>/<step>), so each one can be
  * linked to and Back works. Everything inside reads that gallery's settings (GalleryProvider).
  */
@@ -55,6 +57,7 @@ function Workspace({ data, step }) {
         {step === 'photos' && <PhotosStep ws={ws} />}
         {design && <DesignStep ws={ws} title={<Heading ws={ws} />} actions={<SettingsButton onClick={openSettings} small />} />}
         {step === 'share' && <ShareStep ws={ws} />}
+        {step === 'analytics' && <AnalyticsStep ws={ws} />}
       </div>
       <StepRail step={step} ws={ws} top={top} />
     </div>
@@ -94,7 +97,7 @@ const SettingsButton = ({ onClick, small }) => (
 )
 
 /**
- * Icon-only tab switcher docked on the right edge: Photos, Design, Share stacked vertically.
+ * Icon-only tab switcher docked on the right edge: Photos, Design, Share, Analytics stacked vertically.
  * Sticks under the top bar while the page scrolls. Hovering or focusing a tab shows its name
  * and hint in a tooltip to the left (not on phones).
  */

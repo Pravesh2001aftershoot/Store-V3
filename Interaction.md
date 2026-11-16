@@ -121,7 +121,7 @@ Esc and backdrop tap also close the sheet. Body scroll is locked while it's open
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
-| Image | Finishes loading | Fades in over a grey placeholder | `opacity 0 → 1`, `duration-500` | Tailwind |
+| Image | Finishes loading | Fades in over a grey placeholder, the first time only. A photo that has already loaded shows at once when its tile is rebuilt (changing Orientation or Thumbnail size), so the grid doesn't blank and fade back in | `opacity 0 → 1`, `duration-500` | Tailwind |
 
 ### `CropEditor`: [src/components/CropEditor.jsx](src/components/CropEditor.jsx)
 
@@ -257,7 +257,7 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Delete set / Clear all / Unhide all | Click | A browser `confirm()` dialog; on OK the action runs and the gallery returns to all photos | n/a | Browser native |
 | Layout popover (tablet and desktop) | Open / close | Drops down from the top right | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it. `origin-top-right` | framer-motion |
 | Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
-| Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides to the selected option | `layoutId="seg-{label}"`, `0.35s`, `ease` | framer-motion |
+| Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides sideways to the selected option. One pill behind the buttons, moved by `translateX(index × (100% + 4px))`, not a `layoutId`: the grid re-lays out and the page height (and scroll) changes at the same moment, which a shared-layout animation would read as vertical movement, and a CSS transform keeps running while the grid re-renders | CSS `transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1)` | CSS |
 | Photographer name | Hover / click | Text `type-2 → type-0` and an underline appears. Click opens [`/portfolio`](#portfolio-portfolio-srcportfolioportfoliopagejsx) | Tailwind default | Tailwind |
 
 #### Phone dock

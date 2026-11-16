@@ -14,7 +14,19 @@ function Segmented({ label, options, value, onChange }) {
   return (
     <div>
       <p className="mb-2 text-11-sb uppercase text-type-2">{label}</p>
-      <div className="grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+      <div className="relative grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+        {/* One pill that slides sideways with a CSS transform. It runs on the compositor, so the grid
+            re-laying out underneath can't stall it, and it never moves vertically when the page
+            height (and scroll) changes — which a shared-layout animation would pick up. */}
+        <span
+          aria-hidden
+          className="absolute bottom-1 left-1 top-1 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]"
+          style={{
+            width: `calc((100% - 8px - ${(options.length - 1) * 4}px) / ${options.length})`,
+            transform: `translateX(calc(${Math.max(0, options.findIndex((o) => o.id === value))} * (100% + 4px)))`,
+            transition: `transform 350ms cubic-bezier(${ease.join(',')})`,
+          }}
+        />
         {options.map((o) => (
           <button
             key={o.id}
@@ -26,14 +38,7 @@ function Segmented({ label, options, value, onChange }) {
               value === o.id && 'text-type-0'
             )}
           >
-            {value === o.id && (
-              <motion.span
-                layoutId={`seg-${label}`}
-                className="absolute inset-0 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]"
-                transition={{ duration: 0.35, ease }}
-              />
-            )}
-            <span className="relative">{o.label}</span>
+            {o.label}
           </button>
         ))}
       </div>

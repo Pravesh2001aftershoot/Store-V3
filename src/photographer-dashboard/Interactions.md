@@ -33,8 +33,8 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 
 ## Gallery: step rail
 
-- A vertical, icon-only tab switcher on the right edge: **Photos**, **Design**, **Share**. Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
-- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Send to your client") to the left; on phones the icons carry `aria-label`s only.
+- A vertical, icon-only tab switcher on the right edge: **Photos**, **Design**, **Share**, **Analytics**. Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
+- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Send to your client", "Visitors, downloads, revenue") to the left; on phones the icons carry `aria-label`s only.
 - Browser Back and Forward move between steps, since the step is in the URL.
 
 ## Gallery: Photos
@@ -110,6 +110,15 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - Each "Before you send" row links to the step that fixes it. A grey dot means "worth a look", not an error.
 - The link is `/g/<id>` (the gallery's own link).
 - The Portfolio card opens the Portfolio; the Print store card opens this gallery's catalog.
+
+## Gallery: Analytics
+
+- **Export CSV** downloads `<gallery id>-analytics.csv` with the people currently listed (search and sort apply) and toasts "Exported N people".
+- The search field ("Search people") filters by email or name as you type; ✕ clears it. No match shows "No one matches “<text>”" with **Clear search**.
+- **Sort** (Most recent, Most downloads, Most favourites, Most shares, Highest spend) is a native select on tablet and desktop and a bottom sheet on phones.
+- From 1024px people are a table; below that each person is a card with the counts under the name. A dash means none. Clicking a row or card opens the person.
+- **Person dialog** (centred card; bottom sheet on phones): the email as title, then name, visits, first visit, last active and amount spent. Chips switch between Downloads, Favourites, Shares, Comments and Orders, each with its count; it opens on the first kind that has activity. Chips wrap on tablet and desktop and scroll sideways on phones. An empty kind shows "No downloads" / "No favourites" / "No shares" / "No comments" / "No orders". **Copy email** toasts "Email copied" (or "Couldn’t copy the email"); **Email** opens a mail draft. ✕, Esc or the overlay closes it.
+- A gallery with no photos shows "No activity yet" with **Add photos**, which opens the Photos step.
 
 ## Portfolio
 
