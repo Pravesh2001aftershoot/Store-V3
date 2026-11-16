@@ -42,16 +42,18 @@ function Workspace({ data, step }) {
   const ws = { ...useGalleryWorkspace(data), base: `/dashboard/galleries/${data.meta.id}` }
   const [settings, setSettings] = useState(false)
   const design = step === 'design'
+  const openSettings = () => setSettings(true)
 
   return (
     // Content on the left, the step rail docked on the right. Design is a workspace: it fills
     // the screen instead of scrolling.
     <div className="flex" style={design ? { height: `calc(100svh - ${top}px)` } : undefined}>
       <div className={cn('min-w-0 flex-1', design && 'flex flex-col')}>
-        <Header ws={ws} onSettings={() => setSettings(true)} />
+        {/* Design merges the header into its preview toolbar, where Open already does View's job. */}
+        {!design && <Header ws={ws} onSettings={openSettings} />}
         <GalleryForm open={settings} onOpenChange={setSettings} gallery={data.meta} />
         {step === 'photos' && <PhotosStep ws={ws} />}
-        {design && <DesignStep ws={ws} />}
+        {design && <DesignStep ws={ws} title={<Heading ws={ws} />} actions={<SettingsButton onClick={openSettings} small />} />}
         {step === 'share' && <ShareStep ws={ws} />}
       </div>
       <StepRail step={step} ws={ws} top={top} />
@@ -59,26 +61,37 @@ function Workspace({ data, step }) {
   )
 }
 
-/** Breadcrumb + gallery name, then Settings and View. */
+/** Photos and Share: breadcrumb + gallery name, then Settings and View. */
 function Header({ ws, onSettings }) {
   return (
     <div className="shrink-0 border-b border-border bg-surface-1">
       <div className="mx-auto flex max-w-[1800px] items-center gap-2 px-4 py-3 md:px-6">
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1 text-12-r text-type-3">
-            <Link to="/dashboard/galleries" className="transition hover:text-type-0">Galleries</Link>
-            <CaretRight size={10} />
-            <span className="truncate">{ws.gallery.client}</span>
-          </p>
-          <p className="truncate text-14-m text-type-0">
-            {ws.gallery.title} <span className="text-type-3">· {ws.photos.length} photos</span>
-          </p>
-        </div>
+        <div className="min-w-0 flex-1"><Heading ws={ws} /></div>
         <span className="flex shrink-0 gap-1"><Actions ws={ws} onSettings={onSettings} /></span>
       </div>
     </div>
   )
 }
+
+/** Breadcrumb (Galleries › client) over the gallery title and photo count. */
+function Heading({ ws }) {
+  return (
+    <>
+      <p className="flex items-center gap-1 text-12-r text-type-3">
+        <Link to="/dashboard/galleries" className="transition hover:text-type-0">Galleries</Link>
+        <CaretRight size={10} />
+        <span className="truncate">{ws.gallery.client}</span>
+      </p>
+      <p className="truncate text-14-m text-type-0">
+        {ws.gallery.title} <span className="text-type-3">· {ws.photos.length} photos</span>
+      </p>
+    </>
+  )
+}
+
+const SettingsButton = ({ onClick, small }) => (
+  <IconButton small={small} label="Gallery settings" onClick={onClick}><GearSix size={small ? 16 : 18} /></IconButton>
+)
 
 /**
  * Icon-only tab switcher docked on the right edge: Photos, Design, Share stacked vertically.
@@ -125,7 +138,7 @@ function StepRail({ step, ws, top }) {
 function Actions({ ws, onSettings }) {
   return (
     <>
-      <IconButton label="Gallery settings" onClick={onSettings}><GearSix size={18} /></IconButton>
+      <SettingsButton onClick={onSettings} />
       <a
         href={galleryPath(ws.gallery.id)}
         target="_blank"

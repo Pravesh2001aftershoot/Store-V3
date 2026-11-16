@@ -25,9 +25,10 @@ const label = (list, id) => list.find((o) => o.id === id)?.label
  * Wide screens: a column on the right of the preview with the four parts as underline tabs and the
  * picked part's editor docked under them (EditorPane `inline`, always open, Cover first). Narrower screens: a full-width preview with the parts as chips above it;
  * picking one opens its editor as the gallery's bottom sheet. Either way the preview scrolls to the
- * part being edited and updates as you change it.
+ * part being edited and updates as you change it. The gallery header (`title`, `actions`) lives in
+ * the preview's toolbar here, so there's one bar instead of two.
  */
-export default function DesignStep({ ws }) {
+export default function DesignStep({ ws, title, actions }) {
   const docked = useDocked()
   const phone = usePhone()
   const [picked, setEditing] = useState(null) // 'cover' | 'grid' | 'headings' | 'footer'
@@ -88,7 +89,7 @@ export default function DesignStep({ ws }) {
   if (docked) {
     return (
       <div className="flex min-h-0 flex-1">
-        <PreviewFrame src={galleryPath(ws.gallery.id)} target={target} label="Client gallery" className="min-w-0 flex-1" />
+        <PreviewFrame src={galleryPath(ws.gallery.id)} target={target} label="Client gallery" heading={title} actions={actions} className="min-w-0 flex-1" />
         <aside className="flex w-[380px] shrink-0 flex-col border-l border-border bg-surface-1 xl:w-[400px]">
           <PartTabs parts={parts} active={editing} onPick={setEditing} />
           <div className="flex min-h-0 flex-1 flex-col">{editors}</div>
@@ -113,7 +114,7 @@ export default function DesignStep({ ws }) {
           </button>
         ))}
       </div>
-      <PreviewFrame src={galleryPath(ws.gallery.id)} target={target} fit={phone} label="Client gallery" className="min-h-0 flex-1" />
+      <PreviewFrame src={galleryPath(ws.gallery.id)} target={target} fit={phone} label="Client gallery" heading={title} actions={actions} className="min-h-0 flex-1" />
       {editors}
     </div>
   )

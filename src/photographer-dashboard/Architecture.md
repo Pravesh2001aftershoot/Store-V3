@@ -8,7 +8,7 @@ The dashboard is an admin UI over settings that the client modules already own. 
 src/photographer-dashboard/
 ├── PhotographerDashboard.jsx  Shell: sidebar (full / rail / phone drawer), phone top bar, nested routes, Toaster
 ├── components/
-│   ├── PreviewFrame.jsx       Live preview: client page in an iframe, device widths, scaled to fit
+│   ├── PreviewFrame.jsx       Live preview: client page in an iframe, device widths, scaled to fit; optional toolbar `heading` + `actions`
 │   ├── Modal.jsx              Short-form dialog (centred card; bottom sheet on phones)
 │   ├── InlineName.jsx         Click-to-rename title
 │   └── ui.jsx                 PageHeader, Stat, Chip, Tag, Empty, IconButton, Menu, PriceInput, Select
@@ -18,7 +18,7 @@ src/photographer-dashboard/
 │   ├── GalleryForm.jsx        New gallery / gallery settings (+ delete)
 │   └── GalleryCover.jsx       WithGallery: reads one gallery's cover + count inside its provider
 ├── gallery/
-│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View), the step, right-hand step rail
+│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View; on Design passed into the preview toolbar instead), the step, right-hand step rail
 │   ├── useGalleryWorkspace.js Wires the library, cover, cover photo, headings, footer and grid
 │   ├── PhotosStep.jsx         Upload, collections, selection, drag to reorder or move, selection bar
 │   ├── DesignStep.jsx         Preview + right column of part tabs over the open editor (chips + sheets when narrow)

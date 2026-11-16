@@ -27,6 +27,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 
 ### Inside a gallery
 - The header shows **Galleries › <client>** (the first part links back), the title and photo count, then ⚙ and **View** on the right. The steps are in the rail on the right edge.
+- On **Design** the header is part of the preview's toolbar: breadcrumb and title on the left, then the device switch, Reload, Open and ⚙. There is no View button there; **Open** does the same thing.
 - ⚙ opens **Gallery settings**: the same fields as New gallery (no Start with), plus **Delete gallery** (asks first; disabled for the last gallery). Save toasts "Gallery updated". Changing the catalog changes what this gallery's clients can buy straight away.
 - An unknown gallery id in the URL goes back to the list.
 
