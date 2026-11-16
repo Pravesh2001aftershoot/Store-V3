@@ -18,11 +18,13 @@ src/photographer-dashboard/
 │   ├── GalleryForm.jsx        New gallery / gallery settings (+ delete)
 │   └── GalleryCover.jsx       WithGallery: reads one gallery's cover + count inside its provider
 ├── gallery/
-│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View; on Design passed into the preview toolbar instead), the step, right-hand step rail
+│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View; on Design passed into the preview toolbar instead), the step, right-hand step rail (with the Design parts tray when docked)
 │   ├── useGalleryWorkspace.js Wires the library, cover, cover photo, headings, footer and grid
 │   ├── PhotosStep.jsx         Upload, collections, selection, drag to reorder or move, selection bar
-│   ├── DesignStep.jsx         Preview + right column of part tabs over the open editor (chips + sheets when narrow)
+│   ├── DesignStep.jsx         Preview + right column with the open editor (chips + sheets when narrow); `designParts(ws)` for the rail
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
+│   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
+│   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
 │   ├── ShareStep.jsx          Link, checklist, next steps
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
 │   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
@@ -61,7 +63,7 @@ Settings modules (outside this folder, owned by their module):
 |---|---|
 | `/dashboard` | Redirects to `/dashboard/galleries` |
 | `/dashboard/galleries` | `GalleriesPage` |
-| `/dashboard/galleries/:galleryId/:step?` | `GalleryTab`; `step` is `photos` (default), `design`, `share` or `analytics`. An unknown gallery redirects to the list, an unknown step to Photos. |
+| `/dashboard/galleries/:galleryId/:step?` | `GalleryTab`; `step` is `photos` (default), `design`, `settings`, `share` or `analytics`. An unknown gallery redirects to the list, an unknown step to Photos. |
 | `/dashboard/portfolio` | `PortfolioTab` |
 | `/dashboard/store` | `CatalogsPage` |
 | `/dashboard/store/:catalogId` | `StoreTab`; an unknown catalog redirects to the list |
@@ -133,7 +135,7 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 `EditorPane` gained:
 - **`inline`.** It renders in place, filling its parent, instead of as a fixed sliding panel. It still mounts a non-modal Radix `Dialog.Root` so the shared header (`Dialog.Title`, `Dialog.Close`) and Esc-to-close keep working.
 - **`resetLabel`.** For example, "Reset product".
-- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since its part tabs switch editors; `editing` falls back to `'cover'` there.
+- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since the step rail's parts tray switches editors; `editing` falls back to `'cover'` there. The open part is the `part` search param (`cover` | `grid` | `headings` | `footer`, anything else is ignored), read by both `DesignStep` and `StepRail`; `DesignStep` sets it with `replace` and leaves other params alone. Closing a sheet removes it.
 - **No tab bar for a single tab.**
 
 `CoverEditor`, `FooterEditor` and `SectionEditor` accept `inline` and pass it through. With `inline`, `SectionEditor` drops its own preview stage and its scroll lock, because the dashboard's iframe is the preview. When not docked (under 960px), the dashboard passes `phone` to the panes so they open as bottom sheets. `SectionEditor` decides that itself, keeping its own stage.
@@ -145,6 +147,25 @@ There's no tracking backend, so `buildAnalytics(galleryId, client, photos)` gene
 Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name, isClient, visits, firstVisit, lastActive, downloads: [{ photoId, at }], fullDownloads: [{ at, size }], shares: [{ photoId, at, via }], favourites: [{ photoId, at }], comments: [{ photoId, at, text }], orders: [{ id, at, items: [{ name, size, qty, price, photoId }], total }], spent }` (dates are ms timestamps). The first person is the gallery's client (`isClient`), always the most active. `totals` has `visitors` (people + anonymous), `identified`, `downloads`, `singleDownloads`, `fullDownloads`, `singleDownloaders`, `fullDownloaders`, `revenue`, `orders`, `favourites`, `shares`, `comments`. Order items use the bundled catalog's base size prices (`src/data/catalog.js`), not the gallery's catalog overrides.
 
 `toCSV(people)` builds the export (one row per person, in the list's current filter and sort); `AnalyticsStep` downloads it as `<gallery id>-analytics.csv`.
+
+### Settings (`access.js`, `SettingsStep.jsx`)
+
+`useGalleryAccess()` is `forGallery('access', load)`, saved under `galleryKey(id, 'access')` (`store-v3:gallery-access` for the sample). Shape:
+
+```
+{ mode: 'anyone' | 'roles', roles: ['client' | 'guest' | 'vendor'], singleLink, expiry: { all, client, guest, vendor },  // yyyy-mm-dd or ''
+  data: { anyone, client, guest, vendor } }  // one audience each:
+{ collectEmail: { on }, approved: { on, people: [{ id, name, email, phone }] }, pin: { on, value },
+  faceSearch: { on, scope: 'all' | 'own' }, comments, filterByFace, favoriting: { on, limit }, hideImages: { on, bulk },
+  screenshot, downloads: { on, pin: { on, code }, image: { on, sizes: { web, high }, limit }, video: { on } },
+  sharing: { on, image, video }, sets: { on, hidden: [collection title] } }
+```
+
+- `load` merges the stored value over `defaults()` keeping only values of the right type, then `normalize()`s it. Defaults: Anyone, everything off; Client everything on except email collection, password and face scan, on the approved list; Guest the same but collecting email; Vendor like Client.
+- `normalize()` keeps roles in Client, Guest, Vendor order, makes exactly one of `collectEmail` / `approved` true per role, and sets `pin.on` when `pinRequired(s, role)` (roles + `singleLink` + not approved). `filterIncluded(d)` is face scan on with scope `all`.
+- `saveBlocker(s)` returns the first reason Save is disabled, or null. Limits are whole numbers up to `LIMIT_MAX` (99999), `''` meaning no limit.
+- `SettingsStep` keeps a local draft (`structuredClone` + `normalize` on every edit) and only calls the setter on Save. While it has no unsaved changes it follows the saved value (another tab). A `beforeunload` listener warns while it's dirty.
+- Set visibility stores hidden collection titles, so new collections show by default.
 
 ### Grid defaults
 
@@ -185,11 +206,14 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | Gallery registry in localStorage, slug ids | Gallery records with server ids, a share token per client link, and a `catalog_id` |
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
 | `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
+| Gallery settings saved, not enforced | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 
 ## Known gaps
 
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
+- **Gallery settings aren't enforced.** The Settings step saves access and permissions, but the client gallery doesn't read them yet: no sign-in, password, role links or expiry, and favorites, downloads, sharing and set visibility behave as before.
+- **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).
 - **Per device.** All settings are local to the browser. Opening the gallery on another device shows the defaults.
 - **No drafts.** Every edit is live immediately (see the PRD's open questions).
 - **No touch reorder for photos.** HTML5 drag-and-drop doesn't fire on touch screens, so phones can move photos between collections but can't reorder them. Products, packages and portfolio categories do reorder on touch.

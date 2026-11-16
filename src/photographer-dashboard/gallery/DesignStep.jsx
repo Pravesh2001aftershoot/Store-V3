@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Rows, SquaresFour, TextAa } from '@phosphor-icons/react'
+import { useSearchParams } from 'react-router-dom'
+import { Panorama, Rows, SquaresFour, TextAa } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../../gallery/lib/settings'
 import { ALL_TEMPLATES as COVER_TEMPLATES } from '../../gallery/templates/cover/config'
@@ -11,7 +11,6 @@ import SectionEditor from '../../gallery/templates/set-header/SectionEditor'
 import FooterEditor from '../../gallery/templates/footer/FooterEditor'
 import PreviewFrame from '../components/PreviewFrame'
 import { useDocked, usePhone } from '../lib/hooks'
-import { ease } from '../components/ui'
 import { galleryPath } from '../../data/galleries'
 import GridEditor from './GridEditor'
 
@@ -22,8 +21,10 @@ const label = (list, id) => list.find((o) => o.id === id)?.label
  * Step 2 — Design. The gallery's own editors (cover, collection headings, footer) plus the grid,
  * beside a live preview of the client gallery.
  *
- * Wide screens: a column on the right of the preview with the four parts as underline tabs and the
- * picked part's editor docked under them (EditorPane `inline`, always open, Cover first). Narrower screens: a full-width preview with the parts as chips above it;
+ * The part being edited is in the URL (`?part=cover|grid|headings|footer`), so the step rail can
+ * switch it. Wide screens: the four parts sit under the Design icon in the step rail, and the
+ * picked part's editor docks in a column on the right of the preview (EditorPane `inline`, always
+ * open, Cover first). Narrower screens: a full-width preview with the parts as chips above it;
  * picking one opens its editor as the gallery's bottom sheet. Either way the preview scrolls to the
  * part being edited and updates as you change it. The gallery header (`title`, `actions`) lives in
  * the preview's toolbar here, so there's one bar instead of two.
@@ -31,7 +32,14 @@ const label = (list, id) => list.find((o) => o.id === id)?.label
 export default function DesignStep({ ws, title, actions }) {
   const docked = useDocked()
   const phone = usePhone()
-  const [picked, setEditing] = useState(null) // 'cover' | 'grid' | 'headings' | 'footer'
+  const [params, setParams] = useSearchParams()
+  const picked = PART_IDS.includes(params.get('part')) ? params.get('part') : null
+  // Only `part` changes; anything else in the URL stays.
+  const setEditing = (id) => setParams((prev) => {
+    const next = new URLSearchParams(prev)
+    if (id) next.set('part', id); else next.delete('part')
+    return next
+  }, { replace: true })
   // Docked, one editor is always open (Cover to start); as a sheet, none until a part is picked.
   const editing = docked ? picked ?? 'cover' : picked
   const [peek, setPeek] = useState(false)
@@ -43,19 +51,11 @@ export default function DesignStep({ ws, title, actions }) {
   }, [ws.sections, heading])
 
   const { cover, media, headings, footer, grid } = ws
-  const parts = [
-    {
-      id: 'cover', title: 'Cover', detail: `Template: ${name(COVER_TEMPLATES, cover.template)}`,
-      thumb: <img src={media.photo.thumb ?? media.photo.src} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${media.photo.focus.x}% ${media.photo.focus.y}%` }} />,
-    },
-    { id: 'grid', title: 'Grid', detail: `${label(ORIENTATION, grid.orientation)} · ${label(SIZE, grid.size)} · ${label(SPACING, grid.spacing)}`, icon: SquaresFour },
-    { id: 'headings', title: 'Collection headings', tab: 'Headings', detail: `Template: ${name(HEADING_TEMPLATES, headings.state.layout.template)}${headings.edited ? ' · edited' : ''}`, icon: TextAa },
-    { id: 'footer', title: 'Footer', detail: `Template: ${name(FOOTER_TEMPLATES, footer.config.layout.template)}${footer.edited ? ' · edited' : ''}`, icon: Rows },
-  ]
+  const parts = designParts(ws)
 
   const target = { cover: 'cover', grid: 'grid', headings: heading && `section:${heading}`, footer: 'footer' }[editing] ?? 'cover'
   const close = () => setEditing(null)
-  // Docked editors can't be closed: the tabs switch between them.
+  // Docked editors can't be closed: the step rail switches between them.
   const shared = { onClose: docked ? undefined : close, phone: !docked, peek, onPeek: setPeek, inline: docked }
 
   const editors = (
@@ -90,10 +90,7 @@ export default function DesignStep({ ws, title, actions }) {
     return (
       <div className="flex min-h-0 flex-1">
         <PreviewFrame src={galleryPath(ws.gallery.id)} target={target} label="Client gallery" heading={title} actions={actions} className="min-w-0 flex-1" />
-        <aside className="flex w-[380px] shrink-0 flex-col border-l border-border bg-surface-1 xl:w-[400px]">
-          <PartTabs parts={parts} active={editing} onPick={setEditing} />
-          <div className="flex min-h-0 flex-1 flex-col">{editors}</div>
-        </aside>
+        <aside className="flex w-[380px] shrink-0 flex-col border-l border-border bg-surface-1 xl:w-[400px]">{editors}</aside>
       </div>
     )
   }
@@ -120,23 +117,18 @@ export default function DesignStep({ ws, title, actions }) {
   )
 }
 
-/** The four parts as underline tabs: 40px, `12-SB` uppercase, a 2px `type-0` stroke that slides to the active one. */
-function PartTabs({ parts, active, onPick }) {
-  return (
-    <div role="tablist" aria-label="Gallery parts" className="no-scrollbar flex shrink-0 gap-6 overflow-x-auto px-5">
-      {parts.map((p) => (
-        <button
-          key={p.id}
-          role="tab"
-          aria-selected={active === p.id}
-          title={p.detail}
-          onClick={() => onPick(p.id)}
-          className={cn('relative flex h-10 shrink-0 items-center text-12-sb uppercase transition-colors', active === p.id ? 'text-type-0' : 'text-type-2 hover:text-type-0')}
-        >
-          {p.tab ?? p.title}
-          {active === p.id && <motion.span layoutId="design-part-tab" transition={{ duration: 0.3, ease }} className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" />}
-        </button>
-      ))}
-    </div>
-  )
+const PART_IDS = ['cover', 'grid', 'headings', 'footer']
+
+/** The four parts of the Design step, with each one's current setting (`detail`) for tooltips. */
+export function designParts(ws) {
+  const { cover, media, headings, footer, grid } = ws
+  return [
+    {
+      id: 'cover', title: 'Cover', detail: `Template: ${name(COVER_TEMPLATES, cover.template)}`, icon: Panorama,
+      thumb: <img src={media.photo.thumb ?? media.photo.src} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${media.photo.focus.x}% ${media.photo.focus.y}%` }} />,
+    },
+    { id: 'grid', title: 'Grid', detail: `${label(ORIENTATION, grid.orientation)} · ${label(SIZE, grid.size)} · ${label(SPACING, grid.spacing)}`, icon: SquaresFour },
+    { id: 'headings', title: 'Collection headings', detail: `Template: ${name(HEADING_TEMPLATES, headings.state.layout.template)}${headings.edited ? ' · edited' : ''}`, icon: TextAa },
+    { id: 'footer', title: 'Footer', detail: `Template: ${name(FOOTER_TEMPLATES, footer.config.layout.template)}${footer.edited ? ' · edited' : ''}`, icon: Rows },
+  ]
 }

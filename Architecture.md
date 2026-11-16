@@ -142,6 +142,7 @@ This state is local to `GalleryPage` and does not go through the store context.
 - **Cover settings** are owned by `GalleryPage` (`useCoverConfig`, passed to `CoverSection` as `cover`) so collection headings can follow the cover's style. `CoverSection` owns the cover photo (`useCoverPhoto`). Both are persisted to `localStorage['store-v3:gallery-cover']` and `['store-v3:gallery-cover-photo']`.
 - **Collection heading settings** are owned by `GalleryPage` (`useSectionConfig(cover.config)`) and persisted to `localStorage['store-v3:gallery-sections']`. Only edited words are stored, per collection.
 - **Footer settings** are owned by `FooterSection` (`useFooterConfig`) and persisted to `localStorage['store-v3:gallery-footer']`. Only edited text is stored; everything else is derived from the gallery and the portfolio `profile` on each render.
+- **Access and permissions** are edited in the dashboard's Settings step (`src/photographer-dashboard/gallery/access.js`) and persisted to `localStorage['store-v3:gallery-access']`. The client gallery doesn't read them yet. `'access'` is in `GALLERY_SETTINGS`, so deleting a gallery clears it.
 - **Toasts** use a tiny module-level pub/sub (`notify()` / `useToasts()`), so any component can show one without prop drilling.
 
 ### Portfolio state

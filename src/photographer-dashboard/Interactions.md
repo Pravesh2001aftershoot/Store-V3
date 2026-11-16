@@ -33,9 +33,10 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 
 ## Gallery: step rail
 
-- A vertical, icon-only tab switcher on the right edge: **Photos**, **Design**, **Share**, **Analytics**. Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
-- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Send to your client", "Visitors, downloads, revenue") to the left; on phones the icons carry `aria-label`s only.
+- A vertical, icon-only tab switcher on the right edge: **Photos**, **Design**, **Settings**, **Share**, **Analytics**. Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
+- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Access, engagement, privacy", "Send to your client", "Visitors, downloads, revenue") to the left; on phones the icons carry `aria-label`s only.
 - Browser Back and Forward move between steps, since the step is in the URL.
+- On Design, from 960px wide, a tray under the Design icon lists the four parts: **Cover**, **Grid**, **Collection headings** and **Footer**. Clicking one opens its editor in the docked column; the open one is highlighted. Hovering one shows its name and current setting (for example "Template: Full bleed" or "Vertical · Medium · Thin"). The tray opens and closes with the step (0.3s). Below 960px there's no tray; the parts are chips above the preview.
 
 ## Gallery: Photos
 
@@ -47,8 +48,8 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 5. New photos appear at the end of the collection with a "New" tag.
 
 ### Collections
-- The collection tab row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New collection**, and **Removed** (only when something is removed). It scrolls sideways on phones.
-- **New collection** turns into an inline name field. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
+- The collection tab row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New Set**, and **Removed** (only when something is removed). It scrolls sideways on phones.
+- **New Set** turns into an inline name field. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
 - Open a collection, then use **⋯** for **Rename** (inline field, same rules), **Add photos here**, **Move earlier** / **Move later**, or **Delete collection**.
 - **Delete** asks first if the collection has photos ("Its 89 photos move to Golden Hour"), then shows All. It's disabled when only one collection is left.
 
@@ -81,13 +82,14 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 ## Gallery: Design
 
 ### Docked (960px and wider)
-1. The editor column on the right of the preview starts with underline tabs: **Cover**, **Grid**, **Headings** and **Footer**. Hovering a tab shows its current setting (for example "Template: Classic").
-2. One editor is always open under the tabs, Cover to start. Clicking a tab swaps the editor and the preview scrolls to that part:
+1. The four parts are in the step rail's tray under the Design icon (see Step rail). The column on the right of the preview holds only the open editor.
+2. One editor is always open, Cover to start. Clicking a part in the tray swaps the editor and the preview scrolls to that part:
    - Cover: the top of the page.
    - Grid: the grid.
    - Headings: the collection being edited.
    - Footer: the bottom, after loading the whole grid.
-3. Docked editors have no ✕ or **Done**, and Esc does nothing; **Reset all** stays in the footer. Moving between steps is done in the step rail.
+3. Docked editors have no ✕ or **Done**, and Esc does nothing; **Reset all** stays in the footer. Moving between steps and parts is done in the step rail.
+4. The open part is in the URL (`?part=grid`), so it can be linked to and survives a reload. Switching parts replaces the history entry, so Back leaves the step instead of walking through parts.
 
 ### Not docked
 1. Chips for the four parts sit above a full-width preview. On phones the preview renders at the screen's own width with no device switch.
@@ -103,6 +105,31 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - **Device switch:** Desktop (1280), Tablet (820) or Phone (390), scaled to fit. The page's own responsive layout applies.
 - **Reload** reloads the iframe. **Open** opens the page in a new tab.
 - The preview is a real page: it scrolls, and its links and buttons work. Its own edit buttons are hidden.
+
+## Gallery: Settings
+
+### Who can open it
+- **Anyone with the link** / **By role** switch the access type; the hint under it explains the choice.
+- By role: **Client**, **Guest** and **Vendor** chips. ✕ removes a role (disabled at 2, with the tooltip "Role-based access needs at least 2 roles"); a grey **+ Vendor** chip adds it, switches to it and toasts "Vendor role added".
+- **One link for all roles** (checked by default) shows one link; unchecked shows one per role (`…/g/<id>?role=client`). The note under it changes with the choice.
+- Each link: the copy button toasts "Link copied" (or "Couldn’t copy — select the link and copy it"). **Expires** is a date (today or later); empty reads "never".
+
+### Settings list
+- By role, a switch above the list picks whose settings you're editing (**Clients**, **Guests**, …), with "Showing what clients can do." under it.
+- **Search settings** filters by name and opens every group; nothing matching shows "No settings match “…”."
+- Group headers (**Access**, **Engagement**, **Privacy**) collapse and expand (0.3s) and show "N of M on".
+- A switch turns a setting on and reveals its options. Turning **Downloads** on also ticks Photo and Video downloads (and Web size if no size is picked); turning **Sharing** on ticks Photo and Video sharing.
+- Locked settings show on with a disabled switch and the reason under the description: Password protection ("Required with one link for all roles. Switch to Approved clients only to make it optional.") and Filter by face ("Included with Face scan sign-in → Whole gallery.").
+- By role, **How clients sign in** replaces Collect email: **Collect email on sign-up** or **Approved clients only**. Approved shows the list (initials, name, email · phone, ✕ to remove) and **Add client**, which opens a dialog (Name, Email, Phone optional; Add needs a name and a valid email; Enter submits) and toasts "<name> added". An empty list says nobody can open the link in that role yet.
+- Password: digits only, 4 max ("4 digits"); under 4 shows "Enter 4 digits to save." in amber.
+- Download PIN: ticking **Require a download PIN** makes a random 4-digit PIN; copy toasts "Download PIN copied", ↻ makes a new one and toasts "New download PIN made".
+- Photo download sizes are toggle chips; with none picked, "Pick at least one size." Limits take whole numbers up to 99999; empty is "No limit".
+- Set visibility lists the gallery's sets as checkboxes (ticked = shown). With no sets: "No sets yet. Add them in Photos."
+
+### Saving
+- Any change brings up the bar at the bottom: "Unsaved changes", **Dismiss** (back to the saved settings) and **Save** (toasts "Settings saved"). When it can't save, the bar shows why instead ("Add at least 2 roles to save", "Enter a 4-digit password for Guests", "Pick at least one image size") and Save is disabled.
+- Closing or reloading the tab with unsaved changes asks first. Switching steps doesn't (see Architecture's known gaps).
+- On phones the bar spans the width and Dismiss and Save share the row.
 
 ## Gallery: Share
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowCounterClockwise, ArrowLeft, ArrowRight, Check, CircleNotch, DotsThree, FolderSimple, FolderSimplePlus,
+  ArrowCounterClockwise, ArrowLeft, ArrowRight, Check, CircleNotch, DotsThree, FolderSimple, Plus,
   ImageSquare, PencilSimple, Star, Trash, UploadSimple, X, EyeSlash, ArrowUUpLeft,
 } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
@@ -261,7 +261,7 @@ export default function PhotosStep({ ws }) {
               onClick={() => setNaming({ mode: 'new', value: '' })}
               className="flex h-12 shrink-0 items-center gap-1.5 text-13-m text-type-2 transition hover:text-type-0"
             >
-              <FolderSimplePlus size={16} /> New collection
+              <Plus size={16} /> New Set
             </button>
           )}
           {library.removed.length > 0 && (

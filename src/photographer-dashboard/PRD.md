@@ -6,11 +6,11 @@ The client-facing side of Store V3 (the gallery, portfolio and print store) is b
 
 | Section | The photographer can… |
 |---|---|
-| **Galleries** | Create a gallery per client. In each one: add photos, sort them into collections, set the order and the cover, design the cover, grid, collection headings and footer against a live preview, share the link, and see who visited and what they downloaded, shared, favourited, commented on and bought. Each gallery picks the store catalog its clients buy from. |
+| **Galleries** | Create a gallery per client. In each one: add photos, sort them into collections, set the order and the cover, design the cover, grid, collection headings and footer against a live preview, choose who can open it and what visitors can do in it, share the link, and see who visited and what they downloaded, shared, favourited, commented on and bought. Each gallery picks the store catalog its clients buy from. |
 | **Portfolio** | Edit their profile, portrait, intro, which galleries and categories appear, and the contact section. |
 | **Store** | Create catalogs (for example Weddings, Newborns). In each one: show or hide products and packages, put them in order, rename them, set sizes, prices, option add-ons and package discounts, and build their own packages. |
 
-Every change saves as it's made and shows on the client pages straight away. There is no draft or publish step.
+Every change saves as it's made and shows on the client pages straight away. There is no draft or publish step, except in a gallery's Settings step, which has an explicit Save.
 
 ## Goals
 
@@ -60,19 +60,28 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Gallery: Design (step 2)
 
-- R10. Four parts: Cover, Grid, Collection headings and Footer. On wide screens they're tabs above the editor; on narrower screens chips above the preview.
-- R11. Picking a part opens its editor. On screens 960px and wider it docks in a right-hand column beside the preview, under the part tabs, and one editor is always open (Cover first); on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
+- R10. Four parts: Cover, Grid, Collection headings and Footer. On screens 960px and wider they're listed under the Design icon in the step rail; on narrower screens they're chips above the preview.
+- R11. Picking a part opens its editor. On screens 960px and wider the parts are listed under the Design icon in the step rail, the editor docks in a right-hand column beside the preview, and one editor is always open (Cover first, or the part in `?part=`); on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
 - R12. Cover, heading and footer editing use the gallery's own editors, with the same tabs, controls, limits and templates.
 - R13. Grid sets the default layout clients start with: arrangement (masonry or justified rows), photo size and spacing. Clients can still change their own view.
 - R14. The preview is the real client gallery. It scrolls to the part being edited, updates as settings change, and can render at desktop (1280), tablet (820) or phone (390) width, scaled to fit.
 
-### Gallery: Share (step 3)
+### Gallery: Settings (step 3)
+
+- R14a. **Who can open the gallery:** *Anyone with the link* (no sign-in) or *By role*. By role has Client, Guest and Vendor roles, at least 2 of them, and either **one link for all roles** (visitors pick their role) or one link per role (`?role=<role>`). Every link has Copy and an optional expiry date.
+- R14b. Settings are per audience: the whole gallery, or each role (switched with a role control above the list). They're grouped as **Access** (Collect email on sign-up, Password protection, Face scan sign-in), **Engagement** (Comments, Filter by face, Favorites, Hide photos) and **Privacy** (Screenshot protection, Downloads, Sharing, Set visibility). Comments only exist with roles; Hide photos only on the Client role.
+- R14c. Options under a setting while it's on: a 4-digit password; what visitors see after a face scan (the whole gallery, or only photos they're in); a favorites limit; hiding in bulk; downloads (an optional auto-generated download PIN, photo downloads with Web size / High res and a download limit, video downloads); photo and video sharing; which sets show in the gallery.
+- R14d. Rules: on a role, visitors either **collect email on sign-up** or must be **approved** (people added by name, email and optional phone), never both. With one link for all roles, a role that collects email must have Password protection. Face scan → whole gallery includes Filter by face. Those settings show as on and locked, with the reason.
+- R14e. A search field filters settings by name. Each group collapses and shows how many of its settings are on.
+- R14f. Changes are a draft until **Save**. A bar at the bottom shows while there are unsaved changes, with **Dismiss** and **Save**; Save is disabled with the reason when roles are under 2, a needed password isn't 4 digits, or photo downloads have no size.
+
+### Gallery: Share (step 4)
 
 - R15. The client link, with Copy link and Open.
 - R16. A "Before you send" checklist (photos, cover photo, title, footer), each item linking to where it's fixed.
 - R17. Links on to the Portfolio and to this gallery's store catalog.
 
-### Gallery: Analytics (step 4)
+### Gallery: Analytics (step 5)
 
 - R17a. Totals for the gallery: **Visitors** (with how many gave an email and how many are anonymous), **Downloads** (single photos and full gallery), **Revenue** (orders and average order) and **Favourites** (with shares and comments).
 - R17b. **How people download:** a bar splitting downloads into single photos and full gallery, with each side's download count and how many people did it.
@@ -131,4 +140,6 @@ Every change saves as it's made and shows on the client pages straight away. The
 - **Catalog per client in a gallery?** Today one catalog per gallery. Schools and events may need different catalogs for different viewers of one gallery.
 - **Analytics: what counts as a visitor?** Today a person is an email. Should guests without an email be tracked per device, and should the client see who else viewed their gallery?
 - **Analytics date range.** All time only for now. Photographers may want last 7 / 30 days, or activity since the link was sent.
+- **Settings vs the gear.** The header gear opens "Gallery settings" (title, client, date, catalog) and the rail's Settings step is also titled "Gallery settings" (access and permissions). Merge them, or rename one (for example "Access")?
+- **Settings templates.** The source mockup also had saved templates of settings (Default, Wedding – Clients & Guests, Portrait – Public) and Free / Paid download sizes. Not built yet: are they needed for v1?
 - **Should clients still see edit pencils?** The gallery's own pencils remain for now, but are hidden in the dashboard preview. Once there's a photographer login they should only show to the photographer.

@@ -20,7 +20,7 @@ const SORTS = [
 ]
 
 /**
- * Step 4 — Analytics. Gallery-wide totals (visitors, downloads split into single photos and full
+ * Step 5 — Analytics. Gallery-wide totals (visitors, downloads split into single photos and full
  * gallery, revenue, favourites / shares / comments), then every visitor who gave an email with
  * their counts. A row opens that person: the photos they downloaded, favourited, shared and
  * commented on, and their orders. Sample data (see analytics.js).

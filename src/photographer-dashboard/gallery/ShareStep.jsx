@@ -8,7 +8,7 @@ import { PageHeader } from '../components/ui'
 import { galleryPath } from '../../data/galleries'
 
 /**
- * Step 3 — Share. The client's link, a check that the gallery is ready, and where to go next.
+ * Step 4 — Share. The client's link, a check that the gallery is ready, and where to go next.
  * (Sending is out of scope for the prototype: there's no client list or email service.)
  */
 export default function ShareStep({ ws }) {
