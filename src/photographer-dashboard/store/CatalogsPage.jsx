@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowSquareOut, Copy, DotsThree, Images, Plus, PencilSimple, SquaresFour, Storefront, Trash } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
-import ProductMockup from '../../components/ProductMockup'
+import { ProductImage } from '../../components/ProductMockup'
+import { productById } from '../../data/catalog'
 import { cn, money, plural } from '../../lib/utils'
-import { DEFAULT_CATALOG, LIMITS, original, useCatalogs } from '../../data/storeConfig'
+import { DEFAULT_CATALOG, LIMITS, useCatalogs } from '../../data/storeConfig'
 import { useGalleries } from '../../data/galleries'
 import { notify } from '../../gallery/lib/actions'
 import { TextField } from '../../gallery/templates/cover/controls'
@@ -110,7 +111,7 @@ function CatalogCard({ c, sum, usedBy, onRename, onDuplicate, onDelete }) {
           const id = sum.thumbs[i]
           return (
             <span key={i} className="aspect-square overflow-hidden rounded-xl bg-surface-2">
-              {id && <ProductMockup product={original.productById[id]} className="h-full w-full" />}
+              {id && productById[id] && <ProductImage product={productById[id]} className="h-full w-full" />}
             </span>
           )
         })}

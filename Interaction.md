@@ -92,7 +92,7 @@ Esc and backdrop tap also close the sheet. Body scroll is locked while it's open
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
-| Product mockup | Card hover | Zooms in | `scale 1 → 1.05`, `900ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
+| Product mockup (or a custom product's cover image) | Card hover | Zooms in | `scale 1 → 1.05`, `900ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
 | Arrow badge (bottom right) | Card hover | Rises and fades in | `translateY 12px → 0`, `opacity 0 → 1`, `transition-all duration-500` | Tailwind |
 
 ### `PackageCard`: [src/components/PackageCard.jsx](src/components/PackageCard.jsx)
@@ -534,6 +534,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | "Save more in a package" rows | Hover | Background `→ surface-2`. The arrow nudges right `4px` | Tailwind default | Tailwind |
 | Details / Shipping / Care | Click | [Accordion](#accordion-srccomponentsuiindexjsx). The first item is open by default | n/a | framer-motion |
 | Related products | Hover | [ProductCard](#productcard-srccomponentsproductcardjsx) | n/a | Tailwind |
+| Image thumbnails (photographer's own products with images) | Click | Shows that image in the preview with the same crossfade; the first thumbnail (the mockup) goes back to it, and changing an option does too. The view switcher hides while an image shows. Selected: 2px `type-0` ring with a 2px offset; others at 70% opacity, 100% on hover | `0.4s` crossfade | framer-motion + Tailwind |
 
 ---
 

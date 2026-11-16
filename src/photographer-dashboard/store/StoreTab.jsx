@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { Reorder, useDragControls } from 'framer-motion'
 import { ArrowCounterClockwise, ArrowSquareOut, CaretLeft, CaretRight, DotsSixVertical, Images, Package as PackageIcon, Plus, Storefront } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
-import ProductMockup from '../../components/ProductMockup'
+import { ProductImage } from '../../components/ProductMockup'
 import { cn, money, plural } from '../../lib/utils'
 import { fromPrice, packageItemCount, packagePrice, packageValue } from '../../lib/pricing'
 import { DEFAULT_CATALOG, LIMITS, original, useCatalogs, useStoreConfig } from '../../data/storeConfig'
@@ -14,6 +14,7 @@ import { Chip, Empty, PageHeader, Stat, Tag } from '../components/ui'
 import { useMedia, useTopOffset } from '../lib/hooks'
 import { InlineName } from '../components/InlineName'
 import ProductEditor from './ProductEditor'
+import CustomProductEditor from './CustomProductEditor'
 import PackageEditor from './PackageEditor'
 
 const VIEWS = [
@@ -56,7 +57,12 @@ function CatalogEditor({ catalogId }) {
   const last = useRef(null)
   if (openId) last.current = openId
   const pane = { onClose: () => setOpenId(null), inline: docked, phone: !docked, peek, onPeek: setPeek, open: !!openId, id: openId ?? last.current, s }
-  const editor = view === 'products' ? <ProductEditor {...pane} /> : <PackageEditor {...pane} />
+  const editor = view === 'packages' ? <PackageEditor {...pane} /> : s.isOwnProduct(pane.id) ? <CustomProductEditor {...pane} /> : <ProductEditor {...pane} />
+  const newProduct = () => {
+    const p = s.createProduct(cat === 'all' ? s.categories[0].id : cat)
+    setOpenId(p.id)
+    notify('Product added — it stays hidden until you switch it on')
+  }
 
   const list = (
     <div className="mx-auto max-w-[1100px] px-4 pb-40 pt-6 md:px-6 md:pt-8">
@@ -107,9 +113,13 @@ function CatalogEditor({ catalogId }) {
           <div className="w-full sm:w-[260px]">
             <Segmented options={VIEWS} value={view} onChange={setView} />
           </div>
-          {view === 'packages' && (
+          {view === 'packages' ? (
             <Button size="sm" className="shrink-0 max-sm:h-10 max-sm:w-full" onClick={() => { const pkg = s.createPackage('New package'); setOpenId(pkg.id); notify('Package added — choose what’s in it') }}>
               <Plus size={14} /> New package
+            </Button>
+          ) : (
+            <Button size="sm" className="shrink-0 max-sm:h-10 max-sm:w-full" onClick={newProduct}>
+              <Plus size={14} /> New product
             </Button>
           )}
         </div>
@@ -128,7 +138,9 @@ function CatalogEditor({ catalogId }) {
 
       {view === 'products' ? (
         products.length === 0 ? (
-          <Empty icon={Storefront} title="No products in this category" />
+          <Empty icon={Storefront} title="No products in this category" action={<Button size="sm" onClick={newProduct}><Plus size={14} /> New product</Button>}>
+            Make your own product to sell here.
+          </Empty>
         ) : cat === 'all' ? (
           <Reorder.Group axis="y" values={products.map((p) => p.id)} onReorder={s.setOrder} className="mt-3 space-y-2">
             {products.map((p) => (
@@ -171,7 +183,7 @@ function CatalogEditor({ catalogId }) {
                   {view === 'products' ? <Storefront size={22} /> : <PackageIcon size={22} />}
                 </span>
                 <p className="mt-4 text-16-m text-type-0">Pick a {view === 'products' ? 'product' : 'package'}</p>
-                <p className="mt-1 text-14-r-p text-type-2">Edit its name, {view === 'products' ? 'sizes, prices and options' : 'discount and contents'} here.</p>
+                <p className="mt-1 text-14-r-p text-type-2">Edit its name, {view === 'products' ? 'sizes, prices and options' : 'discount and contents'} here{view === 'products' ? ', or make your own with New product' : ''}.</p>
               </div>
             </div>
           )}
@@ -231,9 +243,9 @@ function Row({ active, hidden, onOpen, handle, thumb, title, tags, meta, price, 
 const MODE = { unit: 'One photo per item', set: 'Photo set', book: 'Album / book' }
 
 function ProductRow({ p, s, active, onOpen, handle }) {
-  const orig = original.productById[p.id]
+  const own = s.isOwnProduct(p.id)
   const now = fromPrice(p)
-  const was = fromPrice(orig)
+  const was = own ? now : fromPrice(original.productById[p.id])
   const category = s.categories.find((c) => c.id === p.category)?.name
   return (
     <Row
@@ -242,10 +254,10 @@ function ProductRow({ p, s, active, onOpen, handle }) {
       onOpen={onOpen}
       handle={handle}
       // The store's own mockup, scaled down: rendered at card size, then fitted to the thumbnail.
-      thumb={<span className="block h-[224px] w-[224px] origin-top-left scale-[0.25]"><ProductMockup product={p} /></span>}
+      thumb={<span className="block h-[224px] w-[224px] origin-top-left scale-[0.25]"><ProductImage product={p} className="h-full" /></span>}
       title={p.name}
-      tags={<>{p.hidden && <Tag>Hidden</Tag>}{s.isEdited(p.id) && !p.hidden && <Tag tone="success">Edited</Tag>}{p.badge && !p.hidden && <Tag className="max-sm:hidden">{p.badge}</Tag>}</>}
-      meta={`${category} · ${MODE[p.mode]} · ${p.options.find((o) => o.id === 'size').values.length} sizes`}
+      tags={<>{p.hidden && <Tag>Hidden</Tag>}{own && !p.hidden && <Tag tone="dark">Yours</Tag>}{s.isEdited(p.id) && !p.hidden && <Tag tone="success">Edited</Tag>}{p.badge && !p.hidden && <Tag className="max-sm:hidden">{p.badge}</Tag>}</>}
+      meta={`${category} · ${MODE[p.mode]} · ${plural(p.options.find((o) => o.id === 'size').values.length, 'size')}`}
       price={
         <>
           <span className="block text-11-r text-type-3">from</span>

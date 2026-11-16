@@ -1,13 +1,22 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react'
 import { lineSubtotal, lineCompareAt, lineItemCount } from '../lib/pricing'
 import { uid } from '../lib/utils'
+import { packageById, productById } from '../data/catalog'
 
 const StoreCtx = createContext(null)
 const KEY = 'lumen-store-v3'
 
+// A line can outlive what it points at (the photographer deleted their own product or package).
+const resolves = (l) =>
+  l?.kind === 'package'
+    ? !!packageById[l.packageId] && Array.isArray(l.slots) && l.slots.every((s) => productById[s.productId])
+    : !!productById[l?.productId]
+
 const load = () => {
   try {
-    return JSON.parse(localStorage.getItem(KEY)) || undefined
+    const saved = JSON.parse(localStorage.getItem(KEY))
+    if (!saved) return undefined
+    return { ...saved, lines: Array.isArray(saved.lines) ? saved.lines.filter(resolves) : [] }
   } catch {
     return undefined
   }

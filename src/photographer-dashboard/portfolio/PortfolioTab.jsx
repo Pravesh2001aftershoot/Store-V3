@@ -8,7 +8,7 @@ import { useDocked, usePhone, useTopOffset } from '../lib/hooks'
 import PortfolioEditor, { TARGETS } from './PortfolioEditor'
 
 /**
- * Portfolio: the editor beside a live preview of /portfolio. The preview scrolls to the section of
+ * Portfolio: a live preview of /portfolio with the editor docked on its right. The preview scrolls to the section of
  * the open tab. Narrow screens: full-width preview, the editor opens as a bottom sheet.
  */
 export default function PortfolioTab() {
@@ -35,8 +35,8 @@ export default function PortfolioTab() {
 
   return (
     <div className="flex" style={{ height: `calc(100svh - ${top}px)` }}>
-      {docked && <aside className="flex w-[380px] shrink-0 flex-col border-r border-border bg-surface-1 xl:w-[400px]">{editor}</aside>}
       <PreviewFrame src="/portfolio" target={TARGETS[tab]} fit={phone} label="Portfolio" className="min-w-0 flex-1" />
+      {docked && <aside className="flex w-[380px] shrink-0 flex-col border-l border-border bg-surface-1 xl:w-[400px]">{editor}</aside>}
       {!docked && (
         <>
           {!open && (

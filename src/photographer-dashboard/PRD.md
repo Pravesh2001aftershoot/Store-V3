@@ -25,7 +25,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - Accounts, sign-in, or a client list. A gallery's "client" is just a name on the gallery.
 - A server. Settings live in this browser (see [Architecture.md](Architecture.md)).
 - Sending the gallery (email, client list), analytics, orders and fulfilment.
-- Creating new products. The delivered catalog defines which products exist; catalogs choose and price them. Packages can be created.
+- New categories, and products that aren't made from the client's photos (every product takes at least one gallery photo). Photographers can create products and packages, but only in the delivered categories.
 
 ## Users
 
@@ -35,14 +35,14 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Shell
 
-- R1. A left sidebar with the logo, **New gallery**, the three sections (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section.
+- R1. A left sidebar with the logo, the three sections (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section.
 - R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio`, `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
 - R3. Each gallery has **View** (its client link), and each catalog has **Preview store** (the print store with that catalog), both in a new tab.
 
 ### Galleries
 
 - G1. A grid of gallery cards, newest first: cover photo (or "No photos yet"), title, date, photo count and catalog. Search by title, client or date. A dashed **New gallery** card leads the grid.
-- G2. **New gallery** (sidebar, page header or card) asks for a title (required, up to 60 characters), client name (defaults to the title), date (defaults to this month), the store catalog, and whether to start empty or with the sample photos. Creating it opens its Photos step. A new gallery has one collection, "Highlights".
+- G2. **New gallery** (page header or card) asks for a title (required, up to 60 characters), client name (defaults to the title), date (defaults to this month), the store catalog, and whether to start empty or with the sample photos. Creating it opens its Photos step. A new gallery has one collection, "Highlights".
 - G3. A card's menu: Edit gallery, Settings, View as client, Delete. Inside a gallery, the header has a breadcrumb back to Galleries, the gear (Settings) and View.
 - G4. **Settings** edits the title, client, date and catalog. Delete is there too, after a confirmation; it removes the gallery's photos (including uploads), design and link. The last gallery can't be deleted.
 - G5. Each gallery has its own photos, collections, cover, grid, headings and footer. Clients open it at `/g/<id>`. The app opens on the dashboard (`/` redirects to `/dashboard`). An unknown link shows "This gallery isn't available".
@@ -59,8 +59,8 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Gallery: Design (step 2)
 
-- R10. Four parts, each showing its current setting: Cover, Grid, Collection headings and Footer.
-- R11. Picking a part opens its editor. On screens 960px and wider it docks in a left column beside the preview; on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
+- R10. Four parts: Cover, Grid, Collection headings and Footer. On wide screens they're tabs above the editor; on narrower screens chips above the preview.
+- R11. Picking a part opens its editor. On screens 960px and wider it docks in a right-hand column beside the preview, under the part tabs, and one editor is always open (Cover first); on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
 - R12. Cover, heading and footer editing use the gallery's own editors, with the same tabs, controls, limits and templates.
 - R13. Grid sets the default layout clients start with: arrangement (masonry or justified rows), photo size and spacing. Clients can still change their own view.
 - R14. The preview is the real client gallery. It scrolls to the part being edited, updates as settings change, and can render at desktop (1280), tablet (820) or phone (390) width, scaled to fit.
@@ -78,14 +78,14 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R20. Work: section title; categories (rename, reorder, hide, which also hides their galleries); galleries (search, filter by category, rename, hide). A hidden gallery's page shows "This gallery isn't available".
 - R21. Contact: heading, which detail rows show, and the header's Enquire button on or off.
 - R22. The profile also fills in the gallery footer's contact details.
-- R23. Same layout as Design: the editor docked beside a live `/portfolio` preview that follows the open tab, or a sheet on narrow screens.
+- R23. Like Design, but the editor ("Customize portfolio") is docked to the **right** of a live `/portfolio` preview that follows the open tab, or a sheet on narrow screens.
 
 ### Store: catalogs
 
 - C1. A list of catalogs as cards: name, product and package counts, the lowest price, four product thumbnails, which galleries use it, and a "Customised" tag once edited. The **Main catalog** always exists and can't be deleted; new galleries use it unless another is picked.
 - C2. **New catalog** asks for a name (up to 40 characters) and how to start: **Everything** (every product and package on), **Nothing** (everything off, to switch on what you sell) or **A copy** of another catalog. Creating it opens it.
 - C3. A card's menu: Edit catalog, Rename, Duplicate (a copy named "<name> copy"), Preview store, Delete. Deleting a catalog moves the galleries using it to the Main catalog, after a confirmation that says how many.
-- C4. Catalogs are independent: a price, a hidden product or a package in one never changes another. Copies get their own packages.
+- C4. Catalogs are independent: a price, a hidden product, a product or a package in one never changes another. Copies get their own products and packages.
 
 ### Store: one catalog
 
@@ -96,6 +96,12 @@ Every change saves as it's made and shows on the client pages straight away. The
   - **Sizes:** the price of each size, and whether it's offered.
   - **Options:** the add-on price of each choice, and whether it's offered.
   Every option keeps at least one choice. "Reset product" goes back to the catalog values.
+- R26a. **New product** (beside the Products / Packages switch, and in an empty category) creates the photographer's own product in this catalog and opens it. It starts hidden, named "New product", in the category being shown (or Wall Art under All), with one 8 × 10" size at $50. It's tagged "Yours" in the list. Its editor has four tabs:
+  - **Details:** show in store; Name (32), Tagline (80), Badge (16); Category (one of the store's four); Description (400) and up to 6 Highlights (60 each), shown under Details on the product page; Delete product (also removes it from the photographer's packages).
+  - **Images:** up to 6 product images (resized to 1000px and stored in the browser). The first is the cover, used on the product card, the catalog row and the catalog card; the product page shows them all as thumbnails beside the "your photo" preview. **Look** picks which mockup style shows the client's photo in it (Loose print, Framed, Canvas, Metal / flat panel, Acrylic block, Book cover, Photo only), and a switch lets clients turn photos landscape.
+  - **Sizes:** how photos work (One photo per item; A set of photos per item, 2–10; Album or book, with photos included, most photos and a price per extra photo), then up to 10 sizes, each width × height in inches (1–60, which sets the crop shape and the label) and a price. A product keeps at least one size.
+  - **Options:** up to 4 options (like Finish or Colour), each with a name, how it's shown (Buttons, Cards with a note, Colour swatches) and up to 8 choices with a name, an add-on price and a colour or note. The first choice is the default. Choices without a name, and options without a named choice, don't show in the store.
+  A custom product works everywhere a catalog product does: shop lists, the product page, the builder, the cart, and the photographer's own packages.
 - R27. Packages: reorder, show or hide, name, tagline, Most popular, and a discount from 0–40% with the live package price, its value and the client's saving. The delivered packages' contents are read-only, and products hidden from the store are flagged.
 - R27a. **New package** creates a package in this catalog (tagged "Yours") with one item, and opens it. Its contents are editable: up to 6 lines, each a product, a size and a quantity (1–50; books are always one), with the line's price. An empty package stays hidden from the store. It can be deleted from its Details tab.
 - R28. Changes apply to the live store of every gallery using the catalog: lists, product pages, the builder, cart prices and package prices.
@@ -103,7 +109,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 ## Success criteria (prototype)
 
 - A photographer can take the mock gallery from as delivered to customised (new photos, a new collection, a cover, a footer) without leaving `/dashboard`.
-- A photographer can create a second gallery from their own photos, give it a Weddings catalog with different prices and a package of their own, and its client sees those prices while the first gallery's client doesn't.
+- A photographer can create a second gallery from their own photos, give it a Weddings catalog with different prices, a product and a package of their own, and its client sees those prices while the first gallery's client doesn't.
 - Every edit shows in the preview in under a second, with no reload.
 - Every tab is usable at 390px wide.
 

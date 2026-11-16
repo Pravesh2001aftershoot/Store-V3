@@ -12,7 +12,6 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 | Click a section in the sidebar | Goes to it. The highlight slides to it and its icon fills. Galleries and Store show their counts. |
 | Hover the rail (640–1023px) | Each icon has a tooltip with its name. The rail shows no recent galleries. |
 | Phone: tap ☰ in the top bar | The sidebar slides in from the left as a drawer over a dimmed page. Tapping the page, ✕ or any link closes it. |
-| **New gallery** (top of the sidebar) | Opens the New gallery dialog from anywhere. |
 | A recent gallery | Opens it (its Photos step). The open one is highlighted. "All N galleries" appears after five. |
 | Profile at the bottom | Opens the portfolio in a new tab. |
 | Any edit, anywhere | Saved immediately. It shows in the preview and in any open client tab without a reload. Only dialogs (new gallery, settings, new catalog, rename) have a Save or Create button. |
@@ -27,13 +26,14 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 | **New gallery** | Dialog: Gallery title (required; Create is disabled until it has text), Client name, Date, Print store catalog, and Start with **Empty** or **Sample photos**. Enter submits. Creating toasts "<title> created" and opens its Photos step. |
 
 ### Inside a gallery
-- The header shows **Galleries › <client>** (the first part links back), the title and photo count, the three steps, then ⚙ and **View**. On phones ⚙ and View sit beside the title.
+- The header shows **Galleries › <client>** (the first part links back), the title and photo count, then ⚙ and **View** on the right. The steps are in the rail on the right edge.
 - ⚙ opens **Gallery settings**: the same fields as New gallery (no Start with), plus **Delete gallery** (asks first; disabled for the last gallery). Save toasts "Gallery updated". Changing the catalog changes what this gallery's clients can buy straight away.
 - An unknown gallery id in the URL goes back to the list.
 
-## Gallery: step bar
+## Gallery: step rail
 
-- Shows the gallery name, photo count and three steps. Every step is a link, so steps can be visited in any order; earlier steps show a tick.
+- A vertical, icon-only tab switcher on the right edge: **Photos**, **Design**, **Share**. Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
+- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Send to your client") to the left; on phones the icons carry `aria-label`s only.
 - Browser Back and Forward move between steps, since the step is in the URL.
 
 ## Gallery: Photos
@@ -80,14 +80,13 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 ## Gallery: Design
 
 ### Docked (960px and wider)
-1. The left column lists **Cover**, **Grid**, **Collection headings** and **Footer**, each with its current setting.
-2. Picking one replaces the list with that editor. The preview scrolls to that part:
+1. The editor column on the right of the preview starts with underline tabs: **Cover**, **Grid**, **Headings** and **Footer**. Hovering a tab shows its current setting (for example "Template: Classic").
+2. One editor is always open under the tabs, Cover to start. Clicking a tab swaps the editor and the preview scrolls to that part:
    - Cover: the top of the page.
    - Grid: the grid.
    - Headings: the collection being edited.
    - Footer: the bottom, after loading the whole grid.
-3. ✕, **Done** or Esc returns to the list.
-4. **Photos** and **Next: Share** sit at the bottom of the list.
+3. Docked editors have no ✕ or **Done**, and Esc does nothing; **Reset all** stays in the footer. Moving between steps is done in the step rail.
 
 ### Not docked
 1. Chips for the four parts sit above a full-width preview. On phones the preview renders at the screen's own width with no device switch.
@@ -114,7 +113,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 ## Portfolio
 
 ### Docked
-- The editor is always open on the left. Its tabs move the preview: Profile and Intro → the top of the page, Work → Selected work, Contact → the closing section.
+- The editor is always open on the right of the preview. Its tabs move the preview: Profile and Intro → the top of the page, Work → Selected work, Contact → the closing section.
 - **Done** toasts "All changes are saved".
 
 ### Not docked
@@ -149,10 +148,12 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - **‹ Catalogs** goes back. The eyebrow says Main catalog or Catalog.
 - Click the name to rename it inline: Enter or clicking away saves (and toasts), Esc cancels, empty keeps the old name.
 - The description says which gallery sells from it (linked), or how many, with chips linking to each when there are several. With none: "No gallery uses this catalog yet".
-- **Preview store** opens the print store using this catalog in a new tab. **Reset** (once edited) asks first and resets products and delivered packages; packages you built are kept.
+- **Preview store** opens the print store using this catalog in a new tab. **Reset** (once edited) asks first and resets catalog products and delivered packages; products and packages you built are kept.
 
 ### Lists
-- The **Products / Packages** switch changes the list and closes the editor. With Packages, a **New package** button appears beside it.
+- The **Products / Packages** switch changes the list and closes the editor. A **New product** or **New package** button sits beside it (full width on phones).
+- **New product** adds a hidden product to the category being shown (Wall Art under All), opens its editor and toasts "Product added — it stays hidden until you switch it on". An empty category shows the same action.
+- Products you made are tagged **Yours**; their thumbnail is their cover image when they have one.
 - **Category chips** filter products. Reordering only works under **All**, and a hint says so.
 - **Reorder:** drag a row by its ⋮⋮ handle (mouse or touch). The rest of the row stays clickable and scrollable. The new order is the client's shop order.
 - **Visibility switch** on a row: hides or shows the product or package immediately and toasts ("Framed Print hidden from the store").
@@ -167,12 +168,20 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
   - Switching off the last offered choice of an option is blocked, with a toast.
 - **Reset product** restores the catalog values and toasts.
 
+### Your own product editor
+- **Details:** the Show in the store switch toasts ("Wooden Photo Block is in the store"). Name, Tagline, Badge, a Category select (a bottom sheet on phones), Description and Highlights save as you type. An empty name shows a red note and the store calls it "Untitled product". **Add a highlight** adds a line, up to 6; ✕ removes one.
+- **Delete product** asks first (mentioning packages when it's in any; an amber note above names them), closes the editor and toasts.
+- **Images:** **Add images** opens the file picker (several at once). Each is resized and added, with a toast ("2 images added"). Picking more than fit adds what fits and says so; going past the storage budget stops with "No room for more images — remove some from your products first". On a tile: ★ makes it the cover (toast), ← → move it, ✕ removes it. **Look** changes the mockup beside it straight away.
+- **Sizes:** changing How photos work shows its own fields (photos per set; or photos included, most photos and price per extra). Count and inch fields take whole numbers and snap into range when you leave them (Enter leaves too). **Add a size** adds one 4" bigger each way at 1.4× the last price, up to 10. The last size's ✕ is disabled.
+- **Options:** **Add an option** adds one with two empty choices, up to 4. Changing **Shown as** keeps the choices and adds a colour or note field. Clicking a colour disc opens the system colour picker. **Add a choice** adds one, up to 8 (full width on phones); an option's last choice can't be removed. Until a choice has a name, the card says "Name a choice to show it".
+- There's no Reset: the footer only has **Done**.
+
 ### Package editor
 - **Details:** the Show in the store and Most popular switches, then Name and Tagline. **In this package** lists the contents with ⚠ on any product hidden from the store.
 - **Packages you built** (tagged "Yours" in the list):
   - **New package** adds one with a single item (the first product on, at its smallest size), opens it and toasts.
   - Name and Tagline are its own (no original to fall back to).
-  - **In this package** is editable. Each line has a Product select (hidden products are marked), a ✕, a Size select, a −/+ quantity (1–50; books show "1 book") and the line's price. Changing the product resets the size to its first. **Add a product** adds a line, up to 6.
+  - **In this package** is editable. Each line has a Product select (catalog products and your own, in shop order; hidden ones are marked), a ✕, a Size select, a −/+ quantity (1–50; books show "1 book") and the line's price. Changing the product resets the size to its first. **Add a product** adds a line, up to 6.
   - With no lines, the package is tagged "Empty" and hidden from the store.
   - **Delete package** (Details) asks first, closes the editor and toasts.
 - **Pricing:** the Discount slider (0–40%) with live figures for Separately, Package and Client saves. The package price is rounded to $5 and also follows the product prices.

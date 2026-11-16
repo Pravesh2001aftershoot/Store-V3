@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowSquareOut, Images, List, Plus, Storefront, UserCircle, X } from '@phosphor-icons/react'
+import { ArrowSquareOut, Images, List, Storefront, UserCircle, X } from '@phosphor-icons/react'
 import { gallery as brand } from '../data/gallery'
 import { DEFAULT_GALLERY, useGalleries } from '../data/galleries'
 import { useCatalogs } from '../data/storeConfig'
@@ -11,7 +11,6 @@ import { usePortfolio } from '../portfolio/data/config'
 import { ease } from './components/ui'
 import { PHONE_BAR_H, usePhone, useWideNav } from './lib/hooks'
 import GalleriesPage from './galleries/GalleriesPage'
-import GalleryForm from './galleries/GalleryForm'
 import WithGallery, { CoverImage } from './galleries/GalleryCover'
 import GalleryTab from './gallery/GalleryTab'
 import PortfolioTab from './portfolio/PortfolioTab'
@@ -34,11 +33,10 @@ export default function PhotographerDashboard() {
   const phone = usePhone()
   const wide = useWideNav()
   const [drawer, setDrawer] = useState(false)
-  const [creating, setCreating] = useState(false)
   const { pathname } = useLocation()
   useEffect(() => { setDrawer(false) }, [pathname])
 
-  const nav = (full) => <Sidebar full={full} onNew={() => { setDrawer(false); setCreating(true) }} />
+  const nav = (full) => <Sidebar full={full} />
 
   return (
     <div className="flex min-h-svh bg-surface-0">
@@ -87,7 +85,6 @@ export default function PhotographerDashboard() {
         </AnimatePresence>
       )}
 
-      <GalleryForm open={creating} onOpenChange={setCreating} />
       <Toaster />
     </div>
   )
@@ -120,8 +117,8 @@ const SECTIONS = [
   { to: '/dashboard/store', label: 'Store', icon: Storefront },
 ]
 
-/** Logo, the three sections (with counts), recent galleries, New gallery and the profile. */
-function Sidebar({ full, onNew }) {
+/** Logo, the three sections (with counts), recent galleries and the profile. */
+function Sidebar({ full }) {
   const { galleries } = useGalleries()
   const { catalogs } = useCatalogs()
   const { profile } = usePortfolio()
@@ -138,19 +135,7 @@ function Sidebar({ full, onNew }) {
         {full && <span className="text-11-sb uppercase text-type-3">Studio</span>}
       </Link>
 
-      <div className={cn('shrink-0', full ? 'px-3' : 'px-3')}>
-        <button
-          onClick={onNew}
-          title={full ? undefined : 'New gallery'}
-          aria-label="New gallery"
-          className={cn('flex h-10 w-full items-center justify-center gap-2 rounded-full bg-primary text-13-m text-primary-foreground transition hover:opacity-90 active:scale-[.98]', !full && 'w-10 mx-auto')}
-        >
-          <Plus size={16} weight="bold" />
-          {full && 'New gallery'}
-        </button>
-      </div>
-
-      <nav aria-label="Dashboard" className="mt-4 space-y-0.5 px-3">
+      <nav aria-label="Dashboard" className="space-y-0.5 px-3">
         {SECTIONS.map((s) => (
           <NavLink
             key={s.to}

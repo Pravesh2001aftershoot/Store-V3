@@ -18,19 +18,20 @@ src/photographer-dashboard/
 │   ├── GalleryForm.jsx        New gallery / gallery settings (+ delete)
 │   └── GalleryCover.jsx       WithGallery: reads one gallery's cover + count inside its provider
 ├── gallery/
-│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → breadcrumb, step bar, settings, the step
+│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View), the step, right-hand step rail
 │   ├── useGalleryWorkspace.js Wires the library, cover, cover photo, headings, footer and grid
 │   ├── PhotosStep.jsx         Upload, collections, selection, drag to reorder or move, selection bar
-│   ├── DesignStep.jsx         Overview of the four parts → their editors, beside the preview
+│   ├── DesignStep.jsx         Preview + right column of part tabs over the open editor (chips + sheets when narrow)
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
 │   └── ShareStep.jsx          Link, checklist, next steps
 ├── portfolio/
-│   ├── PortfolioTab.jsx       Editor beside the /portfolio preview
+│   ├── PortfolioTab.jsx       /portfolio preview with the editor docked on its right
 │   └── PortfolioEditor.jsx    Profile, Intro, Work, Contact tabs
 ├── store/
 │   ├── CatalogsPage.jsx       Catalog cards, New catalog (everything / nothing / copy), rename, duplicate, delete
-│   ├── StoreTab.jsx           One catalog (/store/:catalogId): summary, product and package lists, New package
-│   ├── ProductEditor.jsx      Details, Sizes, Options
+│   ├── StoreTab.jsx           One catalog (/store/:catalogId): summary, product and package lists, New product, New package
+│   ├── ProductEditor.jsx      Catalog products: Details, Sizes, Options
+│   ├── CustomProductEditor.jsx The photographer's own products: Details, Images, Sizes, Options
 │   └── PackageEditor.jsx      Details (+ editable contents for custom packages), Pricing
 └── *.md                       PRD, Architecture, DesignSystem, Interactions
 ```
@@ -130,6 +131,7 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 `EditorPane` gained:
 - **`inline`.** It renders in place, filling its parent, instead of as a fixed sliding panel. It still mounts a non-modal Radix `Dialog.Root` so the shared header (`Dialog.Title`, `Dialog.Close`) and Esc-to-close keep working.
 - **`resetLabel`.** For example, "Reset product".
+- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since its part tabs switch editors; `editing` falls back to `'cover'` there.
 - **No tab bar for a single tab.**
 
 `CoverEditor`, `FooterEditor` and `SectionEditor` accept `inline` and pass it through. With `inline`, `SectionEditor` drops its own preview stage and its scroll lock, because the dashboard's iframe is the preview. When not docked (under 960px), the dashboard passes `phone` to the panes so they open as bottom sheets. `SectionEditor` decides that itself, keeping its own stage.
@@ -144,14 +146,16 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 
 ## Store: catalogs
 
-`data/storeConfig.js` is imported for its side effect in `main.jsx`, before anything reads the catalog. It stores `{ catalogs: [{ id, name, created, products, order, packages, packageOrder, custom }] }`; the single set of edits saved before catalogs existed is migrated into the Main catalog (`id: 'default'`).
+`data/storeConfig.js` is imported for its side effect in `main.jsx`, before anything reads the catalog. It stores `{ catalogs: [{ id, name, created, products, order, packages, packageOrder, custom, customProducts }] }` under `store-v3:store`; the single set of edits saved before catalogs existed is migrated into the Main catalog (`id: 'default'`).
 
 1. It snapshots the catalog as delivered (`original`).
 2. It picks the **active catalog** for this document, first match wins: the dashboard's override (set by `useStoreConfig(id)` while a catalog is open), `?catalog=<id>` (Preview store; kept in `sessionStorage` for that tab until the client opens a gallery), the active gallery's `catalogId`, then the Main catalog.
-3. `apply(catalog)` rebuilds each product and package from the snapshot plus that catalog's edits, and writes the result into the **same objects** that `productById` and `packageById` hold. It then refills the `products` and `packages` arrays with the visible ones, in the catalog's order. A catalog's `custom` packages are added to `packageById`; other catalogs' custom packages are registered too (hidden), so a cart line holding one still prices.
+3. `apply(catalog)` rebuilds each product and package from the snapshot plus that catalog's edits, and writes the result into the **same objects** that `productById` and `packageById` hold. It then refills the `products` and `packages` arrays with the visible ones, in the catalog's order. A catalog's `customProducts` and `custom` packages are added to `productById` / `packageById`; other catalogs' are registered too (hidden), so a cart line holding one still prices.
 4. It re-applies whenever the stored catalogs, the gallery registry, the active gallery or the override change, in this document or another, and bumps the version `useCatalogVersion()` reports.
 
-`useCatalogs()` lists catalogs with `create(name, 'all' | 'none' | <id to copy>)`, `rename`, `remove` (not Main) and `summary(c)` (counts, lowest price, thumbnails, edit count). `useStoreConfig(id)` returns one catalog with the old setters plus `createPackage`, `editCustom`, `deletePackage`, `addSlot`, `editSlot` and `removeSlot`. A copied catalog gets new ids for its custom packages, so catalogs never share one.
+`useCatalogs()` lists catalogs with `create(name, 'all' | 'none' | <id to copy>)`, `rename`, `remove` (not Main) and `summary(c)` (counts, lowest price, thumbnails, edit count). `useStoreConfig(id)` returns one catalog with the old setters plus `createPackage`, `editCustom`, `deletePackage`, `addSlot`, `editSlot`, `removeSlot`, and for the photographer's own products `createProduct(category)`, `editOwnProduct(id, patch | fn)`, `deleteProduct(id)` (also drops it from custom packages), `isOwnProduct(id)` and `productDef(id)`. `editProduct(id, { hidden })` works for both kinds, so the list's switch needs no special case. `allProducts` includes custom products (hidden ones too) in the catalog's order. A copied catalog gets new ids for its custom products and packages (with package lines and the product order remapped), so catalogs never share one.
+
+**Custom products** have the same shape as a catalog product (`src/data/catalog.js`), plus `custom: true`, `hidden` and `images: [{ src, w, h }]` (JPEG data URLs, 1000px, quality 0.8). `blankProduct(id, category)` is the starting point; `readCustomProduct` sanitises stored ones on load (known category, `size` option first with labels rebuilt from `w × h`, numbers clamped to `LIMITS`); `resolveCustom` makes the store-facing copy (empty name → "Untitled product", unnamed choices and empty options dropped, book max ≥ min). `style` is one of `LOOKS` and picks the `ProductMockup` branch; `mode` is one of `MODES`. Their edits live in the definition itself, so **Reset** leaves them alone. `storeSize()` and `STORE_BUDGET` (3.5M characters) stop image uploads before localStorage fills up. `src/state/store.jsx` drops saved cart lines whose product or package no longer exists.
 
 So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 - Hidden products and packages stay in the `…ById` maps, so existing cart lines still price correctly.
@@ -166,6 +170,7 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | `persisted()` + localStorage per browser | Settings API per photographer (store, portfolio, branding) and per gallery (photos, cover, headings, footer, grid) |
 | `storage` events to the preview iframe | The preview subscribes to the same draft through the API, or the dashboard posts the draft to the iframe |
 | IndexedDB uploads, object URLs | Direct-to-storage uploads, image service for sizes, photo records with original dimensions |
+| Custom product images as data URLs in the catalog | Image uploads to storage, referenced by id |
 | `apply()` mutating the catalog in place | Catalog served already resolved for the client; the dashboard edits a photographer catalog resource |
 | Gallery registry in localStorage, slug ids | Gallery records with server ids, a share token per client link, and a `catalog_id` |
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
@@ -180,5 +185,8 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 - **Collection rename loses heading words** (they're keyed by collection name).
 - **The heading editor below 960px** shows its own full-screen stage rather than the dashboard's preview.
 - **Custom packages use a fixed hero photo** (the store's `p1011`); there's no picker yet.
+- **Custom product images live in localStorage** as data URLs, so a few products with six images each can reach the 3.5M-character budget; uploads past it are refused with a toast. Production stores them as uploads.
+- **Custom products can't create categories**, and their sizes are always inches (the label is built from width × height).
+- **Deleting a custom product** removes it from the photographer's packages and drops cart lines holding it on the client's next load.
 - **Clients' favourites, hidden photos and sets** for a deleted gallery stay in localStorage (keyed by `gallery:<id>`).
 - **The store builder isn't re-keyed** on catalog changes. It's outside `Layout`, and it's never open at the same time as the dashboard in one document.

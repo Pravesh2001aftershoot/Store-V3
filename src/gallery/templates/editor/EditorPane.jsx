@@ -20,15 +20,17 @@ export const PEEK_H = 64
  * `modal={false}` drops the click-blocking overlay and scroll lock, for previews that need scrolling.
  * `inline` renders the same pane in place (filling its parent) instead of as a floating panel — the
  * dashboard uses it to dock editors beside its preview. ✕ / Esc / Done still call `onClose`.
+ * Leave `onClose` out (inline only) for a pane that is always open: no ✕, no Done, Esc does nothing.
  * `resetLabel` renames the footer's reset action (e.g. "Reset product").
  */
 export default function EditorPane({
   open, onClose, phone, peek, onPeek, title, subtitle, previewLabel = 'Preview',
   tabs, tab, onTab, onReset, resetLabel = 'Reset all', modal = true, inline = false, children,
 }) {
+  const closable = !!onClose
   const body = (
     <>
-      <Header phone={phone && !inline} peek={peek} onPeek={onPeek} title={title} subtitle={subtitle} previewLabel={previewLabel} tabs={tabs} tab={tab} onTab={onTab} />
+      <Header phone={phone && !inline} peek={peek} onPeek={onPeek} title={title} subtitle={subtitle} previewLabel={previewLabel} tabs={tabs} tab={tab} onTab={onTab} closable={closable} />
       <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5', phone && !inline && peek && 'invisible')}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -43,7 +45,7 @@ export default function EditorPane({
           </motion.div>
         </AnimatePresence>
       </div>
-      {!(phone && !inline && peek) && (
+      {!(phone && !inline && peek) && (closable || onReset) && (
         <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
           {onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2 max-sm:ml-0 max-sm:h-10 max-sm:flex-1">
@@ -52,9 +54,11 @@ export default function EditorPane({
           )}
           <span className="flex-1 max-sm:hidden" />
           {/* Phones: Reset and Done share the row equally. */}
-          <Button size="md" onClick={onClose} className="max-sm:flex-1">
-            <Check size={15} weight="bold" /> Done
-          </Button>
+          {closable && (
+            <Button size="md" onClick={onClose} className="max-sm:flex-1">
+              <Check size={15} weight="bold" /> Done
+            </Button>
+          )}
         </div>
       )}
     </>
@@ -63,7 +67,7 @@ export default function EditorPane({
   if (inline) {
     if (!open) return null
     return (
-      <Dialog.Root open modal={false} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Root open modal={false} onOpenChange={(o) => !o && onClose?.()}>
         <Dialog.Content
           aria-describedby={undefined}
           onInteractOutside={(e) => e.preventDefault()}
@@ -113,7 +117,7 @@ export default function EditorPane({
   )
 }
 
-function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab, onTab }) {
+function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab, onTab, closable }) {
   return (
     <div className={cn('shrink-0 px-5', !(phone && peek) && 'border-b border-border pb-3')}>
       {phone && (
@@ -134,9 +138,11 @@ function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab,
             {peek ? <><CaretUp size={14} /> Edit</> : <><CaretDown size={14} /> Preview</>}
           </button>
         )}
-        <Dialog.Close className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]" aria-label="Close">
-          <X size={16} />
-        </Dialog.Close>
+        {closable && (
+          <Dialog.Close className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]" aria-label="Close">
+            <X size={16} />
+          </Dialog.Close>
+        )}
       </div>
       {!(phone && peek) && tabs.length > 1 && (
         <div role="tablist" className="mt-3 grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>

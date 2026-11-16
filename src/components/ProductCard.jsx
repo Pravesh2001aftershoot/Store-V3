@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from '@phosphor-icons/react'
-import ProductMockup from './ProductMockup'
+import { ProductImage } from './ProductMockup'
 import { Badge } from './ui'
 import { fromPrice, getOption } from '../lib/pricing'
 import { money } from '../lib/utils'
@@ -11,7 +11,7 @@ export default function ProductCard({ product }) {
     <Link to={`/product/${product.id}`} className="group block" draggable={false}>
       <div className="relative overflow-hidden rounded-2xl">
         <div className="transition-transform duration-[900ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.05]">
-          <ProductMockup product={product} />
+          <ProductImage product={product} />
         </div>
         {product.badge && <Badge className="absolute left-3 top-3">{product.badge}</Badge>}
         <span className="absolute bottom-3 right-3 grid h-10 w-10 translate-y-3 place-items-center rounded-full bg-type-0 text-white opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">

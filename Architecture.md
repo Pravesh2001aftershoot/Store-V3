@@ -113,7 +113,7 @@ A single React Context backed by `useReducer`.
 { lines: CartLine[], checkout: {email, firstName, …}, shipping: 'standard'|'express'|'pickup', promo: string|null }
 ```
 
-- **Persistence.** The whole state object is written to `localStorage['lumen-store-v3']` on every change and read back once on boot.
+- **Persistence.** The whole state object is written to `localStorage['lumen-store-v3']` on every change and read back once on boot. Lines whose product or package no longer resolves (a photographer deleted their own product or package) are dropped on load.
 - **Actions.** `add`, `update`, `replace` (one line becomes several, in place; used when edits split a line by variant), `remove`, `duplicate`, `checkout`, `shipping`, `promo`.
 - **Derived totals** are computed in the provider's `useMemo`: subtotal, package savings, item count, promo discount, shipping, tax at a flat 8.25%, and total.
 - **Constants.** `SHIPPING` holds the three methods. `PROMOS` maps codes to rates and currently contains only `LEXIE10`, which takes 10% off.
@@ -162,11 +162,12 @@ Local to the portfolio pages; nothing is persisted and the store context is not 
   setSize?,                    // set: photos per item (triptych = 3)
   book?: { min, max, perExtra },
   allowOrientation?,           // the client may flip portrait/landscape per photo
-  options: [{ id, label, type: 'size'|'swatch'|'segmented'|'card', values: [{ id, label, price | delta, w, h, hex, note }] }]
+  options: [{ id, label, type: 'size'|'swatch'|'segmented'|'card', values: [{ id, label, price | delta, w, h, hex, note }] }],
+  custom?, hidden?, images?    // products the photographer made in the dashboard (data/storeConfig.js `customProducts`)
 }
 ```
 
-The `size` option carries the base `price` and the physical `w`/`h` in inches. Every other option adds a `delta`.
+The `size` option carries the base `price` and the physical `w`/`h` in inches. Every other option adds a `delta`. Products a photographer creates in the dashboard use the same shape and are registered in `productById` by `data/storeConfig.js`, so every page treats them alike; their `images` (data URLs) are the product's own photos.
 
 ### Product modes
 
@@ -208,7 +209,7 @@ A three-step wizard: **Photos → Crop → Review**.
 
 ### Product previews (`src/components/ProductMockup.jsx`)
 
-CSS-only mockups keyed on `product.style`. They react to the variant (frame colour, mat, canvas depth, cover material, size scale) and render the client's actual photos and crops through `CroppedImage`.
+CSS-only mockups keyed on `product.style`. They react to the variant (frame colour, mat, canvas depth, cover material, size scale) and render the client's actual photos and crops through `CroppedImage`. `frame` and `triptych` fall back to a black frame when the product has no `frame` option (custom products). `ProductImage` (same file) shows a custom product's first image when it has one, otherwise the mockup; `ProductCard`, the dashboard's catalog rows and catalog cards use it.
 
 ### Client gallery (`src/gallery/`)
 
@@ -256,7 +257,7 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
   - **Editing.** `GalleryGrid` takes `headings` and `onEditHeading(title)`; each heading then shows a pencil button. `GalleryPage` holds `editingHeading` (the collection being edited) and passes `onEditHeading` only while not multi-selecting. `SectionHeader` keeps its `id` (`sectionId(title)`) so tab jumps and scroll-spy still target it. Favourites, Hidden and sets show a flat list with no headings.
   - **Editor** (`SectionEditor.jsx`). The shared `EditorPane`, non-modal like the footer's, titled "Customize headings". Tabs: Templates, Text, Style. A fixed preview stage beside the pane (above the phone sheet) shows the heading being edited over the first six photos of its collection; page scroll is locked while it's open. Templates renders each template live with the current type and words (a sample note stands in when there's none) through `FitThumb`. Text has a collection picker (`<select>`) and the label, title and note fields, plus "Restore <collection>'s original words". Style has the Match cover switch, a font picker, weight, letter case, alignment, title side, title size, space around and fine rules; controls the cover decides are greyed out while Match cover is on.
 - **Template thumbnails** (`templates/editor/FitThumb.jsx`). Renders its children at a desktop width (1280px by default) and scales them to the card with a `ResizeObserver`, at their true height. `inert`, so nothing inside is focusable. Shared by the footer and heading editors.
-- **Editor shell** (`templates/editor/EditorPane.jsx`). The pane / phone sheet shared by the cover, footer and heading editors: Radix Dialog, header with title, subtitle and Preview/Edit pill (phone), a tab pill bar built from a `tabs` prop, a crossfading body, and a Reset all / Done footer. It exports `PANE_W` (400), `SHEET_H` (`58svh`) and `PEEK_H` (64), which the sections use to inset their previews. `modal` (default `true`) adds a transparent click-blocking overlay and scroll lock; the footer and heading editors pass `modal={false}` so their previews can scroll. Editor controls (`Section`, `Segmented`, `Switch`, `Swatches`, `TextField`…) live in `templates/cover/controls.jsx` and are shared too; `TextField` takes an `error` message and an input `type`.
+- **Editor shell** (`templates/editor/EditorPane.jsx`). The pane / phone sheet shared by the cover, footer and heading editors: Radix Dialog, header with title, subtitle and Preview/Edit pill (phone), a tab pill bar built from a `tabs` prop, a crossfading body, and a Reset all / Done footer. `onClose` is optional when `inline`: without it the ✕ and Done are hidden and Esc does nothing (the dashboard's docked Design editors). It exports `PANE_W` (400), `SHEET_H` (`58svh`) and `PEEK_H` (64), which the sections use to inset their previews. `modal` (default `true`) adds a transparent click-blocking overlay and scroll lock; the footer and heading editors pass `modal={false}` so their previews can scroll. Editor controls (`Section`, `Segmented`, `Switch`, `Swatches`, `TextField`…) live in `templates/cover/controls.jsx` and are shared too; `TextField` takes an `error` message and an input `type`.
 - **Footer** (`templates/footer/`). `FooterSection` renders the footer at the end of the page and owns its editor. Settings live in `templates/footer/config.js`: `layout` (template, background — White `surface-1` by default, Page `surface-0`, Grey `surface-2` or Dark — social display as icons or names, the card template's photo), `show` (logo, tagline, email, location, socials, quick links, button, wordmark, credit, back to top), `content` (only edited text is stored; defaults come from the gallery and the portfolio `profile`) and `socials` (an ordered list of `{ platform, value }`, where `value` is a handle or a full URL, turned into a link by `socialUrl()`). Templates (Simple, Statement, Let's talk, Photo card, Grid, Wordmark) are preset `layout` + `show` and never change the text or socials; `SUPPORTS` lists which optional pieces each template draws, so the editor only offers those. An email that doesn't validate is hidden from the footer. Saved to `localStorage['store-v3:gallery-footer']`.
   - **Editor** (`FooterEditor.jsx`). Same shell as the cover editor (`templates/editor/EditorPane.jsx`), but non-modal so the preview can scroll. Tabs: Templates, Content, Socials, Style. While it's open, `FooterSection` shows a fixed preview stage beside the pane (or above the phone sheet) with the footer pinned to its bottom; clicks inside the stage don't navigate, and page scroll is locked.
   - **Design system.** Templates use only design-system tokens (`surface-*`, `type-*`, `border`, type tokens) and `Button` / `Eyebrow`. The Dark background re-maps those colour tokens on the footer element (`DARK_TOKENS` in `Footer.jsx`), so templates never branch on it. Backgrounds saved by the first version (`paper`, `linen`, `ink`) are mapped to the closest new one on load.

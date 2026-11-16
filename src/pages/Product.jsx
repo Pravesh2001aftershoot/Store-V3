@@ -26,7 +26,7 @@ function HowManyNote({ product, variant }) {
   else if (product.mode === 'set')
     text = (
       <>
-        Every <b className="font-medium text-type-0">{product.setSize} photos</b> make one triptych. Choose 6 photos and you’ll receive 2 sets.
+        Every <b className="font-medium text-type-0">{product.setSize} photos</b> make one {product.name.toLowerCase()}. Choose {product.setSize * 2} photos and you’ll receive 2 sets.
       </>
     )
   else
@@ -48,12 +48,16 @@ export default function Product() {
   const product = productById[productId]
   const [params, setParams] = useSearchParams()
   const [view, setView] = useState('wall')
+  // A photographer's own product can carry images: null shows the mockup, a number shows that image.
+  const [shot, setShot] = useState(null)
   const nav = useNavigate()
 
   if (!product) return <p className="p-20 text-center">Product not found.</p>
+  const images = product.images ?? []
+  const image = shot != null ? images[shot] : null
 
   const variant = defaultVariant(product, Object.fromEntries(params))
-  const setOpt = (id, val) => setParams({ ...variant, [id]: val }, { replace: true, preventScrollReset: true })
+  const setOpt = (id, val) => { setShot(null); setParams({ ...variant, [id]: val }, { replace: true, preventScrollReset: true }) }
   const price = unitPrice(product, variant, product.mode === 'book' ? product.book.min : 0)
   const cat = categories.find((c) => c.id === product.category)
   const inPackages = packages.filter((p) => p.slots.some((s) => s.productId === product.id))
@@ -80,8 +84,12 @@ export default function Product() {
         <div className="lg:sticky lg:top-28 lg:self-start">
           <div className="relative overflow-hidden rounded-2xl">
             <AnimatePresence mode="wait" initial={false}>
-              <motion.div key={view} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                {view === 'photo' ? (
+              <motion.div key={image ? `shot-${shot}` : view} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
+                {image ? (
+                  <div className="relative aspect-[4/5] bg-surface-2 md:aspect-[5/5]">
+                    <img src={image.src} alt={`${product.name}, image ${shot + 1}`} className="absolute inset-0 h-full w-full object-cover" />
+                  </div>
+                ) : view === 'photo' ? (
                   <div className="grid aspect-[4/5] place-items-center bg-surface-2 p-10 md:aspect-[5/5]">
                     <img src={getPhoto('p1043').src} alt="" className="max-h-full rounded-lg object-contain shadow-lg" />
                   </div>
@@ -91,7 +99,7 @@ export default function Product() {
               </motion.div>
             </AnimatePresence>
             {product.badge && <Badge className="absolute left-4 top-4">{product.badge}</Badge>}
-            <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 gap-1 rounded-full bg-surface-1/85 p-1 shadow-sm ring-1 ring-border backdrop-blur">
+            {!image && <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 gap-1 rounded-full bg-surface-1/85 p-1 shadow-sm ring-1 ring-border backdrop-blur">
               {views.map((v) => (
                 <button
                   key={v.id}
@@ -103,20 +111,43 @@ export default function Product() {
                   <span className="relative">{v.label}</span>
                 </button>
               ))}
-            </div>
+            </div>}
           </div>
+          {images.length > 0 && (
+            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
+              <button
+                onClick={() => setShot(null)}
+                aria-label="Preview with your photo"
+                aria-pressed={shot == null}
+                className={cn('h-16 w-16 shrink-0 overflow-hidden rounded-xl transition', shot == null ? 'ring-2 ring-type-0 ring-offset-2' : 'opacity-70 ring-1 ring-border hover:opacity-100')}
+              >
+                <ProductMockup product={product} variant={variant} className="h-full w-full" />
+              </button>
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setShot(i)}
+                  aria-label={`Image ${i + 1}`}
+                  aria-pressed={shot === i}
+                  className={cn('h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-2 transition', shot === i ? 'ring-2 ring-type-0 ring-offset-2' : 'opacity-70 ring-1 ring-border hover:opacity-100')}
+                >
+                  <img src={img.src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           <p className="mt-3 text-center text-12-r text-type-3">Preview updates as you change options. You’ll pick your own photos next.</p>
         </div>
 
         {/* Configurator */}
         <div>
           <h1 className="text-36-sb md:text-48-sb">{product.name}</h1>
-          <p className="mt-2 text-16-r text-type-2">{product.tagline}</p>
+          {product.tagline && <p className="mt-2 text-16-r text-type-2">{product.tagline}</p>}
           <div className="mt-5 flex items-baseline gap-2">
             <span className="text-30-m">
               <AnimatedNumber value={price} format={money} />
             </span>
-            <span className="text-14-r text-type-2">{product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? 'per set of 3' : `incl. ${product.book.min} photos`}</span>
+            <span className="text-14-r text-type-2">{product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? `per set of ${product.setSize}` : `incl. ${product.book.min} photos`}</span>
           </div>
 
           <div className="mt-8 space-y-7 border-t border-border pt-7">
@@ -162,8 +193,8 @@ export default function Product() {
                 q: 'Details',
                 a: (
                   <>
-                    <p>{product.description}</p>
-                    <ul className="mt-3 space-y-1.5">
+                    {product.description && <p className="whitespace-pre-line">{product.description}</p>}
+                    <ul className={cn('space-y-1.5', product.description && 'mt-3')}>
                       {product.details.map((d) => (
                         <li key={d} className="flex items-center gap-2">
                           <Check size={13} weight="bold" /> {d}

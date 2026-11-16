@@ -50,7 +50,8 @@ export default function ProductMockup({ product, variant: v, items, className, s
   let piece
   switch (product.style) {
     case 'frame': {
-      const frame = getValue(product, 'frame', variant.frame)
+      // Custom products may have no frame option: they get a black frame.
+      const frame = getValue(product, 'frame', variant.frame) ?? { hex: '#1d1d1d' }
       const mat = variant.mat === 'white'
       piece = (
         <div
@@ -91,7 +92,7 @@ export default function ProductMockup({ product, variant: v, items, className, s
       break
     }
     case 'triptych': {
-      const frame = getValue(product, 'frame', variant.frame)
+      const frame = getValue(product, 'frame', variant.frame) ?? { hex: '#1d1d1d' }
       const three = [0, 1, 2].map((i) => list[i] || { photoId: DEFAULT_PHOTOS.triptych[i] })
       const a = cellAspect(product, variant, 'portrait')
       piece = (
@@ -200,6 +201,20 @@ export default function ProductMockup({ product, variant: v, items, className, s
           {piece}
         </motion.div>
       </motion.div>
+    </div>
+  )
+}
+
+/**
+ * A product's cover for cards and thumbnails: the first image the photographer uploaded for one of
+ * their own products, otherwise the CSS mockup.
+ */
+export function ProductImage({ product, className }) {
+  const image = product.images?.[0]
+  if (!image) return <ProductMockup product={product} className={className} />
+  return (
+    <div className={cn('relative aspect-[4/5] w-full overflow-hidden bg-surface-2', className)}>
+      <img src={image.src} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
     </div>
   )
 }

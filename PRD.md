@@ -103,6 +103,7 @@ The demo persona is *Lexie & Taylor*, an engagement gallery shot by *Esteban Gil
 | P2 | Option controls by type: size, colour swatch, segmented control, descriptive card. The price updates live as options change. | ✅ |
 | P3 | Explains how photo count maps to quantity for the product's mode | ✅ |
 | P4 | Details list, related packages and "You may also like" | ✅ |
+| P4a | A photographer's own product shows its images as a thumbnail row under the preview (the first thumbnail is the live mockup); its tagline, description and highlights come from the dashboard, and the photo-count note and price unit use its set size | ✅ |
 | P5 | The call to action opens the Builder with the chosen variant | ✅ |
 
 ### 5.4 Builder (`/build/...`)
