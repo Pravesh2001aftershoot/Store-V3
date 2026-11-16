@@ -13,6 +13,7 @@ This is a front-end-only prototype: a React single-page app with no backend. All
 | Motion | framer-motion |
 | Dialogs | `@radix-ui/react-dialog` |
 | Icons | `@phosphor-icons/react` |
+| QR codes | `uqr` (0.1.3, MIT, no dependencies): the dashboard Share step's QR card |
 | Font | Geist Variable (`@fontsource-variable/geist`). Collection headings can also use Fraunces, Cormorant Garamond and Geist Mono (`@fontsource-variable/fraunces`, `/cormorant-garamond`, `/geist-mono`), imported by `gallery/templates/set-header/config.js` |
 | Class utils | `clsx` + `tailwind-merge` (`cn()`), `class-variance-authority` |
 | Dev tooling | Locator (`@locator/babel-jsx` + runtime): alt-click a component to jump to its source. Dev server only. |
@@ -142,7 +143,7 @@ This state is local to `GalleryPage` and does not go through the store context.
 - **Cover settings** are owned by `GalleryPage` (`useCoverConfig`, passed to `CoverSection` as `cover`) so collection headings can follow the cover's style. `CoverSection` owns the cover photo (`useCoverPhoto`). Both are persisted to `localStorage['store-v3:gallery-cover']` and `['store-v3:gallery-cover-photo']`.
 - **Collection heading settings** are owned by `GalleryPage` (`useSectionConfig(cover.config)`) and persisted to `localStorage['store-v3:gallery-sections']`. Only edited words are stored, per collection.
 - **Footer settings** are owned by `FooterSection` (`useFooterConfig`) and persisted to `localStorage['store-v3:gallery-footer']`. Only edited text is stored; everything else is derived from the gallery and the portfolio `profile` on each render.
-- **Access and permissions** are edited in the dashboard's Settings step (`src/photographer-dashboard/gallery/access.js`) and persisted to `localStorage['store-v3:gallery-access']`. The client gallery doesn't read them yet. `'access'` is in `GALLERY_SETTINGS`, so deleting a gallery clears it.
+- **Access and permissions** are edited in the dashboard's Settings step (`src/photographer-dashboard/gallery/access.js`) and persisted to `localStorage['store-v3:gallery-access']`. The client gallery doesn't read them yet. The Share step's email wording and QR options are in `['store-v3:gallery-share']`. `'access'` and `'share'` are in `GALLERY_SETTINGS`, so deleting a gallery clears them.
 - **Toasts** use a tiny module-level pub/sub (`notify()` / `useToasts()`), so any component can show one without prop drilling.
 
 ### Portfolio state

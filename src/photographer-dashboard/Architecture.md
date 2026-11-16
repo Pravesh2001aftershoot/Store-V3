@@ -25,7 +25,8 @@ src/photographer-dashboard/
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
-│   ├── ShareStep.jsx          Link, checklist, next steps
+│   ├── ShareStep.jsx          Access overview (links, passwords, PINs), email composer, QR card, checklist, next steps
+│   ├── share.js               Share settings (email wording, includes, QR options), composeEmail, mailto, qrFor (uqr), qrCardPNG
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
 │   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
 ├── portfolio/
@@ -167,6 +168,20 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
 - `SettingsStep` keeps a local draft (`structuredClone` + `normalize` on every edit) and only calls the setter on Save. While it has no unsaved changes it follows the saved value (another tab). A `beforeunload` listener warns while it's dirty.
 - Set visibility stores hidden collection titles, so new collections show by default.
 
+### Share (`share.js`, `ShareStep.jsx`)
+
+Everything is derived from `useGalleryAccess()`; the step only saves the photographer's wording and choices, `useShareSettings()` = `forGallery('share', load)` under `galleryKey(id, 'share')` (`store-v3:gallery-share` for the sample):
+
+```
+{ subject, message, closing,             // '' = use defaultText(gallery)
+  include: { link, password, pin, expiry }, // email details, all true by default
+  qr: { password, pin } }                  // printed under the QR code (true, false)
+```
+
+- `linkFor(access, aud, base)` is the shared link for `anyone` or a single link, else `?role=<aud>`. `expiryFor` reads `expiry.all` or the role's own. `codesFor(access, aud)` gives `{ password, pin }` ('' when off).
+- `composeEmail` builds `{ subject, body }`: message, the included detail lines, sign-off. `mailto(to, email)` encodes it. Recipients aren't saved; they reset to the approved list when the audience changes (`EmailComposer` is keyed by audience).
+- QR codes come from `uqr` (`encode`, ECC M, no border): the card draws them as one SVG path with `crispEdges`; `qrCardPNG` draws a 1080 × 1350 canvas (title, code at whole-pixel offsets, caption, lines) and returns a data URL that's downloaded as `<gallery>[-<role>]-qr.png`.
+
 ### Grid defaults
 
 `useGridSettings()` (client) now starts from `useGridDefaults()`, the photographer's choice, and the URL only carries values that differ from it. The Layout menu and shared links behave as before.
@@ -206,6 +221,7 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | Gallery registry in localStorage, slug ids | Gallery records with server ids, a share token per client link, and a `catalog_id` |
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
 | `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
+| Email drafts via `mailto:` | Send from the platform (templates, tracking, per-recipient links or tokens) |
 | Gallery settings saved, not enforced | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 

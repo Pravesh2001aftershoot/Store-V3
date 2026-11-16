@@ -24,7 +24,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 - Accounts, sign-in, or a client list. A gallery's "client" is just a name on the gallery.
 - A server. Settings live in this browser (see [Architecture.md](Architecture.md)).
-- Sending the gallery (email, client list), order management and fulfilment.
+- Sending email from the app (the Share step opens a draft in the photographer's own mail app), a client list, order management and fulfilment.
 - Real event tracking. Gallery analytics show sample data (see Gallery: Analytics).
 - New categories, and products that aren't made from the client's photos (every product takes at least one gallery photo). Photographers can create products and packages, but only in the delivered categories.
 
@@ -77,8 +77,11 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Gallery: Share (step 4)
 
-- R15. The client link, with Copy link and Open.
-- R16. A "Before you send" checklist (photos, cover photo, title, footer), each item linking to where it's fixed.
+- R15. How people get in, from Settings: an access summary (linking to Settings), then each link with Copy and Open and its expiry (one shared link, or one per role), and per audience its **password** and **download PIN** with Copy, plus the sign-in method (Approved list · n, or Email sign-up). With roles, every role's password shows, since one gallery can have several.
+- R15a. **Send it** by **Email** or **QR code**, for one audience at a time (a "Who's it for" switch when access is by role).
+- R15b. **Email:** recipients (filled from the role's approved list; add more by typing, Enter or comma; invalid addresses stay in the field), Subject, Message and Sign-off (empty uses default wording made from the gallery), and **Include** checkboxes for the gallery link, password, download PIN and expiry date (only those that exist). The link section also tells a role which role to pick on a shared link, and approved roles to sign in with the email it was sent to. A live preview shows the email. **Open in email app** opens a `mailto:` draft; **Copy email** copies subject and body. The wording and include choices are saved per gallery.
+- R15c. **QR code:** a card with the gallery title, the QR code for that audience's link, "Scan to open the gallery", and optionally the password and download PIN (and the role to pick on a shared link). **Download PNG** saves it at 1080 × 1350; **Copy link** copies the link.
+- R16. A "Before you send" checklist (photos, cover photo, title, footer, access), each item linking to where it's fixed. Access isn't done while a role uses an approved list with nobody on it.
 - R17. Links on to the Portfolio and to this gallery's store catalog.
 
 ### Gallery: Analytics (step 5)

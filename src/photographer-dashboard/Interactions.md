@@ -133,9 +133,20 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 
 ## Gallery: Share
 
-- **Copy link** copies the client URL and toasts "Link copied", or "Couldn’t copy — select the link and copy it". **Open** opens the gallery.
-- Each "Before you send" row links to the step that fixes it. A grey dot means "worth a look", not an error.
-- The link is `/g/<id>` (the gallery's own link).
+- The access line under the cover sums up Settings ("By role · Clients, Guests · one link") and **Settings →** opens that step.
+- Each link has **Copy** (toasts "Link copied") and **Open** (new tab), with "expires 1 March 2027" or "never expires". Each password and download PIN has a copy button ("Password copied", "Download PIN copied"). A failed copy toasts "Couldn’t copy — select it and copy it yourself".
+- The link is `/g/<id>`, or `/g/<id>?role=<role>` when each role has its own.
+
+### Send it
+- With roles, **Who’s it for** picks the audience; **Email** / **QR code** picks the method. Changing the audience refills the recipients.
+- **To:** approved people's emails are filled in as chips ("Filled from approved clients."). Typing an address then Enter, comma or space (or leaving the field) adds it; Backspace in an empty field removes the last chip; ✕ removes one. Invalid addresses stay in the field and toast "“…” isn’t an email address".
+- **Subject**, **Message** (0/1000) and **Sign-off** (0/200) show the default wording as placeholder; empty uses it ("Empty uses the text shown."). **Use the default wording** clears all three. Edits save as you type.
+- **Include** lists only what exists for that audience: Gallery link, Password (1357), Download PIN (2468), Expiry date. Unticking a needed password shows "They’ll need the password to open the gallery. Send it another way." in amber.
+- The preview updates as you type. **Open in email app** opens a draft in the mail app; **Copy email** copies "Subject: …" and the body ("Email copied").
+- **QR code:** the card updates with the audience. **Print under the code** ticks the password (on by default) and download PIN; with the password on, a note warns that anyone who sees the card can get in. **Download PNG** saves the card and toasts "QR card downloaded"; **Copy link** copies the link.
+
+### Checklist
+- Each "Before you send" row links to the step that fixes it. A grey dot means "worth a look", not an error. The Access row reads "No approved clients yet" while an approved list is empty.
 - The Portfolio card opens the Portfolio; the Print store card opens this gallery's catalog.
 
 ## Gallery: Analytics

@@ -54,6 +54,18 @@ export function Chip({ active, count, children, className, ...props }) {
   )
 }
 
+/** 20px checkbox with its label: `type-0` fill and a bold check when ticked. */
+export function Checkbox({ checked, onChange, children }) {
+  return (
+    <button type="button" role="checkbox" aria-checked={checked} onClick={() => onChange(!checked)} className="group flex items-center gap-2 text-left text-14-r text-type-1">
+      <span className={cn('grid h-5 w-5 shrink-0 place-items-center rounded-md border transition', checked ? 'border-type-0 bg-type-0 text-white' : 'border-type-3 bg-surface-1 group-hover:border-type-1')}>
+        {checked && <Check size={12} weight="bold" />}
+      </span>
+      <span className={cn('flex items-center', checked && 'text-type-0')}>{children}</span>
+    </button>
+  )
+}
+
 /** Small tag inside rows: Hidden, Edited, Uploaded… */
 export function Tag({ tone = 'muted', children, className }) {
   const tones = {

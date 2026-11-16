@@ -45,7 +45,7 @@ const registry = persisted(KEY, load)
 /** Storage key for one of a gallery's settings. The sample gallery keeps its original keys. */
 export const galleryKey = (id, name) => (id === DEFAULT_GALLERY ? `store-v3:gallery-${name}` : `store-v3:gallery:${id}:${name}`)
 /** Per-gallery settings names (see galleryKey). Used to clean up when a gallery is deleted. */
-export const GALLERY_SETTINGS = ['library', 'cover', 'cover-photo', 'sections', 'footer', 'grid', 'access']
+export const GALLERY_SETTINGS = ['library', 'cover', 'cover-photo', 'sections', 'footer', 'grid', 'access', 'share']
 
 /** A persisted value per gallery: `forGallery('cover', load)(galleryId)`. */
 export const forGallery = (name, loadFn, save) => persistedFamily((id) => galleryKey(id, name), loadFn, save)

@@ -9,7 +9,7 @@ import { Segmented, Switch } from '../../gallery/templates/cover/controls'
 import { notify } from '../../gallery/lib/actions'
 import { cn } from '../../lib/utils'
 import { galleryPath } from '../../data/galleries'
-import { Chip, IconButton, PageHeader, Tag, ease } from '../components/ui'
+import { Checkbox, Chip, IconButton, PageHeader, Tag, ease } from '../components/ui'
 import Modal from '../components/Modal'
 import {
   IMAGE_SIZES, LIMIT_MAX, MIN_ROLES, ROLES, filterIncluded, initials, normalize, pinRequired, randomPin, roleLabel,
@@ -538,17 +538,6 @@ function SaveBar({ show, blocker, onSave, onDismiss }) {
         </motion.div>
       )}
     </AnimatePresence>
-  )
-}
-
-function Checkbox({ checked, onChange, children }) {
-  return (
-    <button type="button" role="checkbox" aria-checked={checked} onClick={() => onChange(!checked)} className="group flex items-center gap-2 text-left text-14-r text-type-1">
-      <span className={cn('grid h-5 w-5 shrink-0 place-items-center rounded-md border transition', checked ? 'border-type-0 bg-type-0 text-white' : 'border-type-3 bg-surface-1 group-hover:border-type-1')}>
-        {checked && <Check size={12} weight="bold" />}
-      </span>
-      <span className={cn('flex items-center', checked && 'text-type-0')}>{children}</span>
-    </button>
   )
 }
 
