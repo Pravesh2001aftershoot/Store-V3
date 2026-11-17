@@ -174,16 +174,17 @@ The drawer opens from the header cart button on every store screen. It also open
 
 ### Cover editor: [src/gallery/templates/cover/CoverEditor.jsx](src/gallery/templates/cover/CoverEditor.jsx), [controls.jsx](src/gallery/templates/cover/controls.jsx)
 
-Opens from "Edit cover". The pane, sheet, tab pill, tab body and footer come from the shared [EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx). It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
+Opens from "Edit cover". The pane, sheet, tabs, tab body and footer come from the shared [EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx). It uses Radix Dialog with a transparent overlay, so the cover stays visible as the live preview. Clicks outside don't close it; Done, Esc and ✕ do.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
 | Pane (tablet / desktop) | Open / close | Slides in from the left | `x -100% → 0`, exit `→ -110%`, `0.55s`, `ease` | framer-motion + Radix |
 | Sheet (phone) | Open / close | Slides up from the bottom | `y 100% → 0`, `0.55s`, `ease` | framer-motion + Radix |
 | Sheet (phone) | Grab handle or Preview / Edit button | Collapses to a `64px` bar to show the whole cover, and expands back to `58svh` | `height`, `500ms`, `cubic-bezier(.22,1,.36,1)` | Tailwind |
-| Tab pill (Templates / Layout / Text / Photo) | Tab changes | The white pill slides | `layoutId="editor-tab-{title}"` (one per editor), `0.35s`, `ease` | framer-motion |
+| Tabs (Templates / Layout / Text / Photo) | Tab changes | The 2px underline slides to the chosen tab | `layoutId="editor-tab-{title}"` (one per editor), `0.4s`, `ease` | framer-motion |
 | Tab body | Tab changes | Crossfade with a small rise | Enter `opacity 0 → 1`, `y 8 → 0`. Exit `y → -8`. `0.2s`, `ease`. `mode="wait"` | framer-motion |
 | Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected | Tailwind default | Tailwind |
+| Template card | Click | Applies the template's layout and which pieces show (both buttons on for every template); words are kept. The Layout and Text tabs then show only the settings that cover uses; the rest are removed, not greyed out (list in PRD "Settings each cover hides") | Instant | React |
 | Segmented controls (alignment, title size, width, logo, buttons) | Option chosen | The white pill slides | `layoutId="seg-{id}"`, `0.35s`, `ease` | framer-motion |
 | Position grid cell | Hover / selected | Fill `→ white/10` on hover; selected gets `white/20`, a white ring and longer bars | Tailwind default | Tailwind |
 | Switch | Toggle | Knob slides, track `#dcdcdf → type-0` | `x 0 → 16`, `0.25s`, `ease` | framer-motion + Tailwind |
@@ -196,7 +197,7 @@ Opens from "Edit cover". The pane, sheet, tab pill, tab body and footer come fro
 
 ### Footer and footer editor: [src/gallery/templates/footer/Footer.jsx](src/gallery/templates/footer/Footer.jsx), [FooterEditor.jsx](src/gallery/templates/footer/FooterEditor.jsx), [FooterSection.jsx](src/gallery/templates/footer/FooterSection.jsx)
 
-Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Content / Socials / Style), tab body crossfade, Reset all and Done. It's non-modal (`modal={false}`): there's no overlay, so the preview stage can scroll, and `FooterSection` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
+Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, underlined tabs (Templates / Content / Socials / Style), tab body crossfade, Reset all and Done. It's non-modal (`modal={false}`): there's no overlay, so the preview stage can scroll, and `FooterSection` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -221,7 +222,7 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 
 ### Collection headings and heading editor: [src/gallery/templates/set-header/SectionHeader.jsx](src/gallery/templates/set-header/SectionHeader.jsx), [SectionEditor.jsx](src/gallery/templates/set-header/SectionEditor.jsx)
 
-Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, tab pill (Templates / Text / Style), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
+Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, underlined tabs (Templates / Text / Style), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -249,6 +250,7 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Collection tab row | Active tab changes | The row scrolls sideways to centre the active tab | `row.scrollTo({ behavior: 'smooth' })` | Browser native |
 | Collection tab | Tap | The page scrolls so the section heading sits under the nav. Scroll-spy is locked until `scrollend`, wheel or touch (1.5s fallback) | `window.scrollTo({ behavior: 'smooth' })` | Browser native |
 | People button | Click | Opens the Find people pane. `surface-2` while the pane or the People view is open; the icon turns bold in the People view | Tailwind default | Tailwind |
+| Download button | Click | Opens the [Download pane](#download-srcgallerycomponentsdownloadpanejsx) on the current view (Favourites, a set or People) or Whole gallery. `surface-2` while the pane is open. Labelled "Download" from `lg` up, icon only on tablet, a 40px icon beside Shop in the phone top bar. Not shown when the photographer has turned downloads off | Tailwind default | Tailwind |
 | Layout / Hidden / Favourites buttons | Hover / pressed | Background `→ surface-2`. Text labels show from `lg` up; on tablet they're icon plus count. On phones they move to the [dock](#phone-dock) instead. "Shop prints" is an icon-only circle on tablet and a labelled "Shop" pill on phones | Tailwind default | Tailwind |
 | Hidden button | Hover / pressed | Background `→ surface-2`; the eye-slash icon turns bold while the Hidden view is open | Tailwind default | Tailwind |
 | Favourites / Hidden toggle, set tab | Click | Opens that view (or goes back to all photos if it's already open) and jumps back to the top of the grid if scrolled past it. Any selection is cleared | `scrollTo({ behavior: 'instant' })` | Browser native |
@@ -262,7 +264,7 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 
 #### Phone dock
 
-On phones (below 640px) the top bar keeps only the names and "Shop"; People, Favourites, Hidden, Layout and Select live in a floating dock rendered into `document.body`.
+On phones (below 640px) the top bar keeps only the names, the Download icon and "Shop"; People, Favourites, Hidden, Layout and Select live in a floating dock rendered into `document.body`.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -271,6 +273,24 @@ On phones (below 640px) the top bar keeps only the names and "Shop"; People, Fav
 | Dock button | Tap | Scales down while pressed. Opens the same view, pane or sheet as the desktop button; Select turns selection mode on | `active:scale-[.96]`, Tailwind default | Tailwind |
 | Dock button | View or sheet open | `surface-2` pill, text `type-2 → type-0` | Tailwind default | Tailwind |
 | Count badge | Favourites / Hidden count changes | Shown when above 0, `99+` past 99. No motion | n/a | n/a |
+
+### Download: [src/gallery/components/DownloadPane.jsx](src/gallery/components/DownloadPane.jsx), [downloads.js](src/gallery/lib/downloads.js)
+
+Opens from the nav's Download button, the selection bar's Download, or a one-photo download that needs the PIN or is past the limit. Same modal shell as Find people: Esc, ✕ and overlay taps close it. It starts fresh on the first step each time.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Overlay / pane | Open / close | As [Find people](#find-people-srcgallerycomponentsfacepanejsx-facesjs) | `x 100% → 0`, `0.55s`, `ease` | framer-motion |
+| Steps (pick → PIN → preparing → done) | Download, back, PIN accepted, zip ready | Directional slide; back reverses it. The body scrolls to the top in between | `x ±24`, `opacity`, `0.3s`, `ease`, `AnimatePresence mode="wait"` | framer-motion |
+| Allowance bar | Pane opens / photos downloaded | The bar shrinks to what's left; "You've used all M downloads" and "Ask {photographer} if you need more." at zero | `width`, `0.5s`, `ease` | framer-motion |
+| Source row | Tap | Ticks or unticks it: `surface-2` background, the check pops in. Any mix can be ticked; Whole gallery is on its own (ticking it clears the rest, ticking anything else unticks it). The footer's count, note and button update at once, counting shared photos once, with "N photos are in more than one of these, so they download once." under the list. Nothing ticked: "Choose what to download", disabled. Rows with no photos are disabled ("Tap the heart on a photo to add it" for Favourites) | Check `scale 0 → 1`, `0.2s`, `ease` | framer-motion |
+| Web size / High res | Tap | The white pill slides to it; the hint below changes | `layoutId="download-size"`, `0.35s`, `ease` | framer-motion |
+| Over-the-limit note | The choice has more new photos than are left | Opens above the button: "Only N downloads left, and M photos here are new to you. We'll download the first N new, plus the K you've downloaded before." (at zero: "You have no downloads left, so only the K photos you've downloaded before are included.") The button reads "Download X of Y" | `height 0 → auto`, `opacity`, `0.3s`, `ease` | framer-motion |
+| Download N photos | Tap | With a download PIN not yet entered this visit: the PIN step. Otherwise one photo saves and goes to done; 2+ go to preparing. Disabled as "Nothing to download" / "No downloads left" | Step slide | framer-motion |
+| PIN field | Fourth digit typed, or "Unlock and download" | Right PIN: unlocks for the visit and starts the download. Wrong: the field shakes, clears, gets a `destructive` border and "That PIN isn't right. Check the message from {photographer}." | `x 0, -10, 10, -6, 6, 0`, `0.4s` | framer-motion |
+| Preparing | Step opens | The bar fills, with "Packing k of N photos · size". Cancel goes back without downloading | `1.2–4s` (`1200 + 10ms` per photo), `requestAnimationFrame` | JS |
+| Done | Zip ready / one photo saved | The green check pops in: "Your download has started", the file name, "N photos · size" and, with a limit, "N downloads left". "Done" closes; "Download something else" goes back to the list | `scale 0.4 → 1`, `0.35s`, `ease` | framer-motion |
+| Tile / lightbox download | Click | Saves the photo and toasts "Downloading name". Needs the PIN, or new and none left: the lightbox closes and the pane opens on "This photo" | n/a | n/a |
 
 ### Find people: [src/gallery/components/FacePane.jsx](src/gallery/components/FacePane.jsx), [faces.js](src/gallery/data/faces.js)
 
@@ -336,7 +356,8 @@ Shown while multi-selecting. Esc closes the name field if it's open, otherwise l
 | "Select all N" / "Select none" | Hover / click | Text `white/60 → white`, underline. Click swaps the label | Tailwind default | Tailwind |
 | Action buttons (Share, Favourite, Download, New set) | Hover / disabled | Background `→ white/10`, text `white/85 → white`. Disabled at `35%` opacity when nothing is selected | Tailwind default | Tailwind |
 | Favourite action | Every selected photo is a favourite | Becomes "Unfavourite" with a filled red heart | Instant | n/a |
-| Favourite / Download | Click | Runs, toasts, and the bar leaves (selection ends) | See Bar | framer-motion |
+| Favourite | Click | Runs, toasts, and the bar leaves (selection ends) | See Bar | framer-motion |
+| Download | Click | Opens the [Download pane](#download-srcgallerycomponentsdownloadpanejsx) with "Selected photos" ticked. Selection ends once the download starts; closing the pane keeps it. Not shown when downloads are off | See pane | framer-motion |
 | Share | Click | Opens the share sheet, or copies links with a toast. Selection stays | n/a | Browser native |
 | New set (tablet / desktop) | Click | A name panel floats up above the bar; the name is pre-selected. Enter or "Create set" makes the set, toasts, and selection ends | Panel `opacity 0 → 1`, `y 8 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it | framer-motion |
 | New set (phone) | Tap | The name form opens in a [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx) | Same as BottomSheet | framer-motion |

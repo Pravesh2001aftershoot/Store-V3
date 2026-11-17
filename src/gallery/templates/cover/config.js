@@ -68,24 +68,62 @@ export const CTA_SIZE = [
   { id: 'lg', label: 'Large' },
 ]
 
-/** Slider ranges, in px at full desktop width. Smaller screens scale these down (see Cover). */
-export const MARGIN_X = { min: 0, max: 120, step: 4 }
-export const MARGIN_Y = { min: 0, max: 160, step: 4 }
+/** Margin presets, in px at full desktop width. Smaller screens scale these down (see Cover). */
+export const MARGIN_X = [
+  { id: 0, label: 'None' },
+  { id: 16, label: 'S', hint: '16px' },
+  { id: 32, label: 'M', hint: '32px' },
+  { id: 64, label: 'L', hint: '64px' },
+  { id: 96, label: 'XL', hint: '96px' },
+]
+export const MARGIN_Y = [
+  { id: 0, label: 'None' },
+  { id: 16, label: 'S', hint: '16px' },
+  { id: 32, label: 'M', hint: '32px' },
+  { id: 64, label: 'L', hint: '64px' },
+  { id: 120, label: 'XL', hint: '120px' },
+]
+/** How much the photo is darkened behind the text, in %. */
+export const OVERLAY = [
+  { id: 0, label: 'None' },
+  { id: 25, label: 'Light' },
+  { id: 50, label: 'Medium' },
+  { id: 75, label: 'Strong' },
+]
+/** The preset closest to a saved number, so older covers (saved from sliders) still show a choice. */
+const nearest = (options, v) =>
+  typeof v === 'number' ? options.reduce((a, o) => (Math.abs(o.id - v) < Math.abs(a.id - v) ? o : a)).id : undefined
 
-/** Composed cover kinds. `shape`: uses the photo shape control. `flip`: can mirror sides. `photos`: how many photos it shows. */
+// Which editor settings each kind of cover uses. The editor only renders the settings the
+// current cover lists; the rest have no effect on it, so they're hidden rather than disabled.
+//
+//   Layout tab:  position (text position grid), width (text width), titleSize, logo (show/hide),
+//                logoPlacement (top bar / in text + top-bar alignment), marginX, marginY, overlay,
+//                shape (photo shape), photoSize, flip (flip sides), surface (background)
+//   Text tab:    eyebrow (label), subtitle, buttons (primary + secondary, arrangement, size), storeLink
+//   Photo tab:   every cover (1 photo, or 3 for triptych)
+
+/** Settings every cover has. */
+const COMMON = ['titleSize', 'logo', 'marginX', 'marginY', 'eyebrow', 'subtitle', 'buttons', 'storeLink']
+/** Settings every composed cover has on top of COMMON. */
+const COMPOSED = [...COMMON, 'photoSize', 'surface']
+
+/** Cover kinds. `settings`: what the editor shows for it. `photos`: how many photos it shows. */
 export const COMPOSITIONS = {
-  overlay: { name: 'Full bleed' },
-  banner: { name: 'Banner', flip: true, photos: 1 },
-  split: { name: 'Split', flip: true, photos: 1 },
-  frame: { name: 'Framed', shape: true, photos: 1 },
-  strip: { name: 'Side title', flip: true, photos: 1 },
-  triptych: { name: 'Triptych', shape: true, photos: 3 },
-  corner: { name: 'Corner print', shape: true, flip: true, photos: 1 },
-  stacked: { name: 'Stacked', shape: true, photos: 1 },
+  overlay: { name: 'Full bleed', photos: 1, settings: [...COMMON, 'position', 'width', 'logoPlacement', 'overlay'] },
+  banner: { name: 'Banner', photos: 1, settings: [...COMPOSED, 'flip'] },
+  split: { name: 'Split', photos: 1, settings: [...COMPOSED, 'flip'] },
+  frame: { name: 'Framed', photos: 1, settings: [...COMPOSED, 'shape'] },
+  strip: { name: 'Side title', photos: 1, settings: [...COMPOSED, 'flip'] },
+  triptych: { name: 'Triptych', photos: 3, settings: [...COMPOSED, 'shape'] },
+  corner: { name: 'Corner print', photos: 1, settings: [...COMPOSED, 'shape', 'flip'] },
+  stacked: { name: 'Stacked', photos: 1, settings: [...COMPOSED, 'shape'] },
 }
 
 export const isComposed = (layout) => layout.composition !== 'overlay'
 export const photoCount = (layout) => COMPOSITIONS[layout.composition]?.photos ?? 1
+/** Whether the current cover uses an editor setting (see COMPOSITIONS). */
+export const supports = (layout, setting) => COMPOSITIONS[layout.composition]?.settings.includes(setting) ?? false
 
 /** Photo shapes for composed covers. `auto` follows the photo's own orientation. */
 export const SHAPES = [
@@ -139,18 +177,19 @@ export const TEMPLATES = [
   { id: 'full-bleed', name: 'Full bleed', description: 'Photo fills the screen, text on top', ...base },
 ]
 
-// Composed covers: quiet by default (title and date), buttons can be turned on under Text.
-const quiet = { eyebrow: true, subtitle: false, primaryCta: false, secondaryCta: false, storeLink: true }
-const composed = (layout) => ({ ...base.layout, titleSize: 'm', marginX: 32, marginY: 32, ...layout })
+// Composed covers: title, date and both buttons by default; the subtitle can be turned on under Text.
+// Buttons are regular size so they sit comfortably beside the smaller composed titles.
+const composedShow = { eyebrow: true, subtitle: false, primaryCta: true, secondaryCta: true, storeLink: true }
+const composed = (layout) => ({ ...base.layout, titleSize: 'm', ctaSize: 'md', marginX: 32, marginY: 32, ...layout })
 
 export const COMPOSED_TEMPLATES = [
-  { id: 'banner', name: 'Banner', description: 'Wide photo, title below', layout: composed({ composition: 'banner' }), show: quiet },
-  { id: 'split', name: 'Split', description: 'Title beside a tall photo', layout: composed({ composition: 'split', titleSize: 'l' }), show: quiet },
-  { id: 'framed', name: 'Framed', description: 'Centered print, title across', layout: composed({ composition: 'frame' }), show: quiet },
-  { id: 'strip', name: 'Side title', description: 'Vertical title, big photo', layout: composed({ composition: 'strip', photoSize: 'l' }), show: quiet },
-  { id: 'triptych', name: 'Triptych', description: 'Three photos in a row', layout: composed({ composition: 'triptych', shape: 'square', marginX: 88 }), show: quiet },
-  { id: 'corner-print', name: 'Corner print', description: 'Small print, oversized title', layout: composed({ composition: 'corner', titleSize: 'l', marginX: 40, marginY: 40 }), show: quiet },
-  { id: 'stacked', name: 'Stacked', description: 'Title over a centered print', layout: composed({ composition: 'stacked', titleSize: 's' }), show: quiet },
+  { id: 'banner', name: 'Banner', description: 'Wide photo, title below', layout: composed({ composition: 'banner' }), show: composedShow },
+  { id: 'split', name: 'Split', description: 'Title beside a tall photo', layout: composed({ composition: 'split', titleSize: 'l' }), show: composedShow },
+  { id: 'framed', name: 'Framed', description: 'Centered print, title across', layout: composed({ composition: 'frame' }), show: composedShow },
+  { id: 'strip', name: 'Side title', description: 'Vertical title, big photo', layout: composed({ composition: 'strip', photoSize: 'l' }), show: composedShow },
+  { id: 'triptych', name: 'Triptych', description: 'Three photos in a row', layout: composed({ composition: 'triptych', shape: 'square', marginX: 96 }), show: composedShow },
+  { id: 'corner-print', name: 'Corner print', description: 'Small print, oversized title', layout: composed({ composition: 'corner', titleSize: 'l' }), show: composedShow },
+  { id: 'stacked', name: 'Stacked', description: 'Title over a centered print', layout: composed({ composition: 'stacked', titleSize: 's' }), show: composedShow },
 ]
 
 export const ALL_TEMPLATES = [...TEMPLATES, ...COMPOSED_TEMPLATES]
@@ -176,8 +215,12 @@ function load(key) {
   try {
     const saved = JSON.parse(localStorage.getItem(key))
     if (!saved) return DEFAULT
+    const layout = { ...DEFAULT.layout, ...saved.layout }
+    layout.marginX = nearest(MARGIN_X, layout.marginX) ?? DEFAULT.layout.marginX
+    layout.marginY = nearest(MARGIN_Y, layout.marginY) ?? DEFAULT.layout.marginY
+    layout.overlay = nearest(OVERLAY, layout.overlay) ?? DEFAULT.layout.overlay
     return {
-      layout: { ...DEFAULT.layout, ...saved.layout },
+      layout,
       show: { ...DEFAULT.show, ...saved.show },
       content: { ...saved.content },
     }

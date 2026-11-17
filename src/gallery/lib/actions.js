@@ -131,8 +131,8 @@ export async function sharePhotos(photos) {
   }
 }
 
-// ── Favourites & hidden photos (each a set of photo ids, persisted per gallery) ──
-function usePersistedIds(storageKey) {
+// ── Favourites, hidden and downloaded photos (each a set of photo ids, persisted per gallery) ──
+export function usePersistedIds(storageKey) {
   const [ids, setIds] = useState(() => {
     try {
       return new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'))

@@ -115,9 +115,9 @@ export default function Composed({ gallery, slots, config, still, onEnter }) {
       body = (
         <div className="relative h-full">
           <div className="absolute inset-x-0 top-0 flex justify-center" style={{ paddingTop: BAR }}>{logo()}</div>
-          <div className="absolute inset-0 grid place-items-center">{pic(p0, '', framed(h, r, '84cqw'))}</div>
+          <div className="absolute inset-0 grid place-items-center">{pic(p0, '', framed(h, r, 'min(84cqw, 100cqw - 2 * var(--mx))'))}</div>
           {/* Difference blend keeps the title readable across both the backdrop and the photo. */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-[clamp(10px,3cqh,32px)] text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-[clamp(10px,3cqh,32px)] text-center" style={{ paddingInline: 'var(--mx)' }}>
             {title(4.6, 'text-white mix-blend-difference', { letterSpacing: '0.32em', marginRight: '-0.32em' })}
             {show.eyebrow && C.eyebrow && (
               <Up still={still} delay={0.2} className="text-[clamp(13px,1.6cqw,22px)] tracking-[0.12em] text-white mix-blend-difference">{C.eyebrow}</Up>
@@ -212,7 +212,7 @@ export default function Composed({ gallery, slots, config, still, onEnter }) {
     default: {
       const h = { s: 46, m: 58, l: 68 }[L.photoSize]
       body = (
-        <div className="flex h-full flex-col items-center justify-center text-center" style={{ padding: PAD, gap: 'clamp(12px, 3cqh, 28px)' }}>
+        <div className="flex h-full flex-col items-center justify-center text-center" style={{ padding: `${BAR} var(--mx) var(--my)`, gap: 'clamp(12px, 3cqh, 28px)' }}>
           <div className="flex flex-col items-center gap-x-[clamp(16px,3cqw,36px)] gap-y-2 @xl:flex-row">
             {title(2.4, 'font-normal', { letterSpacing: '0.26em', marginRight: '-0.26em' })}
             {show.eyebrow && C.eyebrow && (

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretLeft, CheckCircle, EyeSlash, Handbag, Heart, PencilSimple, SlidersHorizontal, Stack, UserFocus, X } from '@phosphor-icons/react'
+import { CaretLeft, CheckCircle, DownloadSimple, EyeSlash, Handbag, Heart, PencilSimple, SlidersHorizontal, Stack, UserFocus, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../lib/settings'
 import { useBreakpoint } from '../lib/hooks'
@@ -231,8 +231,9 @@ function useDockVisible(navRef, enabled) {
  * buckets, and the entry to the store. A set opens like a bucket: `view` is `set:<id>`.
  * People (`onFaces`, left out when the gallery has no key faces) opens the face filter pane; its
  * results open like a bucket too (`view` is `faces`), described by `faceFilter`.
+ * Download (`onDownload`, left out when the photographer has turned downloads off) opens the download pane.
  */
-export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting, onFaces, facesOpen, faceFilter, faceCount, onClearFaces }) {
+export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting, onFaces, facesOpen, faceFilter, faceCount, onClearFaces, onDownload, downloadOpen }) {
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
@@ -466,6 +467,24 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
                 <span className="tabular-nums">{favCount}</span>
               </button>
             </>
+          )}
+          {onDownload && (
+            <button
+              onClick={onDownload}
+              aria-haspopup="dialog"
+              aria-expanded={downloadOpen}
+              aria-label="Download photos"
+              title="Download photos"
+              // Phone: an icon button beside Shop (the dock is full). Tablet: icon only. Desktop: labelled.
+              className={cn(
+                'flex h-10 items-center justify-center gap-2 rounded-full text-14-r text-type-1 transition hover:bg-surface-2 hover:text-type-0',
+                isPhone ? 'w-10' : 'px-3',
+                downloadOpen && 'bg-surface-2 text-type-0'
+              )}
+            >
+              <DownloadSimple size={18} />
+              {!isPhone && <span className="hidden lg:inline">Download</span>}
+            </button>
           )}
           <Link
             to="/store"

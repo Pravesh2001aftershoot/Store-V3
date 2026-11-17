@@ -4,10 +4,10 @@ import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, CircleNotch, Cross
 import { Button } from '../../../components/ui'
 import { cn } from '../../../lib/utils'
 import {
-  ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO_ALIGN, LOGO_PLACEMENT, MARGIN_X, MARGIN_Y, PHOTO_SIZE,
-  SHAPES, SURFACES, TEMPLATES, TITLE_SIZE, WIDTH, isComposed, photoCount,
+  ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO_ALIGN, LOGO_PLACEMENT, MARGIN_X, MARGIN_Y, OVERLAY, PHOTO_SIZE,
+  SHAPES, SURFACES, TEMPLATES, TITLE_SIZE, WIDTH, isComposed, photoCount, supports,
 } from './config'
-import { FocalPoint, Label, PositionGrid, Section, Segmented, Slider, Swatches, Switch, TextField } from './controls'
+import { FocalPoint, Label, PositionGrid, Section, Segmented, Swatches, Switch, TextField } from './controls'
 import { CENTER, UPLOAD_ID, readImage } from './photo'
 import Composed from './Composed'
 import EditorPane, { PANE_W, PEEK_H, SHEET_H } from '../editor/EditorPane'
@@ -71,7 +71,6 @@ function TemplatesTab({ cover, photo, slots, gallery }) {
           )}
         </div>
         <p className="mt-2 text-13-m text-type-0">{t.name}</p>
-        <p className="text-12-r text-type-2">{t.description}</p>
       </button>
     )
   }
@@ -147,25 +146,71 @@ function FullBleedThumb({ template, photo, gallery, content: C }) {
 
 // ── Layout ──────────────────────────────────────────────────────────────────
 
+/** What "Flip sides" does, per composition. */
+const FLIP_HINT = {
+  banner: 'Title on the right, logo on the left',
+  split: 'Photo on the left, title on the right',
+  strip: 'Title panel on the right',
+  corner: 'Photo top left, title bottom right',
+}
+const LOGO_TOGGLE = [{ id: 'top-left', label: 'Show' }, { id: 'hidden', label: 'Hide' }]
+const orientation = (p) => (!p?.w || !p?.h ? null : p.w > p.h * 1.05 ? 'landscape' : p.h > p.w * 1.05 ? 'portrait' : 'square')
+
+/** Layout controls. Only the settings the current cover uses are rendered (see COMPOSITIONS in ./config). */
 function LayoutTab({ cover, photo }) {
   const { layout: L } = cover.config
   const set = cover.setLayout
-  if (isComposed(L)) return <ComposedLayout cover={cover} photo={photo} />
+  const can = (setting) => supports(L, setting)
+  const meta = COMPOSITIONS[L.composition]
+  const found = orientation(photo)
+  const shapes = SHAPES.map((s) => (s.id === 'auto' && found ? { ...s, hint: `Follows the photo — this one is ${found}` } : s))
   return (
     <div>
-      <Section title="Text" hint="Tap where the title block should sit.">
-        <PositionGrid value={L.position} onChange={(position) => set({ position })} photo={photo} />
-        <Segmented label="Title size" options={TITLE_SIZE} value={L.titleSize} onChange={(titleSize) => set({ titleSize })} />
-        <Segmented label="Text width" options={WIDTH} value={L.width} onChange={(width) => set({ width })} />
+      {(can('shape') || can('photoSize') || can('flip')) && (
+        <Section title="Photo" hint={`${meta.name} layout. Switch layouts under Templates.`}>
+          {can('shape') && <Segmented label="Shape" options={shapes} value={L.shape} onChange={(shape) => set({ shape })} />}
+          {can('photoSize') && (
+            <Segmented label={L.composition === 'split' ? 'Photo width' : 'Size'} options={PHOTO_SIZE} value={L.photoSize} onChange={(photoSize) => set({ photoSize })} />
+          )}
+          {can('flip') && (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label>Flip sides</Label>
+                <p className="-mt-1.5 text-12-r text-type-2">{FLIP_HINT[L.composition]}</p>
+              </div>
+              <Switch checked={L.flip} onChange={(flip) => set({ flip })} label="Flip sides" />
+            </div>
+          )}
+        </Section>
+      )}
+
+      {can('surface') && (
+        <Section title="Background">
+          <Swatches label="Background" options={SURFACES} value={L.surface} onChange={(surface) => set({ surface })} />
+        </Section>
+      )}
+
+      <Section title="Text" hint={can('position') ? 'Tap where the title block should sit.' : undefined}>
+        {can('position') && <PositionGrid value={L.position} onChange={(position) => set({ position })} photo={photo} />}
+        {can('titleSize') && <Segmented label="Title size" options={TITLE_SIZE} value={L.titleSize} onChange={(titleSize) => set({ titleSize })} />}
+        {can('width') && <Segmented label="Text width" options={WIDTH} value={L.width} onChange={(width) => set({ width })} />}
       </Section>
 
-      <LogoSection value={L.logo} onChange={(logo) => set({ logo })} />
+      {can('logoPlacement') ? (
+        <LogoSection value={L.logo} onChange={(logo) => set({ logo })} />
+      ) : can('logo') && (
+        <Section title="Logo">
+          <Segmented options={LOGO_TOGGLE} value={L.logo === 'hidden' ? 'hidden' : 'top-left'} onChange={(logo) => set({ logo })} />
+        </Section>
+      )}
 
-      <MarginsSection L={L} set={set} />
+      {(can('marginX') || can('marginY')) && <MarginsSection L={L} set={set} can={can} />}
 
-      <Section title="Overlay" hint="Darkens the photo behind the text so it stays readable.">
-        <Slider label="Strength" min={0} max={100} step={5} value={L.overlay} onChange={(overlay) => set({ overlay })} format={(v) => `${v}%`} />
-      </Section>
+      {can('overlay') && (
+        <Section title="Overlay" hint="Darkens the photo behind the text so it stays readable.">
+          <Segmented label="Strength" options={OVERLAY} value={L.overlay} onChange={(overlay) => set({ overlay })} />
+        </Section>
+      )}
     </div>
   )
 }
@@ -198,62 +243,12 @@ function LogoSection({ value, onChange }) {
   )
 }
 
-function MarginsSection({ L, set }) {
+function MarginsSection({ L, set, can }) {
   return (
     <Section title="Margins" hint="Distance from the edges on a desktop screen. Scales down on smaller screens.">
-      <Slider label="Left & right" {...MARGIN_X} value={L.marginX} onChange={(marginX) => set({ marginX })} format={(v) => `${v}px`} />
-      <Slider label="Top & bottom" {...MARGIN_Y} value={L.marginY} onChange={(marginY) => set({ marginY })} format={(v) => `${v}px`} />
+      {can('marginX') && <Segmented label="Left & right" options={MARGIN_X} value={L.marginX} onChange={(marginX) => set({ marginX })} />}
+      {can('marginY') && <Segmented label="Top & bottom" options={MARGIN_Y} value={L.marginY} onChange={(marginY) => set({ marginY })} />}
     </Section>
-  )
-}
-
-/** What "Flip sides" does, per composition. */
-const FLIP_HINT = {
-  banner: 'Title on the right, logo on the left',
-  split: 'Photo on the left, title on the right',
-  strip: 'Title panel on the right',
-  corner: 'Photo top left, title bottom right',
-}
-const LOGO_TOGGLE = [{ id: 'top-left', label: 'Show' }, { id: 'hidden', label: 'Hide' }]
-const orientation = (p) => (!p?.w || !p?.h ? null : p.w > p.h * 1.05 ? 'landscape' : p.h > p.w * 1.05 ? 'portrait' : 'square')
-
-/** Layout controls for composed covers: the photo's shape and size, sides, backdrop. */
-function ComposedLayout({ cover, photo }) {
-  const { layout: L } = cover.config
-  const set = cover.setLayout
-  const meta = COMPOSITIONS[L.composition]
-  const found = orientation(photo)
-  const shapes = SHAPES.map((s) => (s.id === 'auto' && found ? { ...s, hint: `Follows the photo — this one is ${found}` } : s))
-  return (
-    <div>
-      <Section title="Photo" hint={`${meta.name} layout. Switch layouts under Templates.`}>
-        {meta.shape && <Segmented label="Shape" options={shapes} value={L.shape} onChange={(shape) => set({ shape })} />}
-        <Segmented label={L.composition === 'split' ? 'Photo width' : 'Size'} options={PHOTO_SIZE} value={L.photoSize} onChange={(photoSize) => set({ photoSize })} />
-        {meta.flip && (
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <Label>Flip sides</Label>
-              <p className="-mt-1.5 text-12-r text-type-2">{FLIP_HINT[L.composition]}</p>
-            </div>
-            <Switch checked={L.flip} onChange={(flip) => set({ flip })} label="Flip sides" />
-          </div>
-        )}
-      </Section>
-
-      <Section title="Background">
-        <Swatches label="Background" options={SURFACES} value={L.surface} onChange={(surface) => set({ surface })} />
-      </Section>
-
-      <Section title="Text">
-        <Segmented label="Title size" options={TITLE_SIZE} value={L.titleSize} onChange={(titleSize) => set({ titleSize })} />
-      </Section>
-
-      <Section title="Logo">
-        <Segmented options={LOGO_TOGGLE} value={L.logo === 'hidden' ? 'hidden' : 'top-left'} onChange={(logo) => set({ logo })} />
-      </Section>
-
-      <MarginsSection L={L} set={set} />
-    </div>
   )
 }
 
@@ -261,35 +256,40 @@ function ComposedLayout({ cover, photo }) {
 
 function TextTab({ cover }) {
   const { content: C, show, layout: L } = cover.config
+  const can = (setting) => supports(L, setting)
   const anyCta = show.primaryCta || show.secondaryCta
   const text = (key) => ({ value: C[key] ?? '', onChange: (v) => cover.setContent({ [key]: v }), limit: LIMITS[key] })
   const toggle = (key) => ({ enabled: show[key], onToggle: (on) => cover.setShow({ [key]: on }) })
   return (
     <div>
       <Section title="Heading">
-        <TextField label="Eyebrow" hint="Small line above the title" {...text('eyebrow')} {...toggle('eyebrow')} />
+        {can('eyebrow') && <TextField label="Label" hint="Small line above the title" {...text('eyebrow')} {...toggle('eyebrow')} />}
         <TextField label="Title" hint="Usually the client’s names" required {...text('title')} />
-        <TextField label="Subtitle" hint="Your name links to your portfolio" multiline {...text('subtitle')} {...toggle('subtitle')} />
+        {can('subtitle') && <TextField label="Subtitle" hint="Your name links to your portfolio" multiline {...text('subtitle')} {...toggle('subtitle')} />}
       </Section>
 
-      <Section title="Buttons">
-        <TextField label="Primary button" hint="Scrolls to the photos" {...text('primaryCta')} {...toggle('primaryCta')} />
-        <TextField label="Secondary button" hint="Opens the print store" {...text('secondaryCta')} {...toggle('secondaryCta')} />
-        <div className={cn('space-y-3', !anyCta && 'pointer-events-none opacity-50')} aria-disabled={!anyCta}>
-          <Segmented label="Arrangement" options={CTA_LAYOUT} value={L.ctaLayout} onChange={(ctaLayout) => cover.setLayout({ ctaLayout })} />
-          <Segmented label="Size" options={CTA_SIZE} value={L.ctaSize} onChange={(ctaSize) => cover.setLayout({ ctaSize })} />
-        </div>
-      </Section>
-
-      <Section title="Top bar">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <Label>Print store link</Label>
-            <p className="-mt-1.5 text-12-r text-type-2">Shown opposite the logo</p>
+      {can('buttons') && (
+        <Section title="Buttons">
+          <TextField label="Primary button" hint="Scrolls to the photos" {...text('primaryCta')} {...toggle('primaryCta')} />
+          <TextField label="Secondary button" hint="Opens the print store" {...text('secondaryCta')} {...toggle('secondaryCta')} />
+          <div className={cn('space-y-3', !anyCta && 'pointer-events-none opacity-50')} aria-disabled={!anyCta}>
+            <Segmented label="Arrangement" options={CTA_LAYOUT} value={L.ctaLayout} onChange={(ctaLayout) => cover.setLayout({ ctaLayout })} />
+            <Segmented label="Size" options={CTA_SIZE} value={L.ctaSize} onChange={(ctaSize) => cover.setLayout({ ctaSize })} />
           </div>
-          <Switch checked={show.storeLink} onChange={(storeLink) => cover.setShow({ storeLink })} label="Show print store link" />
-        </div>
-      </Section>
+        </Section>
+      )}
+
+      {can('storeLink') && (
+        <Section title="Top bar">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <Label>Print store link</Label>
+              <p className="-mt-1.5 text-12-r text-type-2">{isComposed(L) ? 'Shown in the top corner' : 'Shown opposite the logo'}</p>
+            </div>
+            <Switch checked={show.storeLink} onChange={(storeLink) => cover.setShow({ storeLink })} label="Show print store link" />
+          </div>
+        </Section>
+      )}
     </div>
   )
 }

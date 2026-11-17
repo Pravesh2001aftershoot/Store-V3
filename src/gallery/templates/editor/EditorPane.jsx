@@ -119,7 +119,7 @@ export default function EditorPane({
 
 function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab, onTab, closable }) {
   return (
-    <div className={cn('shrink-0 px-5', !(phone && peek) && 'border-b border-border pb-3')}>
+    <div className={cn('shrink-0 px-5', !(phone && peek) && 'border-b border-border', !(phone && peek) && tabs.length <= 1 && 'pb-3')}>
       {phone && (
         <button onClick={() => onPeek(!peek)} className="flex w-full justify-center pb-1 pt-2.5" aria-label={peek ? 'Show settings' : previewLabel}>
           <span className="h-1 w-10 rounded-full bg-border" />
@@ -145,16 +145,17 @@ function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab,
         )}
       </div>
       {!(phone && peek) && tabs.length > 1 && (
-        <div role="tablist" className="mt-3 grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+        // Underlined tabs sitting on the header's bottom border, like the gallery's collection nav.
+        <div role="tablist" className="-mb-px mt-2 flex gap-6">
           {tabs.map((t) => (
             <button
               key={t.id}
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => onTab(t.id)}
-              className={cn('relative h-8 rounded-full text-13-m text-type-2 transition hover:text-type-0', tab === t.id && 'text-type-0')}
+              className={cn('relative h-10 text-13-m text-type-2 transition hover:text-type-0', tab === t.id && 'text-type-0')}
             >
-              {tab === t.id && <motion.span layoutId={`editor-tab-${title}`} className="absolute inset-0 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]" transition={{ duration: 0.35, ease }} />}
+              {tab === t.id && <motion.span layoutId={`editor-tab-${title}`} className="absolute inset-x-0 bottom-0 h-0.5 bg-type-0" transition={{ duration: 0.4, ease }} />}
               <span className="relative">{t.label}</span>
             </button>
           ))}

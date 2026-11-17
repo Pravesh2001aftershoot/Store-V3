@@ -13,9 +13,11 @@ import Toaster from './components/Toaster'
 import QuickBuy from './components/QuickBuy'
 import SelectionBar from './components/SelectionBar'
 import FacePane from './components/FacePane'
+import DownloadPane from './components/DownloadPane'
 import { people, withFaces } from './data/faces'
 import { registerPhoto } from '../data/gallery'
-import { MAX_SETS, downloadPhotos, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
+import { MAX_SETS, downloadPhoto, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
+import { DownloadContext, useDownloads } from './lib/downloads'
 import FooterSection from './templates/footer/FooterSection'
 import { useGalleryLibrary } from './lib/library'
 import { isEmbedded, scrollToEl, usePreviewTarget } from '../lib/embed'
@@ -72,6 +74,8 @@ function ClientGallery({ data }) {
   const anchor = useRef(null) // id of the last photo toggled — the start of a Shift-click range
   const [lightboxId, setLightboxId] = useState(null) // id of the photo open in the lightbox
   const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
+  const dl = useDownloads(data.clientKey) // the photographer's download rules + what this visitor has downloaded
+  const [downloading, setDownloading] = useState(null) // the download pane: { initial, pick? } while open
   const [minCount, setMinCount] = useState(0)
   const [jump, setJump] = useState(null)
   const gridRef = useRef(null)
@@ -191,10 +195,8 @@ function ClientGallery({ data }) {
       notify(allFavorite ? `Removed ${plural(n)} from favourites` : `Added ${plural(n)} to favourites`)
       exitSelect()
     },
-    download: () => {
-      downloadPhotos(selectedPhotos)
-      exitSelect()
-    },
+    // Goes through the download pane, so the PIN, sizes and limit apply. Selection ends once it starts.
+    download: () => setDownloading({ initial: 'pick', pick: selectedPhotos }),
     createSet: (name) => {
       const made = createSet(name, selectedPhotos.map((p) => p.id))
       if (!made) return notify(`You can keep up to ${MAX_SETS} sets — delete one to make another`)
@@ -228,6 +230,42 @@ function ClientGallery({ data }) {
     setLightboxId(null)
     setBuying(registerPhoto(photo))
   }
+
+  // ── Download ──────────────────────────────────────────────────────────────
+  // One photo (tile or lightbox) downloads straight away, unless it needs the PIN or is past the
+  // limit: then the pane opens on that photo to explain.
+  const downloadOne = useCallback((photo) => {
+    if (dl.locked || (dl.isNew(photo) && dl.left < 1)) {
+      setLightboxId(null)
+      setDownloading({ initial: 'pick', pick: [photo] })
+      return
+    }
+    downloadPhoto(photo)
+    dl.record([photo])
+  }, [dl])
+  const downloadAction = useMemo(() => ({ allowed: dl.rules.on, one: downloadOne }), [dl.rules.on, downloadOne])
+
+  // What the pane offers, in order. The view you're in is chosen on open (see NavBar onDownload).
+  const downloadSources = useMemo(() => {
+    if (!downloading) return []
+    const list = []
+    const { pick } = downloading
+    if (pick) list.push({ id: 'pick', label: pick.length === 1 ? 'This photo' : 'Selected photos', photos: pick })
+    if (view === 'faces' && faceFilter.ids.length) {
+      list.push({ id: 'faces', label: faceFilter.ids.length === 1 ? 'Photos of this person' : 'Photos of these people', photos: facePhotos })
+    }
+    list.push({ id: 'all', label: 'Whole gallery', photos: ordered })
+    list.push({ id: 'favs', label: 'Favourites', photos: favPhotos, empty: 'Tap the heart on a photo to add it' })
+    sets.forEach((x) => {
+      const ids = new Set(x.ids)
+      list.push({ id: `set:${x.id}`, group: 'Your sets', label: x.name, photos: ordered.filter((p) => ids.has(p.id)) })
+    })
+    // One collection is the whole gallery, so only list them when there's a choice.
+    if (sections.length > 1) {
+      sections.forEach((x) => list.push({ id: `c:${x.title}`, group: 'Collections', label: x.title, photos: ordered.slice(x.start, x.end) }))
+    }
+    return list
+  }, [downloading, view, faceFilter, facePhotos, ordered, favPhotos, sets, sections])
 
   const navBottom = () => navRef.current?.getBoundingClientRect().bottom ?? 0
 
@@ -319,6 +357,7 @@ function ClientGallery({ data }) {
   })
 
   return (
+    <DownloadContext.Provider value={downloadAction}>
     <div className="min-h-screen bg-background">
       <CoverSection editable={!embedded} gallery={gallery} cover={cover} photo={coverPhoto} photos={everything} collections={tabs} onEnter={() => gridRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
@@ -347,6 +386,8 @@ function ClientGallery({ data }) {
           faceFilter={faceFilter}
           faceCount={facePhotos.length}
           onClearFaces={clearFaces}
+          onDownload={dl.rules.on ? () => setDownloading({ initial: view === 'favs' || view === 'faces' || view.startsWith('set:') ? view : 'all' }) : undefined}
+          downloadOpen={!!downloading}
         />
         <GalleryGrid
           photos={visible}
@@ -398,6 +439,16 @@ function ClientGallery({ data }) {
         photos={ordered}
         cover={cover.config}
       />
+      <DownloadPane
+        open={!!downloading}
+        onClose={() => setDownloading(null)}
+        sources={downloadSources}
+        initial={downloading?.initial}
+        dl={dl}
+        gallery={gallery}
+        hiddenCount={hidden.size}
+        onStarted={(ids) => ids.includes('pick') && selecting && exitSelect()}
+      />
       <FacePane open={facesOpen} onClose={() => setFacesOpen(false)} photos={ordered} filter={faceFilter} onApply={applyFaces} />
       <QuickBuy photo={buying} onClose={() => setBuying(null)} />
       <SelectionBar
@@ -410,12 +461,13 @@ function ClientGallery({ data }) {
         onSelectNone={() => setSelected(new Set())}
         onShare={bulk.share}
         onFavorite={bulk.favorite}
-        onDownload={bulk.download}
+        onDownload={dl.rules.on ? bulk.download : undefined}
         onCreateSet={bulk.createSet}
         onSetLimit={() => notify(`You can keep up to ${MAX_SETS} sets — delete one to make another`)}
         onExit={exitSelect}
       />
       <Toaster raised={selecting || isPhone} />
     </div>
+    </DownloadContext.Provider>
   )
 }

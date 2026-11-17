@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretLeft, CaretRight, DownloadSimple, Eye, EyeSlash, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
+import { useDownloadAction } from '../lib/downloads'
 
 const SWIPE_DISTANCE = 60 // px dragged before release counts as a swipe
 const SWIPE_VELOCITY = 400 // px/s flick counts as a swipe even if short
@@ -30,6 +31,7 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
   const photo = open ? photos[index] : null
   const dir = useRef(1) // 1 = moving forward, -1 = backward; drives slide direction
   const swipeable = useCoarsePointer()
+  const dl = useDownloadAction() // null outside the gallery: download straight away
 
   const go = (delta) => {
     dir.current = delta
@@ -94,9 +96,11 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
               >
                 {hidden.has(photo.id) ? <Eye size={20} /> : <EyeSlash size={20} />}
               </button>
-              <button onClick={() => downloadPhoto(photo)} className={btn} aria-label="Download photo" title="Download">
-                <DownloadSimple size={20} />
-              </button>
+              {(!dl || dl.allowed) && (
+                <button onClick={() => (dl ? dl.one(photo) : downloadPhoto(photo))} className={btn} aria-label="Download photo" title="Download">
+                  <DownloadSimple size={20} />
+                </button>
+              )}
               <button onClick={() => sharePhoto(photo)} className={btn} aria-label="Share photo" title="Share">
                 <ShareNetwork size={20} />
               </button>

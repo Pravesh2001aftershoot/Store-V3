@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Heart, Handbag, DownloadSimple, ShareNetwork, Eye, EyeSlash, Check } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
+import { useDownloadAction } from '../lib/downloads'
 import { cn } from '../../lib/utils'
 
 /**
@@ -16,6 +17,7 @@ const seen = new Set()
 export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onOpen, onBuy, selecting, selected, onSelect, style, className }) {
   const [loaded, setLoaded] = useState(() => seen.has(photo.thumb))
   const press = useLongPress(onSelect)
+  const dl = useDownloadAction() // null outside the gallery: download straight away
   return (
     <figure
       style={{ aspectRatio: `${photo.w} / ${photo.h}`, ...style }}
@@ -67,14 +69,16 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
             >
               <Heart size={15} weight={favorite ? 'fill' : 'regular'} className={favorite ? 'text-destructive' : undefined} />
             </button>
-            <button
-              onClick={() => downloadPhoto(photo)}
-              aria-label="Download photo"
-              title="Download"
-              className="grid h-8 w-8 place-items-center rounded-full bg-surface-1/90 text-type-0 backdrop-blur transition hover:bg-surface-1"
-            >
-              <DownloadSimple size={15} />
-            </button>
+            {(!dl || dl.allowed) && (
+              <button
+                onClick={() => (dl ? dl.one(photo) : downloadPhoto(photo))}
+                aria-label="Download photo"
+                title="Download"
+                className="grid h-8 w-8 place-items-center rounded-full bg-surface-1/90 text-type-0 backdrop-blur transition hover:bg-surface-1"
+              >
+                <DownloadSimple size={15} />
+              </button>
+            )}
             <button
               onClick={() => sharePhoto(photo)}
               aria-label="Share photo"

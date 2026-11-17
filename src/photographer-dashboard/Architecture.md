@@ -222,13 +222,13 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
 | `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
 | Email drafts via `mailto:` | Send from the platform (templates, tracking, per-recipient links or tokens) |
-| Gallery settings saved, not enforced | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
+| Gallery settings saved, mostly not enforced (Downloads is read by the client gallery) | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 
 ## Known gaps
 
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
-- **Gallery settings aren't enforced.** The Settings step saves access and permissions, but the client gallery doesn't read them yet: no sign-in, password, role links or expiry, and favorites, downloads, sharing and set visibility behave as before.
+- **Gallery settings are mostly not enforced.** The Settings step saves access and permissions. The client gallery reads only **Downloads** (on/off, download PIN, Web size / High res, download limit) through `useDownloadRules` in `src/gallery/lib/downloads.js`, for the whole gallery or the role in the link (`?role=`, else Client); a gallery that was never saved keeps downloads open. Everything else isn't read yet: no sign-in, password, role links or expiry, and favorites, sharing, video downloads and set visibility behave as before.
 - **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).
 - **Per device.** All settings are local to the browser. Opening the gallery on another device shows the defaults.
 - **No drafts.** Every edit is live immediately (see the PRD's open questions).

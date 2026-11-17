@@ -197,7 +197,7 @@ export function FocalPoint({ photo, value, onChange }) {
   }
   const keys = { ArrowLeft: [-2, 0], ArrowRight: [2, 0], ArrowUp: [0, -2], ArrowDown: [0, 2] }
   return (
-    <div className="flex justify-center rounded-xl bg-surface-2 p-3">
+    <div className="flex justify-center rounded-xl bg-surface-2">
       <div
         ref={box}
         role="slider"
@@ -214,7 +214,7 @@ export function FocalPoint({ photo, value, onChange }) {
           const m = e.shiftKey ? 5 : 1
           onChange({ x: clamp(value.x + d[0] * m), y: clamp(value.y + d[1] * m) })
         }}
-        className="group relative cursor-crosshair touch-none select-none overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-type-0 focus-visible:ring-offset-2"
+        className="group relative cursor-crosshair touch-none select-none overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-type-0 focus-visible:ring-offset-2"
         style={{ aspectRatio: ratio, width: `min(100%, ${Math.round(220 * ratio)}px)` }}
       >
         <img src={photo.thumb ?? photo.src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full object-cover" />

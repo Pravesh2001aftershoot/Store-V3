@@ -172,7 +172,7 @@ export default function SelectionBar({ open, count, total, allFavorite, setCount
               disabled={none}
               active={allFavorite && !none}
             />
-            <Action icon={DownloadSimple} label="Download" onClick={onDownload} disabled={none} />
+            {onDownload && <Action icon={DownloadSimple} label="Download" onClick={onDownload} disabled={none} />}
             <Action
               icon={StackPlus}
               label={`New set ${setCount}/${MAX_SETS}`}
