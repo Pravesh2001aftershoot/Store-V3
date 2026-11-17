@@ -18,6 +18,8 @@ const PAD_Y = {
   regular: 'clamp(20px, 4.2cqw, 64px)',
   airy: 'clamp(32px, 7.5cqw, 120px)',
 }
+// Side margin, so the text (and any rule) sits in from the photo edges rather than flush with them.
+const PAD_X = 'clamp(12px, 3cqw, 48px)'
 const ITEMS = { left: 'items-start text-left', center: 'items-center text-center', right: 'items-end text-right' }
 
 /** Inline style for the title: typeface, weight, case, and tracking that suits them. */
@@ -50,8 +52,11 @@ export default function SectionHeader({ id, style, words, index = 0, onEdit, cla
     </h2>
   )
   return (
-    <header id={id} className={cn('@container group/heading relative px-1', className)} style={{ paddingTop: PAD_Y[L.spacing], paddingBottom: PAD_Y[L.spacing] }}>
-      <Template L={L} show={show} w={words} title={title} index={index} />
+    <header id={id} className={cn('@container group/heading relative', className)}>
+      {/* Padding on an inner box, so its cqw is measured against this heading rather than the page. */}
+      <div style={{ paddingBlock: PAD_Y[L.spacing], paddingInline: PAD_X }}>
+        <Template L={L} show={show} w={words} title={title} index={index} />
+      </div>
       {onEdit && (
         <button
           onClick={onEdit}
@@ -120,7 +125,7 @@ function Numbered({ L, show, w, title, index }) {
   const center = L.align === 'center'
   const right = L.align === 'right'
   return (
-    <div className={cn(show.divider && 'border-t border-border pt-[clamp(16px,3cqw,40px)]')}>
+    <div>
       <div className={cn('flex gap-[clamp(14px,2.6cqw,40px)]', center ? 'flex-col items-center text-center' : 'items-start', right && 'flex-row-reverse text-right')}>
         <span
           aria-hidden

@@ -69,7 +69,7 @@ export const TEMPLATES = [
   t('classic', 'Classic', 'Photo count over a large title'),
   t('centered', 'Centered', 'Title centred between two fine rules', { align: 'center' }, { divider: true }),
   t('split', 'Split', 'Title on one side, your note on the other', { size: 'l' }),
-  t('numbered', 'Numbered', 'Chapter number beside the title', {}, { divider: true }),
+  t('numbered', 'Numbered', 'Chapter number beside the title'),
   t('inline', 'Inline', 'A quiet title and count on one hairline', { size: 's', spacing: 'compact' }),
 ]
 
@@ -78,7 +78,7 @@ export const SUPPORTS = {
   classic: ['align', 'divider'],
   centered: ['divider'],
   split: ['flip', 'divider'],
-  numbered: ['align', 'divider'],
+  numbered: ['align'],
   inline: [],
 }
 export const supports = (layout, key) => SUPPORTS[layout.template]?.includes(key) ?? false
