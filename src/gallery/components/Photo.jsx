@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Heart, Handbag, DownloadSimple, ShareNetwork, Eye, EyeSlash, Check } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 import { useDownloadAction } from '../lib/downloads'
+import { usePermissions } from '../lib/visitor'
 import { cn } from '../../lib/utils'
 
 /**
@@ -18,6 +19,7 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
   const [loaded, setLoaded] = useState(() => seen.has(photo.thumb))
   const press = useLongPress(onSelect)
   const dl = useDownloadAction() // null outside the gallery: download straight away
+  const can = usePermissions() // what the photographer lets this visitor do (Settings step)
   return (
     <figure
       style={{ aspectRatio: `${photo.w} / ${photo.h}`, ...style }}
@@ -50,6 +52,7 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
       {!selecting && (
         <>
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 [@media(hover:none)]:hidden" />
+          {can.hide.on && (
           <button
             onClick={onHide}
             aria-label={hidden ? 'Unhide photo' : 'Hide photo'}
@@ -59,7 +62,9 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
           >
             {hidden ? <Eye size={15} /> : <EyeSlash size={15} />}
           </button>
+          )}
           <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:hidden">
+            {can.favorites.on && (
             <button
               onClick={onFavorite}
               aria-label={favorite ? 'Remove from favourites' : 'Add to favourites'}
@@ -69,16 +74,19 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
             >
               <Heart size={15} weight={favorite ? 'fill' : 'regular'} className={favorite ? 'text-destructive' : undefined} />
             </button>
+            )}
             {(!dl || dl.allowed) && (
               <button
                 onClick={() => (dl ? dl.one(photo) : downloadPhoto(photo))}
-                aria-label="Download photo"
-                title="Download"
-                className="grid h-8 w-8 place-items-center rounded-full bg-surface-1/90 text-type-0 backdrop-blur transition hover:bg-surface-1"
+                aria-label={downloadLabel(dl?.left)}
+                title={downloadLabel(dl?.left, 'Download')}
+                className="relative grid h-8 w-8 place-items-center rounded-full bg-surface-1/90 text-type-0 backdrop-blur transition hover:bg-surface-1"
               >
                 <DownloadSimple size={15} />
+                <LeftBadge left={dl?.left} />
               </button>
             )}
+            {can.share && (
             <button
               onClick={() => sharePhoto(photo)}
               aria-label="Share photo"
@@ -87,6 +95,7 @@ export default function Photo({ photo, favorite, onFavorite, hidden, onHide, onO
             >
               <ShareNetwork size={15} />
             </button>
+            )}
             <button
               onClick={onBuy}
               aria-label="Buy a print of this photo"
@@ -180,4 +189,24 @@ function useLongPress(onLongPress) {
       onContextMenu: (e) => e.nativeEvent.pointerType !== 'mouse' && e.preventDefault(),
     },
   }
+}
+
+/** "Download photo · 12 downloads left" with a download limit, else just the label. */
+export const downloadLabel = (left, label = 'Download photo') =>
+  left == null ? label : `${label} · ${left ? `${left.toLocaleString()} download${left === 1 ? '' : 's'} left` : 'no downloads left'}`
+
+/**
+ * Downloads left, as a small count on a download button's corner (only with a download limit).
+ * `dark` for buttons on a dark background (the lightbox): a white badge with dark text.
+ */
+export function LeftBadge({ left, dark = false }) {
+  if (left == null) return null
+  return (
+    <span
+      aria-hidden
+      className={`absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full px-1 text-11-sb tabular-nums leading-none ${dark ? 'bg-white text-type-0' : 'bg-type-0 text-white'}`}
+    >
+      {left > 999 ? '999+' : left}
+    </span>
+  )
 }

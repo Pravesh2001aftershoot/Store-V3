@@ -14,10 +14,15 @@ import QuickBuy from './components/QuickBuy'
 import SelectionBar from './components/SelectionBar'
 import FacePane from './components/FacePane'
 import DownloadPane from './components/DownloadPane'
+import SizePrompt from './components/SizePrompt'
 import { people, withFaces } from './data/faces'
 import { registerPhoto } from '../data/gallery'
 import { MAX_SETS, downloadPhoto, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
-import { DownloadContext, useDownloads } from './lib/downloads'
+import { DownloadContext, useDownloads, useSizePref } from './lib/downloads'
+import { VisitorContext, approvedPerson, useVisitor, useVisitorState } from './lib/visitor'
+import SignIn from './components/SignIn'
+import ScreenshotGuard from './components/ScreenshotGuard'
+import { useCoverPhoto } from './templates/cover/photo'
 import FooterSection from './templates/footer/FooterSection'
 import { useGalleryLibrary } from './lib/library'
 import { isEmbedded, scrollToEl, usePreviewTarget } from '../lib/embed'
@@ -42,8 +47,42 @@ export default function GalleryPage() {
   if (!data) return <GalleryNotFound />
   return (
     <GalleryProvider id={galleryId}>
-      <ClientGallery key={galleryId} data={data} />
+      <VisitorGate key={galleryId} data={data} />
     </GalleryProvider>
+  )
+}
+
+const EMPTY = new Set()
+
+/**
+ * Sign-in in front of the gallery, from the photographer's Settings step (lib/visitor.js). While any
+ * step is left (or the link has expired) the sign-in screen shows; then the gallery, with the
+ * visitor's permissions in VisitorContext.
+ */
+function VisitorGate({ data }) {
+  const state = useVisitorState()
+  const { visitor, session } = state
+  const gated = !visitor.open && (visitor.expired || visitor.steps.length > 0)
+  // The sign-in screen's cover and face scan need the gallery's photos (uploads included).
+  const library = useGalleryLibrary(data.base, data.baseCollections)
+  const cover = useCoverPhoto(fallbackCover(data, library.photos), library.photos).photo
+  const wasGated = useRef(gated)
+  useEffect(() => {
+    if (gated) { wasGated.current = true; return }
+    if (!wasGated.current) return
+    wasGated.current = false
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    // The gallery's toaster mounts with it, so greet on the next tick.
+    const name = approvedPerson(visitor.d, session?.email)?.name?.split(' ')[0]
+    const t = setTimeout(() => notify(name ? `Welcome, ${name}` : session?.email ? `Signed in as ${session.email}` : 'Welcome'), 300)
+    return () => clearTimeout(t)
+  }, [gated, visitor.d, session?.email])
+
+  if (gated) return <SignIn gallery={data.gallery} cover={cover} photos={library.photos} state={state} />
+  return (
+    <VisitorContext.Provider value={state}>
+      <ClientGallery data={data} />
+    </VisitorContext.Provider>
   )
 }
 
@@ -62,8 +101,19 @@ function ClientGallery({ data }) {
   const [settings, setSetting] = useGridSettings()
   const isPhone = useBreakpoint() === 'mobile' // the phone dock sits where toasts would
   const [collection, setCollection] = useState(BASE_COLLECTIONS[0])
-  const [favorites, toggleFav, clearFavs, setFavs] = useFavorites(data.clientKey)
-  const [hidden, toggleHidden, clearHidden] = useHidden(data.clientKey)
+  const { perms, visitor, session, signOut } = useVisitor()
+  const [savedFavs, toggleFavRaw, clearFavs, setFavs] = useFavorites(data.clientKey)
+  const [savedHidden, toggleHidden, clearHidden, setHidden] = useHidden(data.clientKey)
+  // Turned off by the photographer: favourites / hidden photos saved earlier on this device are ignored.
+  const favorites = perms.favorites.on ? savedFavs : EMPTY
+  const hidden = perms.hide.on ? savedHidden : EMPTY
+  const favLimit = perms.favorites.limit
+  const atFavLimit = (adding) => favLimit != null && favorites.size + adding > favLimit
+  const toggleFav = (id) => {
+    if (!perms.favorites.on) return
+    if (!favorites.has(id) && atFavLimit(1)) return notify(`You can favourite up to ${favLimit} photos. Remove one to add another.`)
+    toggleFavRaw(id)
+  }
   const [sets, createSet, deleteSet] = useSets(data.clientKey)
   const [view, setView] = useState('all') // 'all' | 'favs' | 'hidden' | 'faces' | 'set:<id>'
   const [faceFilter, setFaceFilter] = useState({ ids: [], mode: 'any' }) // the people shown in the 'faces' view
@@ -76,6 +126,7 @@ function ClientGallery({ data }) {
   const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
   const dl = useDownloads(data.clientKey) // the photographer's download rules + what this visitor has downloaded
   const [downloading, setDownloading] = useState(null) // the download pane: { initial, pick? } while open
+  const [sizePrompt, setSizePrompt] = useState(null) // SizePrompt: { mode: 'download' | 'change', photo, size, remember? } while open
   const [minCount, setMinCount] = useState(0)
   const [jump, setJump] = useState(null)
   const gridRef = useRef(null)
@@ -86,8 +137,14 @@ function ClientGallery({ data }) {
 
   // The photographer's arrangement (collections, order, removed photos, uploads) from the dashboard.
   const library = useGalleryLibrary(allPhotos, BASE_COLLECTIONS)
-  const COLLECTIONS = library.collections
-  const photos = useMeasuredPhotos(library.photos)
+  // Settings → Set visibility can keep collections off the gallery for this visitor.
+  const COLLECTIONS = useMemo(
+    () => library.collections.filter((c) => !perms.hiddenCollections.includes(c)),
+    [library.collections, perms.hiddenCollections]
+  )
+  const measured = useMeasuredPhotos(library.photos)
+  // Face scan → "Only photos they're in": everything the visitor browses is their own photos.
+  const photos = useMemo(() => (perms.faceOnly ? withFaces(measured, [perms.faceOnly]) : measured), [measured, perms.faceOnly])
   const embedded = isEmbedded() // dashboard preview: editing happens in the dashboard, not here
 
   // Cover settings live here (not in CoverSection) so collection headings can match the cover's style.
@@ -97,7 +154,12 @@ function ClientGallery({ data }) {
   const [editingHeading, setEditingHeading] = useState(null) // collection whose heading is being edited
 
   // All photos in collection (tab order) — the cover and footer use the full set, hidden or not.
-  const everything = useMemo(() => COLLECTIONS.flatMap((title) => photos.filter((p) => p.collection === title)), [photos, COLLECTIONS])
+  const everything = useMemo(() => COLLECTIONS.flatMap((title) => measured.filter((p) => p.collection === title)), [measured, COLLECTIONS])
+  const browsable = useMemo(() => {
+    if (!perms.faceOnly) return everything
+    const mine = new Set(photos.map((p) => p.id))
+    return everything.filter((p) => mine.has(p.id))
+  }, [everything, photos, perms.faceOnly])
   const coverPhoto = fallbackCover(data, everything)
 
   // The browsable gallery: hidden photos left out, grouped by collection, plus each collection's range.
@@ -115,7 +177,7 @@ function ClientGallery({ data }) {
   const tabs = useMemo(() => sections.map((s) => s.title), [sections])
 
   const favPhotos = useMemo(() => ordered.filter((p) => favorites.has(p.id)), [ordered, favorites])
-  const hiddenPhotos = useMemo(() => everything.filter((p) => hidden.has(p.id)), [everything, hidden])
+  const hiddenPhotos = useMemo(() => browsable.filter((p) => hidden.has(p.id)), [browsable, hidden])
   const openSet = view.startsWith('set:') ? sets.find((x) => `set:${x.id}` === view) : null
   const setPhotos = useMemo(() => {
     if (!openSet) return []
@@ -191,8 +253,19 @@ function ClientGallery({ data }) {
     share: () => sharePhotos(selectedPhotos),
     favorite: () => {
       const n = selectedPhotos.length
+      const adding = allFavorite ? 0 : selectedPhotos.filter((p) => !favorites.has(p.id)).length
+      if (atFavLimit(adding)) {
+        const room = Math.max(0, favLimit - favorites.size)
+        return notify(room ? `Only ${room} more fit. You can favourite up to ${favLimit} photos.` : `You can favourite up to ${favLimit} photos. Remove one to add another.`)
+      }
       setFavs(selectedPhotos.map((p) => p.id), !allFavorite)
       notify(allFavorite ? `Removed ${plural(n)} from favourites` : `Added ${plural(n)} to favourites`)
+      exitSelect()
+    },
+    hide: () => {
+      const n = selectedPhotos.length
+      setHidden(selectedPhotos.map((p) => p.id), true)
+      notify(`Hid ${plural(n)} — find them under Hidden`)
       exitSelect()
     },
     // Goes through the download pane, so the PIN, sizes and limit apply. Selection ends once it starts.
@@ -232,18 +305,54 @@ function ClientGallery({ data }) {
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
-  // One photo (tile or lightbox) downloads straight away, unless it needs the PIN or is past the
-  // limit: then the pane opens on that photo to explain.
+  // One photo (tile or lightbox) asks which size first (web or high res) when the photographer offers
+  // both, unless the visitor ticked "Remember my choice"; then it downloads straight away in that size,
+  // and the toast's "Change" reopens the question. It needs the PIN or is past the limit: the pane
+  // opens on that photo to explain.
+  const [sizePref, setSizePref] = useSizePref(data.clientKey, dl.rules.sizes)
+  const saveOne = useCallback((photo, sizeId, remembered) => {
+    const size = dl.rules.sizes.find((z) => z.id === sizeId) ?? dl.rules.sizes[0]
+    const action = remembered && dl.rules.sizes.length > 1
+      ? { label: 'Change', onClick: () => setSizePrompt({ mode: 'change', photo, size: sizeId }) }
+      : undefined
+    // With a limit, the toast says what's left after this one (a photo downloaded before is free).
+    const after = dl.left - (dl.isNew(photo) ? 1 : 0)
+    const note = dl.rules.limit != null ? (after ? `${after.toLocaleString()} download${after === 1 ? '' : 's'} left` : 'No downloads left') : undefined
+    downloadPhoto(photo, { label: size?.label, note, action })
+    dl.record([photo])
+  }, [dl])
   const downloadOne = useCallback((photo) => {
     if (dl.locked || (dl.isNew(photo) && dl.left < 1)) {
       setLightboxId(null)
       setDownloading({ initial: 'pick', pick: [photo] })
       return
     }
-    downloadPhoto(photo)
-    dl.record([photo])
-  }, [dl])
-  const downloadAction = useMemo(() => ({ allowed: dl.rules.on, one: downloadOne }), [dl.rules.on, downloadOne])
+    if (dl.rules.sizes.length > 1 && !sizePref) {
+      setSizePrompt({ mode: 'download', photo, size: null, remember: false })
+      return
+    }
+    saveOne(photo, sizePref ?? dl.rules.sizes[0]?.id, !!sizePref)
+  }, [dl, sizePref, saveOne])
+  // "Download photo" answers with (size, remember) and downloads. "Download size" (the toast's Change)
+  // only saves the size — null is Ask every time — and downloads the photo again only if asked to.
+  const answerSize = (sizeId, flag) => {
+    const { photo, mode } = sizePrompt
+    setSizePrompt(null)
+    if (mode === 'change') {
+      setSizePref(sizeId)
+      if (sizeId && flag) saveOne(photo, sizeId, true)
+      else notify(sizeId ? `Single photos will download in ${dl.rules.sizes.find((z) => z.id === sizeId)?.label}` : 'We’ll ask which size each time')
+      return
+    }
+    setSizePref(flag ? sizeId : null)
+    saveOne(photo, sizeId, flag)
+  }
+  // `left`: downloads left with a limit (badge on the tile and lightbox buttons), else null.
+  const downloadLeft = dl.rules.limit != null ? dl.left : null
+  const downloadAction = useMemo(
+    () => ({ allowed: dl.rules.on, one: downloadOne, left: downloadLeft }),
+    [dl.rules.on, downloadOne, downloadLeft]
+  )
 
   // What the pane offers, in order. The view you're in is chosen on open (see NavBar onDownload).
   const downloadSources = useMemo(() => {
@@ -255,7 +364,7 @@ function ClientGallery({ data }) {
       list.push({ id: 'faces', label: faceFilter.ids.length === 1 ? 'Photos of this person' : 'Photos of these people', photos: facePhotos })
     }
     list.push({ id: 'all', label: 'Whole gallery', photos: ordered })
-    list.push({ id: 'favs', label: 'Favourites', photos: favPhotos, empty: 'Tap the heart on a photo to add it' })
+    if (perms.favorites.on) list.push({ id: 'favs', label: 'Favourites', photos: favPhotos, empty: 'Tap the heart on a photo to add it' })
     sets.forEach((x) => {
       const ids = new Set(x.ids)
       list.push({ id: `set:${x.id}`, group: 'Your sets', label: x.name, photos: ordered.filter((p) => ids.has(p.id)) })
@@ -265,7 +374,7 @@ function ClientGallery({ data }) {
       sections.forEach((x) => list.push({ id: `c:${x.title}`, group: 'Collections', label: x.title, photos: ordered.slice(x.start, x.end) }))
     }
     return list
-  }, [downloading, view, faceFilter, facePhotos, ordered, favPhotos, sets, sections])
+  }, [downloading, view, faceFilter, facePhotos, ordered, favPhotos, sets, sections, perms.favorites.on])
 
   const navBottom = () => navRef.current?.getBoundingClientRect().bottom ?? 0
 
@@ -381,7 +490,10 @@ function ClientGallery({ data }) {
           onView={(v) => { setView((cur) => (cur === v ? 'all' : v)); toGrid() }}
           onClearFavs={() => { clearFavs(); setView('all') }}
           onUnhideAll={() => { clearHidden(); setView('all') }}
-          onFaces={data.meta.sample && people.length ? () => setFacesOpen(true) : undefined}
+          onFaces={perms.faces && data.meta.sample && people.length ? () => setFacesOpen(true) : undefined}
+          canFavorite={perms.favorites.on}
+          canHide={perms.hide.on}
+          account={visitor.signedIn ? { email: session?.email, role: visitor.mode === 'roles' ? visitor.aud : null, onSignOut: signOut } : null}
           facesOpen={facesOpen}
           faceFilter={faceFilter}
           faceCount={facePhotos.length}
@@ -445,10 +557,13 @@ function ClientGallery({ data }) {
         sources={downloadSources}
         initial={downloading?.initial}
         dl={dl}
+        sizePref={sizePref}
+        onSizePref={setSizePref}
         gallery={gallery}
         hiddenCount={hidden.size}
         onStarted={(ids) => ids.includes('pick') && selecting && exitSelect()}
       />
+      <SizePrompt prompt={sizePrompt} sizes={dl.rules.sizes} dl={dl} photographer={gallery.photographer} onClose={() => setSizePrompt(null)} onDone={answerSize} />
       <FacePane open={facesOpen} onClose={() => setFacesOpen(false)} photos={ordered} filter={faceFilter} onApply={applyFaces} />
       <QuickBuy photo={buying} onClose={() => setBuying(null)} />
       <SelectionBar
@@ -459,14 +574,16 @@ function ClientGallery({ data }) {
         setCount={sets.length}
         onSelectAll={selectAll}
         onSelectNone={() => setSelected(new Set())}
-        onShare={bulk.share}
-        onFavorite={bulk.favorite}
+        onShare={perms.share ? bulk.share : undefined}
+        onFavorite={perms.favorites.on ? bulk.favorite : undefined}
+        onHide={perms.hide.bulk && view !== 'hidden' ? bulk.hide : undefined}
         onDownload={dl.rules.on ? bulk.download : undefined}
         onCreateSet={bulk.createSet}
         onSetLimit={() => notify(`You can keep up to ${MAX_SETS} sets — delete one to make another`)}
         onExit={exitSelect}
       />
       <Toaster raised={selecting || isPhone} />
+      {perms.screenshot && <ScreenshotGuard />}
     </div>
     </DownloadContext.Provider>
   )

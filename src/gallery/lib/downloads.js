@@ -1,16 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { galleryKey, useGalleryId } from '../../data/galleries'
-import { readJSON } from '../../lib/persisted'
-import { IMAGE_SIZES, useGalleryAccess } from '../../photographer-dashboard/gallery/access'
+import { IMAGE_SIZES } from '../../photographer-dashboard/gallery/access'
+import { persistedFamily, readJSON } from '../../lib/persisted'
 import { usePersistedIds } from './actions'
+import { useVisitor } from './visitor'
 
 // Download rules for the client gallery, read from the photographer's Settings → Downloads
 // (photographer-dashboard/gallery/access.js), plus a per-visitor ledger of what's been downloaded.
 //
-// The audience is the whole gallery ("anyone"), or with role-based access the role in the link
-// (`?role=guest`), falling back to Client. A gallery whose settings were never saved keeps downloads
-// open (both sizes, no PIN, no limit), so an unconfigured gallery isn't locked by the defaults.
+// The audience is the signed-in visitor's (lib/visitor.js): the whole gallery ("anyone"), or with
+// role-based access their role. An OPEN visitor (settings never saved, or the dashboard preview) keeps
+// downloads open (both sizes, no PIN, no limit), so an unconfigured gallery isn't locked by the defaults.
 
 const HINTS = {
   web: 'Long edge 2048px. Good for phones, screens and sharing.',
@@ -22,16 +21,10 @@ const OPEN = { on: true, pin: null, sizes: SIZES, limit: null }
 
 /** `{ on, pin, sizes, limit }` for this visitor. `pin` is the 4-digit code or null; `limit` a number or null. */
 export function useDownloadRules() {
-  const id = useGalleryId()
-  const [access] = useGalleryAccess()
-  const [params] = useSearchParams()
-  const asked = params.get('role')
+  const d = useVisitor()?.visitor.d
   return useMemo(() => {
-    if (readJSON(galleryKey(id, 'access'), null) == null) return OPEN
-    const role = access.mode !== 'roles' ? 'anyone'
-      : access.roles.includes(asked) ? asked
-      : access.roles.includes('client') ? 'client' : access.roles[0]
-    const dl = access.data[role].downloads
+    if (!d) return OPEN
+    const dl = d.downloads
     const sizes = SIZES.filter((z) => dl.image.sizes[z.id])
     const limit = Number(dl.image.limit)
     return {
@@ -40,7 +33,7 @@ export function useDownloadRules() {
       sizes,
       limit: limit > 0 ? limit : null,
     }
-  }, [id, access, asked])
+  }, [d])
 }
 
 /**
@@ -63,6 +56,23 @@ export function useDownloads(clientKey) {
   }, [rules.pin])
 
   return { rules, used: done.size, left, isNew, record, locked: !!rules.pin && !unlocked, unlock }
+}
+
+/**
+ * The size this visitor wants single photos in, saved per gallery under `gallery-download-size:<clientKey>`
+ * ('web' | 'high', or null to be asked each time). `[size, setSize]`; `size` is null when the saved size
+ * isn't one the photographer offers any more, so the visitor is asked again.
+ */
+const sizePref = persistedFamily(
+  (clientKey) => `gallery-download-size:${clientKey}`,
+  (key) => {
+    const v = readJSON(key)
+    return SIZES.some((z) => z.id === v) ? v : null
+  }
+)
+export function useSizePref(clientKey, sizes) {
+  const [saved, setSaved] = sizePref(clientKey).use()
+  return [sizes.some((z) => z.id === saved) ? saved : null, setSaved]
 }
 
 /**

@@ -20,6 +20,8 @@ const plural = (n, word = 'photo') => `${n.toLocaleString()} ${word}${n === 1 ? 
  *
  * `sources`: [{ id, label, group?, photos }] in display order. `initial` is the source ticked on open.
  * `dl` comes from useDownloads(). `onStarted(sourceIds)` runs once the files are on their way.
+ * `sizePref` is the size saved for single photos ("Remember my choice", or null to ask each time); the
+ * pane starts on it, and its "Single photos" switch changes it with `onSizePref(sizeId | null)`.
  */
 export default function DownloadPane({ open, onClose, ...props }) {
   return (
@@ -54,13 +56,13 @@ export default function DownloadPane({ open, onClose, ...props }) {
 }
 
 // step: 'pick' → 'pin' (only with a download PIN, once per visit) → 'preparing' (2+ photos) → 'done'
-function Pane({ onClose, sources, initial, dl, gallery, hiddenCount, onStarted }) {
+function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hiddenCount, onStarted }) {
   const { rules } = dl
   const [step, setStep] = useState('pick')
   const [dir, setDir] = useState(1)
   // The sources ticked, in the order chosen. Whole gallery is all-or-nothing: it already has everything.
   const [chosen, setChosen] = useState(() => [sources.some((s) => s.id === initial && s.photos.length) ? initial : 'all'])
-  const [size, setSize] = useState(rules.sizes[0]?.id)
+  const [size, setSize] = useState(sizePref ?? rules.sizes[0]?.id)
   const [job, setJob] = useState(null) // { photos, sourceIds, sizeLabel, file }
   const bodyRef = useRef(null)
 
@@ -145,6 +147,8 @@ function Pane({ onClose, sources, initial, dl, gallery, hiddenCount, onStarted }
                 overlap={overlap}
                 size={size}
                 onSize={setSize}
+                sizePref={sizePref}
+                onSizePref={onSizePref}
                 dl={dl}
                 photographer={gallery.photographer}
                 hiddenCount={hiddenCount}
@@ -186,7 +190,7 @@ function mergePhotos(picked, order) {
 const zipName = (picked) =>
   picked.length <= 2 ? picked.map((s) => s.label).join(' + ') : `${picked[0].label} + ${picked.length - 1} more`
 
-function PickStep({ sources, chosen, onToggle, overlap, size, onSize, dl, photographer, hiddenCount }) {
+function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, onSizePref, dl, photographer, hiddenCount }) {
   const { rules } = dl
   // Ungrouped sources first, then each group under its heading, in the order they come.
   const groups = []
@@ -197,27 +201,7 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, dl, photog
 
   return (
     <div className="space-y-6">
-      {rules.limit != null && <Allowance limit={rules.limit} used={dl.used} left={dl.left} photographer={photographer} />}
-
-      <div role="group" aria-label="What to download" className="space-y-5">
-        {groups.map((g) => (
-          <div key={g.title ?? 'main'}>
-            {g.title && <p className="mb-1.5 px-2 text-11-sb uppercase text-type-2">{g.title}</p>}
-            <div className="-mx-2 space-y-0.5">
-              {g.items.map((s) => (
-                <SourceRow key={s.id} source={s} on={chosen.includes(s.id)} onPick={() => onToggle(s.id)} isNew={dl.isNew} />
-              ))}
-            </div>
-          </div>
-        ))}
-        {(overlap > 0 || hiddenCount > 0) && (
-          <div className="space-y-1 text-12-r text-type-3">
-            {overlap > 0 && <p>{plural(overlap)} {overlap === 1 ? 'is' : 'are'} in more than one of these, so {overlap === 1 ? 'it downloads' : 'they download'} once.</p>}
-            {hiddenCount > 0 && <p>Photos you’ve hidden aren’t included.</p>}
-          </div>
-        )}
-      </div>
-
+      {/* Size first: it applies to whatever is ticked below. */}
       <div>
         <p className="mb-2 text-11-sb uppercase text-type-2">Size</p>
         {rules.sizes.length > 1 ? (
@@ -239,6 +223,7 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, dl, photog
               ))}
             </div>
             <p className="mt-1.5 text-12-r text-type-3">{rules.sizes.find((z) => z.id === size)?.hint}</p>
+            <SingleSize sizes={rules.sizes} value={sizePref} onChange={onSizePref} />
           </>
         ) : (
           <p className="text-14-r text-type-1">
@@ -246,12 +231,72 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, dl, photog
           </p>
         )}
       </div>
+
+      {rules.limit != null && <Allowance limit={rules.limit} used={dl.used} left={dl.left} photographer={photographer} />}
+
+      <div role="group" aria-label="What to download" className="space-y-5">
+        {groups.map((g) => (
+          <div key={g.title ?? 'main'}>
+            {g.title && <p className="mb-1.5 px-2 text-11-sb uppercase text-type-2">{g.title}</p>}
+            <div className="-mx-2 space-y-0.5">
+              {g.items.map((s) => (
+                <SourceRow key={s.id} source={s} on={chosen.includes(s.id)} onPick={() => onToggle(s.id)} isNew={dl.isNew} />
+              ))}
+            </div>
+          </div>
+        ))}
+        {(overlap > 0 || hiddenCount > 0) && (
+          <div className="space-y-1 text-12-r text-type-3">
+            {overlap > 0 && <p>{plural(overlap)} {overlap === 1 ? 'is' : 'are'} in more than one of these, so {overlap === 1 ? 'it downloads' : 'they download'} once.</p>}
+            {hiddenCount > 0 && <p>Photos you’ve hidden aren’t included.</p>}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
 
-/** How many of the photographer's downloads this visitor has left. */
-function Allowance({ limit, used, left, photographer }) {
+/**
+ * "Single photos": the size a tile or full-screen download uses without asking (Web size / High res), or
+ * Ask every time. The same setting as "Remember my choice" in SizePrompt. Changing it downloads nothing.
+ */
+function SingleSize({ sizes, value, onChange }) {
+  const options = [...sizes, { id: 'ask', label: 'Ask every time' }]
+  const current = value ?? 'ask'
+  return (
+    <div className="mt-5">
+      <p className="mb-2 text-11-sb uppercase text-type-2">Single photos</p>
+      <div role="radiogroup" aria-label="Single photos" className="grid grid-cols-3 gap-1 rounded-full bg-surface-2 p-1">
+        {options.map((o) => (
+          <button
+            key={o.id}
+            role="radio"
+            aria-checked={current === o.id}
+            onClick={() => onChange(o.id === 'ask' ? null : o.id)}
+            className={cn('relative h-8 rounded-full px-1 text-13-m text-type-2 transition hover:text-type-0', current === o.id && 'text-type-0')}
+          >
+            {current === o.id && (
+              <motion.span layoutId="single-size" className="absolute inset-0 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]" transition={{ duration: 0.35, ease }} />
+            )}
+            <span className="relative truncate">{o.label}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-1.5 text-12-r text-type-3">
+        {value
+          ? `Downloading one photo from the gallery or full screen saves it in ${sizes.find((z) => z.id === value)?.label} without asking.`
+          : 'Downloading one photo from the gallery or full screen asks which size first.'}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * How many of the photographer's downloads this visitor has left. Also used by SizePrompt for one
+ * photo, with its own `note` in place of the general one.
+ */
+export function Allowance({ limit, used, left, photographer, note }) {
   const out = left === 0
   return (
     <div className="rounded-xl bg-surface-2 p-4">
@@ -270,9 +315,9 @@ function Allowance({ limit, used, left, photographer }) {
         />
       </div>
       <p className="mt-2 text-12-r-p text-type-2">
-        {out
+        {note ?? (out
           ? `You can still download photos you’ve downloaded before. Ask ${photographer} if you need more.`
-          : 'Each photo counts once. Downloading it again is free.'}
+          : 'Each photo counts once. Downloading it again is free.')}
       </p>
     </div>
   )

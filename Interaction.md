@@ -241,7 +241,33 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Headings (page and stage) | Template, type or spacing change | Update instantly; no transition between templates | n/a | n/a |
 | Headings | Cover changes while Match cover is on | Font, weight, case, alignment and size follow the cover instantly | n/a | n/a |
 
+### Sign-in: [src/gallery/components/SignIn.jsx](src/gallery/components/SignIn.jsx), [visitor.js](src/gallery/lib/visitor.js)
+
+Shown in front of the gallery when its Settings were saved and a step is left (see PRD G41). Steps show one at a time; which ones depends on the visitor's audience.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Cover photo | Screen opens | Fades in and settles from a slight zoom | `opacity 0 → 1`, `scale 1.06 → 1`, `1.2s`, `ease` | framer-motion |
+| Step | A step is passed / "Change" | The next step slides in from the right (back: from the left) | `opacity 0 → 1`, `x ±24 → 0`, `0.3s`, `ease`, `mode="wait"`. Exit reverses it | framer-motion |
+| Role card | Tap | Saves the role and moves to the next step. Hover: border `→ type-3`, background `→ surface-0`, caret nudges 2px right; press `scale 0.99` | Tailwind default | Tailwind |
+| "Not the client? Change" | Tap | Clears the role, email, password and face scan and goes back to the role cards. Only after a role was picked from the cards | n/a | n/a |
+| Email → Continue | Submit (Enter or button) | Disabled while empty. Invalid: "Enter a valid email address". Approved only and not on the list: "This email isn't on the list for {roles}…". Errors turn the field `border-destructive` and clear on typing | n/a | n/a |
+| Password field | Fourth digit typed / Open gallery | Tries at once. Wrong: the field shakes, clears and shows "That password isn't right…" | `x [0, -10, 10, -6, 6, 0]`, `0.4s`, `ease` | framer-motion |
+| Face scan | Selfie taken / uploaded | The [Find people](#find-people-srcgallerycomponentsfacepanejsx-facesjs) scan, then "Is this you?": "Yes, that's me" signs in, "That's not me, scan again" restarts the camera | Same as Find people | framer-motion |
+| Last step passed | — | The gallery replaces the screen at the top of the page, then a toast: "Welcome, {first name}" for approved people, else "Signed in as {email}" | toast after `300ms` | n/a |
+| Expired link | Screen opens | "This link has expired" with the date. No actions | n/a | n/a |
+
+### Screenshot protection: [src/gallery/components/ScreenshotGuard.jsx](src/gallery/components/ScreenshotGuard.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Shield | Print Screen, ⌘⇧3/4/5 | Blurs the whole page behind "Photos are protected · Screenshots are turned off in this gallery." for 2.5s; Print Screen also empties the clipboard | `opacity 0 → 1`, `0.15s`; `backdrop-blur-2xl`, `bg-surface-0/60` | framer-motion |
+| Shield | Window loses focus / tab hidden | Shown until focus returns, then cleared after `250ms` | Same as above | framer-motion |
+| Photo | Right-click / long press | No context menu ("Save image") | n/a | Browser native |
+
 ### Nav bar: [src/gallery/components/NavBar.jsx](src/gallery/components/NavBar.jsx)
+
+Buttons for actions the photographer turned off (Favourites, Hidden, People, Download) are left out, here and in the phone dock.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -260,6 +286,7 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Layout popover (tablet and desktop) | Open / close | Drops down from the top right | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it. `origin-top-right` | framer-motion |
 | Layout sheet (phone) | Open / close / drag | Same as [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx): backdrop `0.25s`, sheet `y 100% → 0` `0.35s`, drag-to-close at `80px` or `500px/s` | n/a | framer-motion |
 | Segmented control pill (Orientation / Size / Spacing) | Option chosen | The white pill slides sideways to the selected option. One pill behind the buttons, moved by `translateX(index × (100% + 4px))`, not a `layoutId`: the grid re-lays out and the page height (and scroll) changes at the same moment, which a shared-layout animation would read as vertical movement, and a CSS transform keeps running while the grid re-renders | CSS `transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1)` | CSS |
+| Account button | Click | Shown only after a sign-in. Opens a popover (tablet / desktop, same motion as the Layout popover, 280px) or a [bottom sheet](#bottomsheet-and-select-srccomponentsuiselectjsx) (phone) with the email and "Viewing as {role}". **Sign out** clears the session and shows the sign-in screen again. Outside tap or Esc closes the popover | `opacity 0 → 1`, `y -6 → 0`, `scale 0.98 → 1`, `0.2s`, `ease` | framer-motion |
 | Photographer name | Hover / click | Text `type-2 → type-0` and an underline appears. Click opens [`/portfolio`](#portfolio-portfolio-srcportfolioportfoliopagejsx) | Tailwind default | Tailwind |
 
 #### Phone dock
@@ -276,7 +303,7 @@ On phones (below 640px) the top bar keeps only the names, the Download icon and 
 
 ### Download: [src/gallery/components/DownloadPane.jsx](src/gallery/components/DownloadPane.jsx), [downloads.js](src/gallery/lib/downloads.js)
 
-Opens from the nav's Download button, the selection bar's Download, or a one-photo download that needs the PIN or is past the limit. Same modal shell as Find people: Esc, ✕ and overlay taps close it. It starts fresh on the first step each time.
+Opens from the nav's Download button, the selection bar's Download, or a one-photo download that needs the PIN or is past the limit. Same modal shell as Find people: Esc, ✕ and overlay taps close it. Top to bottom: Size and Single photos, the allowance (with a limit), then what to download. It starts fresh on the first step each time.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -290,7 +317,22 @@ Opens from the nav's Download button, the selection bar's Download, or a one-pho
 | PIN field | Fourth digit typed, or "Unlock and download" | Right PIN: unlocks for the visit and starts the download. Wrong: the field shakes, clears, gets a `destructive` border and "That PIN isn't right. Check the message from {photographer}." | `x 0, -10, 10, -6, 6, 0`, `0.4s` | framer-motion |
 | Preparing | Step opens | The bar fills, with "Packing k of N photos · size". Cancel goes back without downloading | `1.2–4s` (`1200 + 10ms` per photo), `requestAnimationFrame` | JS |
 | Done | Zip ready / one photo saved | The green check pops in: "Your download has started", the file name, "N photos · size" and, with a limit, "N downloads left". "Done" closes; "Download something else" goes back to the list | `scale 0.4 → 1`, `0.35s`, `ease` | framer-motion |
-| Tile / lightbox download | Click | Saves the photo and toasts "Downloading name". Needs the PIN, or new and none left: the lightbox closes and the pane opens on "This photo" | n/a | n/a |
+| Tile / lightbox download | Click | Needs the PIN, or new and none left: the lightbox closes and the pane opens on "This photo". Otherwise, with both sizes allowed and no saved size: opens "Download photo" (below). With a saved size, or one size allowed: saves the photo and toasts "Downloading name · size"; after a saved size the toast has **Change**. With a download limit the toast ends "· N downloads left" ("· No downloads left") and the button's count badge drops by one (not for a photo downloaded before) | n/a | n/a |
+| Single photos: Web size / High res / Ask every time | Tap | The white pill slides to it and the line below changes. Saves the size tile and lightbox downloads use without asking (Ask every time clears it). Downloads nothing | `layoutId="single-size"`, `0.35s`, `ease` | framer-motion |
+
+### Download photo: [src/gallery/components/SizePrompt.jsx](src/gallery/components/SizePrompt.jsx)
+
+Opens from a tile or lightbox download when the photographer allows both sizes and no size is saved, or as **"Download size"** from the toast's **Change** (rows marked *Change* below). A centred dialog over the gallery or lightbox on tablet and desktop; a bottom sheet on phones (drag down, backdrop tap or Esc closes). Esc, ✕, the overlay and Cancel close it without downloading.
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Dialog | Opens / closes | Desktop: fades and scales in; phone: sheet slides up | `opacity`, `scale 0.96 → 1`, `y 8 → 0`, `0.3s`, `ease`; sheet `y 100% → 0`, `0.35s` | framer-motion |
+| Web size / High res card | Tap | Selects it: dark border, `surface-2`, the radio dot pops in. Opens on the first allowed size (Web size). *Change*: also an "Ask every time" card, and it opens on the saved size | Dot `scale 0 → 1`, `0.2s`, `ease` | framer-motion |
+| Allowance card | Opens (download limit only) | Shows "N of M downloads left" and the bar, with "This photo uses 1 download, leaving N." or "You've downloaded this photo before, so it's free." | n/a | n/a |
+| Remember my choice | Tap | Ticks or unticks. Starts unticked. Not in *Change* | Check `scale 0 → 1`, `0.2s` | framer-motion |
+| Download | Tap | Closes, saves the photo in that size and toasts "Downloading name · size". Ticked: saves the size for this gallery (next single downloads don't ask) and the toast gets **Change**. Unticked: clears any saved size, so it asks every time | n/a | n/a |
+| *Change*: Also download this photo again in {size} | Tap | Ticks or unticks (starts unticked; hidden on Ask every time). The hint says "Free · you've downloaded it before" or "Uses 1 download" with a limit, otherwise the file name. The button becomes "Save and download" | Check `scale 0 → 1`, `0.2s` | framer-motion |
+| *Change*: Save | Tap | Closes and saves the size (or Ask every time) without downloading: toasts "Single photos will download in {size}" / "We'll ask which size each time". "Save and download" also saves the photo again in that size, with the usual download toast | n/a | n/a |
 
 ### Find people: [src/gallery/components/FacePane.jsx](src/gallery/components/FacePane.jsx), [faces.js](src/gallery/data/faces.js)
 
@@ -320,11 +362,11 @@ Opens from the People button in the nav, or "Change" in the People view. A modal
 | Tile image | Finishes loading | Fade in | `opacity 0 → 1`, `700ms`, `ease-out` | Tailwind |
 | Tile image | Hover | Slight zoom | `scale 1 → 1.02`, `700ms`, `ease-out` | Tailwind |
 | Bottom gradient | Hover (hidden on touch screens) | Fades in | `opacity 0 → 1`, `duration-300` | Tailwind |
-| Action buttons (heart, download, share, buy) | Hover or keyboard focus (hidden on touch) | Fade in | `opacity 0 → 1`, `duration-300` | Tailwind |
+| Action buttons (heart, download, share, buy; heart, download and share only when allowed for the visitor) | Hover or keyboard focus (hidden on touch) | Fade in. With a download limit the download button carries a count of downloads left | `opacity 0 → 1`, `duration-300` | Tailwind |
 | Each action button | Hover | Background `surface-1/90 → surface-1` | Tailwind default | Tailwind |
 | Favourite heart badge (top left) | Tile hover | Hides so it doesn't double up with the action row | Instant `opacity 0` | Tailwind |
 | Infinite-scroll spinner | Next batch loading (350ms simulated delay) | Spins | `animate-spin` (1s linear infinite) | Tailwind keyframes |
-| Hide button (top right) | Tile hover or keyboard focus (hidden on touch) | Fades in with the tile actions; background `surface-1/90 → surface-1` on hover | Tailwind default | Tailwind |
+| Hide button (top right; only when the visitor may hide photos) | Tile hover or keyboard focus (hidden on touch) | Fades in with the tile actions; background `surface-1/90 → surface-1` on hover | Tailwind default | Tailwind |
 | Hide button | Click | The photo leaves the grid at once (the rest reflow with no animation) and a toast says where to find it. In the Hidden view the button unhides instead and the photo leaves that list | n/a | n/a |
 | Select check (top left) | Tile hover or keyboard focus (pointer devices; never on touch) | Fades in. Fill `black/15 → black/30` on hover. Click enters selection mode with that photo selected. Not shown inside a set | `opacity 0 → 1`, `duration-200` | Tailwind |
 | Tile | Long press (touch) | Enters selection mode with that photo selected; a short vibration. The tap that follows is ignored, and the system image menu is suppressed | Hold `450ms`; cancelled by more than `10px` of movement, scrolling or lifting the finger. `navigator.vibrate(10)` | Pointer events (custom) |
@@ -340,6 +382,7 @@ Opens from the People button in the nav, or "Change" in the People view. A modal
 | Photo | Next / previous (arrows, keys, film strip, swipe) | Slides in the direction of travel | Enter `x dir×80 → 0`, `opacity 0 → 1`. Exit `x → dir×−80`, `opacity → 0`. `0.25s`, `easeOut`. `mode="popLayout"`, `initial={false}`, `custom={dir}` | framer-motion variants |
 | Photo | Swipe (coarse pointer only) | Rubber-bands under the finger and snaps back. A swipe moves to the next photo | `drag="x"`, `dragElastic 0.7`, `dragSnapToOrigin`. Counts as a swipe at > `60px` offset or > `400px/s` | framer-motion drag |
 | Header icons, prev / next | Hover | Background `→ white/10`, text `white/80 → white` | Tailwind default | Tailwind |
+| Download icon | Click / downloads left change | Same as the [tile download](#download-srcgallerycomponentsdownloadpanejsx). With a download limit it carries a white count badge of downloads left, which drops after each new photo | n/a | n/a |
 | Heart | Toggle | Icon switches between outline and red fill | Instant | n/a |
 | Hide / unhide (header) | Click | The photo leaves the current view; the viewer steps to the next photo (or the previous one at the end) with the usual slide, and closes if none are left. Toast confirms | See Photo above | framer-motion |
 | Film-strip thumb | Current / hover | Current: `opacity 100%` + white ring. Others `50%`, hover `80%` | Tailwind default | Tailwind |
@@ -354,11 +397,13 @@ Shown while multi-selecting. Esc closes the name field if it's open, otherwise l
 | Bar | Selection starts / ends | Rises in from the bottom, drops out | `opacity 0 → 1`, `y 24 → 0`, `0.3s`, `ease`. Exit reverses it | framer-motion |
 | "N selected" | Count changes | Number changes instantly; announced politely to screen readers | `aria-live="polite"` | n/a |
 | "Select all N" / "Select none" | Hover / click | Text `white/60 → white`, underline. Click swaps the label | Tailwind default | Tailwind |
-| Action buttons (Share, Favourite, Download, New set) | Hover / disabled | Background `→ white/10`, text `white/85 → white`. Disabled at `35%` opacity when nothing is selected | Tailwind default | Tailwind |
+| Action buttons (Share, Favourite, Hide, Download, New set; each only when the photographer allows it) | Hover / disabled | Background `→ white/10`, text `white/85 → white`. Disabled at `35%` opacity when nothing is selected | Tailwind default | Tailwind |
 | Favourite action | Every selected photo is a favourite | Becomes "Unfavourite" with a filled red heart | Instant | n/a |
 | Favourite | Click | Runs, toasts, and the bar leaves (selection ends) | See Bar | framer-motion |
 | Download | Click | Opens the [Download pane](#download-srcgallerycomponentsdownloadpanejsx) with "Selected photos" ticked. Selection ends once the download starts; closing the pane keeps it. Not shown when downloads are off | See pane | framer-motion |
 | Share | Click | Opens the share sheet, or copies links with a toast. Selection stays | n/a | Browser native |
+| Hide | Click | Only with "Allow hiding in bulk" (Client role), not in the Hidden view. Hides every selected photo, toasts "Hid N photos — find them under Hidden" and selection ends | See Bar | framer-motion |
+| Favourite | Past the favourites limit | Nothing is added; toast "Only N more fit. You can favourite up to M photos." (or "…Remove one to add another." when none fit) | n/a | n/a |
 | New set (tablet / desktop) | Click | A name panel floats up above the bar; the name is pre-selected. Enter or "Create set" makes the set, toasts, and selection ends | Panel `opacity 0 → 1`, `y 8 → 0`, `scale 0.98 → 1`, `0.2s`, `ease`. Exit reverses it | framer-motion |
 | New set (phone) | Tap | The name form opens in a [BottomSheet](#bottomsheet-and-select-srccomponentsuiselectjsx) | Same as BottomSheet | framer-motion |
 | New set | At the two-set limit | No form: a toast asks to delete a set first | n/a | n/a |
@@ -367,7 +412,7 @@ Shown while multi-selecting. Esc closes the name field if it's open, otherwise l
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
-| Toast pill | Download / share / favourite / hide / set feedback | Rises in, drops out | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`, `y → 8`. `0.2s` | framer-motion |
+| Toast pill | Download / share / favourite / hide / set feedback | Rises in, drops out. A toast with an action ("Change" after a remembered-size download) has a white `13-SB` text button that takes clicks (`white/10` on hover) and stays 5s instead of 2.6s; Change opens "Download size" ([Download photo](#download-photo-srcgallerycomponentssizepromptjsx)), which downloads nothing unless asked | Enter `opacity 0 → 1`, `y 12 → 0`. Exit `opacity → 0`, `y → 8`. `0.2s`, `ease` | framer-motion |
 | Toast stack | Selection bar shows / hides | Moves up above the bar, and back down. On phones it always sits at `96px`, above the dock | `bottom 24px → 96px`, `duration-300` | Tailwind |
 
 ### Quick buy panel: [src/gallery/components/QuickBuy.jsx](src/gallery/components/QuickBuy.jsx)

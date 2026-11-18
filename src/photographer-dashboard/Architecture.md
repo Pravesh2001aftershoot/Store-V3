@@ -167,6 +167,7 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
 - `saveBlocker(s)` returns the first reason Save is disabled, or null. Limits are whole numbers up to `LIMIT_MAX` (99999), `''` meaning no limit.
 - `SettingsStep` keeps a local draft (`structuredClone` + `normalize` on every edit) and only calls the setter on Save. While it has no unsaved changes it follows the saved value (another tab). A `beforeunload` listener warns while it's dirty.
 - Set visibility stores hidden collection titles, so new collections show by default.
+- The client gallery reads this through `useGalleryAccess()` in `src/gallery/lib/visitor.js` (`resolveVisitor`, `permissionsFor`; see the root `Architecture.md`, Client gallery → Sign-in and permissions). The preview frame loads the gallery with `?embed=1`, which skips sign-in and shows every action.
 
 ### Share (`share.js`, `ShareStep.jsx`)
 
@@ -222,13 +223,13 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
 | `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
 | Email drafts via `mailto:` | Send from the platform (templates, tracking, per-recipient links or tokens) |
-| Gallery settings saved, mostly not enforced (Downloads is read by the client gallery) | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
+| Gallery settings saved to `localStorage` and enforced in the browser by the client gallery (`src/gallery/lib/visitor.js`) | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 
 ## Known gaps
 
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
-- **Gallery settings are mostly not enforced.** The Settings step saves access and permissions. The client gallery reads only **Downloads** (on/off, download PIN, Web size / High res, download limit) through `useDownloadRules` in `src/gallery/lib/downloads.js`, for the whole gallery or the role in the link (`?role=`, else Client); a gallery that was never saved keeps downloads open. Everything else isn't read yet: no sign-in, password, role links or expiry, and favorites, sharing, video downloads and set visibility behave as before.
+- **Gallery settings are enforced only in the browser.** The client gallery reads the saved settings (`src/gallery/lib/visitor.js`, `downloads.js`): a sign-in screen (role, email or approved list, password, face scan, expiry) and every action (favorites + limit, hide + bulk hide on the Client role, filter by face, face scan → only their photos, sharing, set visibility, screenshot protection, downloads). Passwords and approved emails are in `localStorage`, so this is a prototype of the rules, not security. A gallery that was never saved, and the dashboard preview (`?embed=1`), stay open with no sign-in. Comments and video sharing / downloads have nothing to act on in the client gallery yet.
 - **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).
 - **Per device.** All settings are local to the browser. Opening the gallery on another device shows the defaults.
 - **No drafts.** Every edit is live immediately (see the PRD's open questions).

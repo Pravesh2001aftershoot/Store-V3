@@ -3,16 +3,17 @@ import { useCallback, useEffect, useState } from 'react'
 // ── Toasts ──────────────────────────────────────────────────────────────────
 // A tiny pub/sub so any component can show a message without prop drilling.
 const listeners = new Set()
-export function notify(message) {
-  listeners.forEach((fn) => fn(message))
+/** `action` ({ label, onClick }) adds a button to the toast, which then stays up a little longer. */
+export function notify(message, action) {
+  listeners.forEach((fn) => fn(message, action))
 }
 export function useToasts() {
   const [toasts, setToasts] = useState([])
   useEffect(() => {
-    const on = (message) => {
+    const on = (message, action) => {
       const id = Math.random().toString(36).slice(2)
-      setToasts((t) => [...t, { id, message }])
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600)
+      setToasts((t) => [...t, { id, message, action }])
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), action ? 5000 : 2600)
     }
     listeners.add(on)
     return () => listeners.delete(on)
@@ -37,10 +38,16 @@ async function saveFile(photo) {
   return a.download
 }
 
-/** Downloads the full-size photo. Falls back to opening it in a new tab if the fetch fails. */
-export async function downloadPhoto(photo) {
+/**
+ * Downloads the full-size photo. Falls back to opening it in a new tab if the fetch fails.
+ * `size` ({ label, note?, action? }) names the size in the toast, can add a note (e.g. "12 downloads left")
+ * and a toast button (e.g. "Change").
+ * The prototype saves the same file for every size.
+ */
+export async function downloadPhoto(photo, size) {
   try {
-    notify(`Downloading ${await saveFile(photo)}`)
+    const name = await saveFile(photo)
+    notify([`Downloading ${name}`, size?.label, size?.note].filter(Boolean).join(' · '), size?.action)
   } catch {
     window.open(photo.src, '_blank', 'noopener')
   }

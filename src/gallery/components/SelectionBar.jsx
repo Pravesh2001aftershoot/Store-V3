@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { DownloadSimple, Heart, ShareNetwork, StackPlus, X } from '@phosphor-icons/react'
+import { DownloadSimple, EyeSlash, Heart, ShareNetwork, StackPlus, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { MAX_SETS } from '../lib/actions'
 import { useBreakpoint } from '../lib/hooks'
@@ -92,7 +92,7 @@ function NamePanel(props) {
  * Floating bar shown while multi-selecting photos: the count, select all / none, and the bulk actions.
  * Esc closes the naming panel if it's open, otherwise leaves selection; ⌘/Ctrl+A selects everything in view.
  */
-export default function SelectionBar({ open, count, total, allFavorite, setCount, onSelectAll, onSelectNone, onShare, onFavorite, onDownload, onCreateSet, onSetLimit, onExit }) {
+export default function SelectionBar({ open, count, total, allFavorite, setCount, onSelectAll, onSelectNone, onShare, onFavorite, onHide, onDownload, onCreateSet, onSetLimit, onExit }) {
   const [naming, setNaming] = useState(false)
   const none = count === 0
   const atLimit = setCount >= MAX_SETS
@@ -163,15 +163,16 @@ export default function SelectionBar({ open, count, total, allFavorite, setCount
               </button>
             </div>
             <span className="mx-0.5 h-6 w-px shrink-0 bg-white/15" />
-            <Action icon={ShareNetwork} label="Share" onClick={onShare} disabled={none} />
-            <Action
+            {onShare && <Action icon={ShareNetwork} label="Share" onClick={onShare} disabled={none} />}
+            {onFavorite && <Action
               icon={Heart}
               label={allFavorite && !none ? 'Unfavourite' : 'Favourite'}
               hint={allFavorite && !none ? 'Remove from favourites' : 'Add to favourites'}
               onClick={onFavorite}
               disabled={none}
               active={allFavorite && !none}
-            />
+            />}
+            {onHide && <Action icon={EyeSlash} label="Hide" hint="Hide the selected photos" onClick={onHide} disabled={none} />}
             {onDownload && <Action icon={DownloadSimple} label="Download" onClick={onDownload} disabled={none} />}
             <Action
               icon={StackPlus}

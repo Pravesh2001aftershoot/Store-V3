@@ -287,7 +287,7 @@ function PickStep({ ids, onToggle, mode, onMode, countOf, notMe, onScan }) {
  * Camera → capture → simulated scan. Falls back to uploading a selfie when there's no camera or
  * permission is refused. The selfie never leaves the device.
  */
-function ScanStep({ total, onFound }) {
+export function ScanStep({ total, onFound }) {
   const [state, setState] = useState('starting') // starting | live | blocked | scanning
   const [still, setStill] = useState(null)
   const video = useRef(null)

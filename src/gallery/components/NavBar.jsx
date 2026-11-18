@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CaretLeft, CheckCircle, DownloadSimple, EyeSlash, Handbag, Heart, PencilSimple, SlidersHorizontal, Stack, UserFocus, X } from '@phosphor-icons/react'
+import { CaretLeft, CheckCircle, DownloadSimple, EyeSlash, Handbag, Heart, PencilSimple, SignOut, SlidersHorizontal, Stack, UserCircle, UserFocus, X } from '@phosphor-icons/react'
 import { cn } from '../../lib/utils'
 import { ORIENTATION, SIZE, SPACING } from '../lib/settings'
 import { useBreakpoint } from '../lib/hooks'
 import { FaceStack, MATCH } from './FacePane'
+import { BottomSheet } from '../../components/ui'
+import { roleLabel } from '../../photographer-dashboard/gallery/access'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -175,6 +177,88 @@ function LayoutMenu({ settings, onChange, renderTrigger }) {
   )
 }
 
+/**
+ * Who's signed in, and Sign out. An icon button in the top bar; the details open in a popover on
+ * tablet / desktop and a bottom sheet on phones. Only shown after a sign-in (`account` from the gallery).
+ */
+function AccountMenu({ account }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const isPhone = useBreakpoint() === 'mobile'
+  useEffect(() => {
+    if (!open || isPhone) return
+    const close = (e) => !ref.current?.contains(e.target) && setOpen(false)
+    const esc = (e) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('pointerdown', close)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [open, isPhone])
+
+  const who = account.email || 'Signed in'
+  const role = account.role ? roleLabel(account.role) : null
+  const body = (
+    <>
+      <div className="flex items-center gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-2 text-14-m uppercase text-type-0">
+          {account.email ? account.email[0] : <UserCircle size={20} />}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-14-m text-type-0">{who}</p>
+          <p className="text-12-r text-type-2">{role ? `Viewing as ${role.toLowerCase()}` : 'Signed in to this gallery'}</p>
+        </div>
+      </div>
+      <button
+        onClick={() => { setOpen(false); account.onSignOut() }}
+        className={cn(
+          'mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-input text-type-0 transition hover:bg-surface-2',
+          isPhone ? 'h-12 text-16-m' : 'h-10 text-14-m'
+        )}
+      >
+        <SignOut size={16} /> Sign out
+      </button>
+    </>
+  )
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label="Your account"
+        title={who}
+        className={cn('grid h-10 w-10 place-items-center rounded-full text-type-1 transition hover:bg-surface-2 hover:text-type-0', open && 'bg-surface-2 text-type-0')}
+      >
+        <UserCircle size={20} />
+      </button>
+      {isPhone ? (
+        <BottomSheet open={open} onClose={() => setOpen(false)} title="Your account">
+          <div className="pt-4">{body}</div>
+        </BottomSheet>
+      ) : (
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              role="dialog"
+              aria-label="Your account"
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.2, ease }}
+              className="absolute right-0 top-12 z-50 w-[280px] origin-top-right rounded-lg border border-border bg-surface-1 p-4 shadow-[0_20px_50px_-20px_rgba(0,0,0,.25)]"
+            >
+              {body}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+    </div>
+  )
+}
+
 /** One phone-dock action: icon over a label, with an optional count badge. 56px tall, fills its share of the dock. */
 function DockButton({ icon, label, count, active, className, ...props }) {
   return (
@@ -233,7 +317,7 @@ function useDockVisible(navRef, enabled) {
  * results open like a bucket too (`view` is `faces`), described by `faceFilter`.
  * Download (`onDownload`, left out when the photographer has turned downloads off) opens the download pane.
  */
-export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting, onFaces, facesOpen, faceFilter, faceCount, onClearFaces, onDownload, downloadOpen }) {
+export default function NavBar({ navRef, collections, collection, onCollection, gallery, counts, settings, onSetting, favCount, hiddenCount, sets = [], onDeleteSet, view, onView, onClearFavs, onUnhideAll, selecting, onSelecting, onFaces, facesOpen, faceFilter, faceCount, onClearFaces, onDownload, downloadOpen, canFavorite = true, canHide = true, account }) {
   // Keep the active tab in view when it changes (the tab row scrolls sideways on small screens).
   const tabsRef = useRef(null)
   const isPhone = useBreakpoint() === 'mobile'
@@ -366,7 +450,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
               label="People"
             />
           )}
-          <DockButton
+          {canFavorite && <DockButton
             onClick={() => onView('favs')}
             aria-pressed={showFavs}
             aria-label={`Favourites, ${favCount}`}
@@ -374,8 +458,8 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
             icon={<Heart size={22} weight={showFavs || favCount ? 'fill' : 'regular'} className={showFavs || favCount ? 'text-destructive' : undefined} />}
             count={favCount}
             label="Favourites"
-          />
-          <DockButton
+          />}
+          {canHide && <DockButton
             onClick={() => onView('hidden')}
             aria-pressed={showHidden}
             aria-label={`Hidden, ${hiddenCount}`}
@@ -383,7 +467,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
             icon={<EyeSlash size={22} weight={showHidden ? 'bold' : 'regular'} />}
             count={hiddenCount}
             label="Hidden"
-          />
+          />}
           <LayoutMenu
             settings={settings}
             onChange={onSetting}
@@ -438,7 +522,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
                   <span className="hidden lg:inline">People</span>
                 </button>
               )}
-              <button
+              {canHide && <button
                 onClick={() => onView('hidden')}
                 aria-pressed={showHidden}
                 aria-label={showHidden ? 'Show all photos' : 'Show hidden photos'}
@@ -451,8 +535,8 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
                 <EyeSlash size={18} weight={showHidden ? 'bold' : 'regular'} />
                 <span className="hidden lg:inline">Hidden</span>
                 <span className="tabular-nums">{hiddenCount}</span>
-              </button>
-              <button
+              </button>}
+              {canFavorite && <button
                 onClick={() => onView('favs')}
                 aria-pressed={showFavs}
                 aria-label={showFavs ? 'Show all photos' : 'Show favourites'}
@@ -465,7 +549,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
                 <Heart size={18} weight={showFavs || favCount ? 'fill' : 'regular'} className={showFavs || favCount ? 'text-destructive' : undefined} />
                 <span className="hidden lg:inline">Favourites</span>
                 <span className="tabular-nums">{favCount}</span>
-              </button>
+              </button>}
             </>
           )}
           {onDownload && (
@@ -486,6 +570,7 @@ export default function NavBar({ navRef, collections, collection, onCollection, 
               {!isPhone && <span className="hidden lg:inline">Download</span>}
             </button>
           )}
+          {account && <AccountMenu account={account} />}
           <Link
             to="/store"
             aria-label="Shop prints"

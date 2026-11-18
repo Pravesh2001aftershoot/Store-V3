@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CaretLeft, CaretRight, DownloadSimple, Eye, EyeSlash, Handbag, Heart, ShareNetwork, X } from '@phosphor-icons/react'
 import { downloadPhoto, sharePhoto } from '../lib/actions'
 import { useDownloadAction } from '../lib/downloads'
+import { LeftBadge, downloadLabel } from './Photo'
+import { usePermissions } from '../lib/visitor'
 
 const SWIPE_DISTANCE = 60 // px dragged before release counts as a swipe
 const SWIPE_VELOCITY = 400 // px/s flick counts as a swipe even if short
@@ -32,6 +34,7 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
   const dir = useRef(1) // 1 = moving forward, -1 = backward; drives slide direction
   const swipeable = useCoarsePointer()
   const dl = useDownloadAction() // null outside the gallery: download straight away
+  const can = usePermissions()
 
   const go = (delta) => {
     dir.current = delta
@@ -84,10 +87,10 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
               {index + 1} / {photos.length} <span className="ml-2 max-sm:hidden">{photo.name}</span>
             </p>
             <div className="flex items-center gap-1">
-              <button onClick={() => onFavorite(photo.id)} className={btn} aria-label="Favourite" title="Favourite" aria-pressed={favorites.has(photo.id)}>
+              {can.favorites.on && <button onClick={() => onFavorite(photo.id)} className={btn} aria-label="Favourite" title="Favourite" aria-pressed={favorites.has(photo.id)}>
                 <Heart size={20} weight={favorites.has(photo.id) ? 'fill' : 'regular'} className={favorites.has(photo.id) ? 'text-destructive' : undefined} />
-              </button>
-              <button
+              </button>}
+              {can.hide.on && <button
                 onClick={() => onHide(photo.id)}
                 className={btn}
                 aria-label={hidden.has(photo.id) ? 'Unhide photo' : 'Hide photo'}
@@ -95,15 +98,23 @@ export default function Lightbox({ photos, index, onIndex, onClose, favorites, o
                 aria-pressed={hidden.has(photo.id)}
               >
                 {hidden.has(photo.id) ? <Eye size={20} /> : <EyeSlash size={20} />}
-              </button>
+              </button>}
               {(!dl || dl.allowed) && (
-                <button onClick={() => (dl ? dl.one(photo) : downloadPhoto(photo))} className={btn} aria-label="Download photo" title="Download">
+                <button
+                  onClick={() => (dl ? dl.one(photo) : downloadPhoto(photo))}
+                  className={`relative ${btn}`}
+                  aria-label={downloadLabel(dl?.left)}
+                  title={downloadLabel(dl?.left, 'Download')}
+                >
                   <DownloadSimple size={20} />
+                  <LeftBadge left={dl?.left} dark />
                 </button>
               )}
-              <button onClick={() => sharePhoto(photo)} className={btn} aria-label="Share photo" title="Share">
-                <ShareNetwork size={20} />
-              </button>
+              {can.share && (
+                <button onClick={() => sharePhoto(photo)} className={btn} aria-label="Share photo" title="Share">
+                  <ShareNetwork size={20} />
+                </button>
+              )}
               <button onClick={() => onBuy(photo)} className="mx-1 flex h-10 items-center gap-2 rounded-full bg-white px-4 text-14-m text-type-0 transition hover:bg-white/90">
                 <Handbag size={16} /> <span className="max-sm:hidden">Buy print</span>
               </button>
