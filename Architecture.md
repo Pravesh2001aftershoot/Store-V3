@@ -14,7 +14,7 @@ This is a front-end-only prototype: a React single-page app with no backend. All
 | Dialogs | `@radix-ui/react-dialog` |
 | Icons | `@phosphor-icons/react` |
 | QR codes | `uqr` (0.1.3, MIT, no dependencies): the dashboard Share step's QR card |
-| Font | Geist Variable (`@fontsource-variable/geist`). Collection headings can also use Fraunces, Cormorant Garamond and Geist Mono (`@fontsource-variable/fraunces`, `/cormorant-garamond`, `/geist-mono`), imported by `gallery/templates/set-header/config.js` |
+| Font | Geist (variable, weights 100–900) from Google Fonts: `<link>`s in `index.html` (preconnect to `fonts.googleapis.com` / `fonts.gstatic.com`, `css2?family=Geist:wght@100..900&display=swap`), used as `'Geist'` in `--font-sans` (`src/index.css`), the heading font picker and the share-card canvas (`photographer-dashboard/gallery/share.js`). Collection headings can also use Fraunces, Cormorant Garamond and Geist Mono (`@fontsource-variable/fraunces`, `/cormorant-garamond`, `/geist-mono`), imported by `gallery/templates/set-header/config.js` |
 | Class utils | `clsx` + `tailwind-merge` (`cn()`), `class-variance-authority` |
 | Dev tooling | Locator (`@locator/babel-jsx` + runtime): alt-click a component to jump to its source. Dev server only. |
 
@@ -345,6 +345,7 @@ These are the places that would be swapped out for real services:
 
 ## Known gaps / tech debt
 
+- **Geist loads from Google Fonts.** Without a connection to `fonts.googleapis.com` the app falls back to `ui-sans-serif` / `system-ui`, and `display=swap` shows the fallback until Geist arrives. The share-card canvas draws with whatever is loaded at that moment. Fraunces, Cormorant Garamond and Geist Mono are still bundled through `@fontsource-variable`.
 - **Two photo sets.** The store builder picks from the 28 photos in `data/gallery.js`, while the gallery page shows up to 200, or the local images. Photos dropped into `gallery/assets/photos/` do not appear in the builder.
 - **Portfolio galleries are synthetic.** They are fixed-size slices of a genre folder with mock names, places and dates, and are unrelated to the client galleries at `/g/:galleryId`. Portfolio photos can't be opened in a lightbox or bought.
 - **Portfolio images are committed to the repo.** About 500 web-sized JPEGs live in `src/portfolio/assets/work/` and are emitted as build assets. Only their URLs are in the JS bundle; each image downloads when it renders.

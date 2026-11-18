@@ -19,7 +19,7 @@ import { isComposed } from '../cover/config'
 export const LIMITS = { eyebrow: 32, title: 40, description: 160 }
 
 export const FONTS = [
-  { id: 'sans', label: 'Sans', family: "'Geist Variable', ui-sans-serif, system-ui, sans-serif", hint: 'Geist — the gallery’s own typeface' },
+  { id: 'sans', label: 'Sans', family: "'Geist', ui-sans-serif, system-ui, sans-serif", hint: 'Geist — the gallery’s own typeface' },
   { id: 'serif', label: 'Serif', family: "'Fraunces Variable', ui-serif, Georgia, serif", hint: 'Fraunces — soft, editorial' },
   { id: 'garamond', label: 'Classic', family: "'Cormorant Garamond Variable', ui-serif, Georgia, serif", hint: 'Cormorant Garamond — fine, high contrast' },
   { id: 'mono', label: 'Mono', family: "'Geist Mono Variable', ui-monospace, monospace", hint: 'Geist Mono — technical, understated' },

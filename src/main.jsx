@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import '@fontsource-variable/geist'
 import './index.css'
 import './data/storeConfig' // applies the photographer's store edits to the catalog before anything reads it
 import App from './App'

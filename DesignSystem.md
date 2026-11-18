@@ -54,7 +54,7 @@ Colours are defined as CSS variables on `:root` and exposed as Tailwind colours,
 
 ## Typography
 
-The font is **Geist Variable**, with stylistic sets `ss01` and `cv11` on and antialiasing turned on.
+The font is **Geist** (variable, 100–900), loaded from Google Fonts in `index.html`, with stylistic sets `ss01` and `cv11` on and antialiasing turned on.
 
 **Exception: collection heading titles.** The photographer can set gallery collection headings in Sans (Geist), Serif (Fraunces Variable), Classic (Cormorant Garamond Variable) or Mono (Geist Mono Variable), at Light 300, Regular 400 or Bold 600, as typed or uppercase. These titles don't use type tokens: `SectionHeader.jsx` sets family, weight, case, tracking (`-0.035em` for bold Geist, `-0.02em` for lighter Geist, `-0.04em` mono, `-0.01em` serifs, `+0.04em` uppercase) and line height (`1.04` for the serifs, `0.98` otherwise) inline. Sizes are `clamp()`ed container units: Small `24–44px`, Medium `34–76px`, Large `42–120px`. Their label and note still use tokens (`12-SB` uppercase `type-2`, `16-R-P` `type-1`). Everything else stays in Geist.
 
