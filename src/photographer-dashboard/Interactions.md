@@ -133,26 +133,29 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 
 ## Gallery: Share
 
-- The access line under the cover sums up Settings ("By role · Clients, Guests · one link") and **Settings →** opens that step.
-- Each link has **Copy** (toasts "Link copied") and **Open** (new tab), with "expires 1 March 2027" or "never expires". Each password and download PIN has a copy button ("Password copied", "Download PIN copied"). A failed copy toasts "Couldn’t copy — select it and copy it yourself".
+- The page splits in two from 1024px: on the left, the cover and every link with its codes, then the email history; on the right, the **Send by** card. Narrower, it stacks: links, Send by, then the email history.
+- The access line at the bottom of the links card sums up Settings ("By role · Clients, Guests · one link") and **Settings →** opens that step.
+- Each link shows "Expires on 1 Mar 2027" or "Never expires" beside its name. The copy icon inside the link pill copies it (toasts "Link copied"); the round ↗ button next to it opens it in a new tab. Each password and download PIN has a copy button ("Password copied", "Download PIN copied"). A failed copy toasts "Couldn’t copy — select it and copy it yourself".
 - The link is `/g/<id>`, or `/g/<id>?role=<role>` when each role has its own.
 
-### Send it
-- With roles, **Who’s it for** picks the audience; **Email** / **QR code** picks the method. Changing the audience refills the recipients.
-- **To:** approved people's emails are filled in as chips ("Filled from approved clients."). Typing an address then Enter, comma or space (or leaving the field) adds it; Backspace in an empty field removes the last chip; ✕ removes one. Invalid addresses stay in the field and toast "“…” isn’t an email address".
-- **Subject** (0/120), **Message** (0/1000) and **Sign-off** (0/200) show the default wording as placeholder; empty uses it ("Empty uses the text shown. Type { to add a variable."). **Use the default wording** clears all three. Edits save as you type. Subject stays on one line (Enter does nothing); Message and Sign-off grow with their text.
-- **Variables:** Gallery name `{gallery_name}`, Client name `{client_name}`, Client email `{client_email}` (the first address in To) and Expiry date `{expiry_date}`. `${Gallery_name}`, `{Gallery name}` and any case read the same.
+### Send by
+- The **Email / QR code** switch in the card's header changes what the card shows. There's one email and one QR card for everyone; no audience switch.
+- **To:** with roles, each role on an approved list with people on it gets an **Add approved clients (2)** checkbox under the field, ticked to start. Ticked, the group shows in the field as one chip ("Approved clients · 2", hover lists the addresses); unticking it, or ✕ on the chip, takes those addresses out. Typing an address then Enter, comma or space (or leaving the field) adds it ("Press Enter or comma after each address."); Backspace in an empty field removes the last typed chip; ✕ removes one. An address in both a group and the typed list is sent once. Invalid addresses stay in the field and toast "“…” isn’t an email address".
+- **Subject** (0/120) and **Message** (0/1000) show the default wording as placeholder; empty uses it ("Empty uses the text shown. Type { to add a variable."). The default message ends with the sign-off ("Enjoy!" and the photographer's name); there's no separate Sign-off field. The included details follow the message in the email. **Use the default wording** clears both. Edits save as you type. Subject stays on one line (Enter does nothing); Message grows with its text.
+- **Variables:** Gallery name `{gallery_name}`, Client name `{client_name}`, Client email `{client_email}` (the first address in To) and Expiry date `{expiry_date}` (the shared link's date, or the soonest role date when each role has its own link). `${Gallery_name}`, `{Gallery name}` and any case read the same.
   - Typing `{` (or `${`) opens suggestions under the caret, each with its label and what it fills in ("Nothing to fill yet" when empty). Typing narrows them; ↑ ↓ move, Enter or Tab inserts, Esc or clicking away closes. On phones they show as a chip row under the field instead; tap one to insert.
   - **+ Variable** beside the count opens a menu of all four (a bottom sheet titled "Insert a variable" on phones) and inserts at the caret.
   - Known variables get a green tint in the field; anything else in braces gets a wavy red underline and "{foo} isn’t a variable. Try {gallery_name}, …". A variable with nothing to fill it (no recipient, no expiry) shows in amber: "Client email is empty for this email, so it’ll be left blank."
-  - The preview, **Copy email** and **Open in email app** use the filled-in text; unknown variables are left as typed.
-- **Include** lists only what exists for that audience: Gallery link, Password (1357), Download PIN (2468), Expiry date. Unticking a needed password shows "They’ll need the password to open the gallery. Send it another way." in amber.
-- The preview updates as you type. **Open in email app** opens a draft in the mail app; **Copy email** copies "Subject: …" and the body ("Email copied").
-- **QR code:** the card updates with the audience. **Print under the code** ticks the password (on by default) and download PIN; with the password on, a note warns that anyone who sees the card can get in. **Download PNG** saves the card and toasts "QR card downloaded"; **Copy link** copies the link.
+  - The preview and the sent email use the filled-in text; unknown variables are left as typed.
+- **Include** lists only what exists: Gallery link, Password (1357), Download PIN (2468), Expiry date (1 March 2027). With roles they read Passwords, Download PINs and Expiry dates (or Expiry date with one link) and cover every role, with "Everyone gets every role’s details. Untick a detail to send it another way." under them. Unticking a needed password shows "They’ll need the password to open the gallery. Send it another way." in amber. No codes at all: "No password or download PIN. Add them in Settings."
+- The preview updates as you type. **Send** (at the end of the form, under Include; full width on phones) toasts "Email sent to 3 people". With nobody in To it toasts "Add someone to send it to"; with an address still being typed, "Add or clear the address you’re typing first". Nothing is actually sent in the prototype.
+- **QR code:** the tip comes first; ✕ closes it until the page reloads. Then one row per QR card: one for the gallery link, or with a link per role one per role. Each row shows the code, its label, "Scan to open the gallery" and what's printed under it, plus a round download button that saves the PNG and toasts "QR card downloaded" (with a link per role, "Clients QR card downloaded"). Copy links from the links card on the left. Passwords are always printed under the code. **Print the download PIN (2468) under the code** (with roles, **Print download PINs under the code**) only shows when there's a download PIN. It's off by default and applies to every card. A role's own card prints only its codes ("Password 1357"); the one card for a shared role link prints a line per role ("Guests · Password 1357"), then "Choose Client or Guest when it opens".
 
-### Checklist
-- Each "Before you send" row links to the step that fixes it. A grey dot means "worth a look", not an error. The Access row reads "No approved clients yet" while an approved list is empty.
-- The Portfolio card opens the Portfolio; the Print store card opens this gallery's catalog.
+### Email history
+- Every **Send** adds a row at the top: the first recipient ("lexie@example.com +2 more") and when ("Today, 4:41 pm", "Yesterday, …", or "12 Nov 2026, …"). It's saved per gallery, so it's there after a reload.
+- Clicking a row opens it to show the subject and every recipient ("Sent to 3 people"); clicking again, or opening another row, closes it.
+- The latest 5 show; **Show all 12** lists the rest and **Show fewer** goes back. Only the latest 50 are kept.
+- Empty state: an envelope icon, "No emails sent yet" and "When you send the gallery by email, who it went to and when shows here." QR downloads aren't recorded.
 
 ## Gallery: Analytics
 

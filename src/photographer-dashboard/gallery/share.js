@@ -1,20 +1,19 @@
 import { encode } from 'uqr'
 import { readJSON } from '../../lib/persisted'
 import { forGallery, useGalleryId } from '../../data/galleries'
-import { roleLabel, rolePlural } from './access'
+import { audiences, roleLabel, rolePlural } from './access'
 
 // Share step: the email the photographer sends and the QR card they print, built from the gallery's
 // access settings (access.js). Only the wording and the include choices are saved, per gallery under
 // galleryKey(id, 'share'); empty wording falls back to text made from the gallery.
 
-export const LIMITS = { subject: 120, message: 1000, closing: 200 }
+export const LIMITS = { subject: 120, message: 1000 }
 
 const DEFAULTS = {
   subject: '',
   message: '',
-  closing: '',
   include: { link: true, password: true, pin: true, expiry: true }, // email
-  qr: { password: true, pin: false }, // printed under the QR code
+  qr: { pin: false }, // printed under the QR code (passwords always are)
 }
 
 const load = (key) => {
@@ -24,7 +23,6 @@ const load = (key) => {
   return {
     subject: text(s.subject, LIMITS.subject),
     message: text(s.message, LIMITS.message),
-    closing: text(s.closing, LIMITS.closing),
     include: Object.fromEntries(Object.entries(DEFAULTS.include).map(([k, d]) => [k, bool(s.include?.[k], d)])),
     qr: Object.fromEntries(Object.entries(DEFAULTS.qr).map(([k, d]) => [k, bool(s.qr?.[k], d)])),
   }
@@ -34,8 +32,41 @@ const family = forGallery('share', load)
 /** This gallery's share settings: `[settings, set]`. */
 export const useShareSettings = () => family(useGalleryId()).use()
 
+// Emails sent from the Share step, newest first, under galleryKey(id, 'share-history'). Each entry is
+// { id, at (ms), to: [email], subject }. Only the latest HISTORY_LIMIT are kept.
+export const HISTORY_LIMIT = 50
+const loadHistory = (key) => {
+  const list = readJSON(key, [])
+  if (!Array.isArray(list)) return []
+  return list
+    .filter((e) => e && typeof e.at === 'number' && Array.isArray(e.to) && e.to.length)
+    .map((e) => ({ id: String(e.id ?? e.at), at: e.at, to: e.to.filter((x) => typeof x === 'string'), subject: typeof e.subject === 'string' ? e.subject : '' }))
+    .slice(0, HISTORY_LIMIT)
+}
+const historyFamily = forGallery('share-history', loadHistory)
+
+/** This gallery's sent emails: `{ history, record({ to, subject }) }`. */
+export function useShareHistory() {
+  const [history, setHistory] = historyFamily(useGalleryId()).use()
+  const record = ({ to, subject }) => {
+    const at = Date.now()
+    setHistory((h) => [{ id: `${at}`, at, to, subject }, ...h].slice(0, HISTORY_LIMIT))
+  }
+  return { history, record }
+}
+
+/** "Today, 3:42 pm", "Yesterday, 9:05 am", or "12 Nov 2026, 3:42 pm". */
+export function formatSent(at, now = Date.now()) {
+  const d = new Date(at)
+  const time = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const day = (x) => new Date(x).toDateString()
+  if (day(at) === day(now)) return `Today, ${time}`
+  if (day(at) === day(now - 864e5)) return `Yesterday, ${time}`
+  return `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${time}`
+}
+
 /**
- * Variables the photographer can put in the subject, message and sign-off, written `{gallery_name}`.
+ * Variables the photographer can put in the subject and message, written `{gallery_name}`.
  * `${Gallery_name}`, any case and spaces for underscores (`{Gallery name}`) are read the same way.
  * Each is filled from the gallery when the email is built.
  */
@@ -64,8 +95,7 @@ export const fillVariables = (text, values) =>
 /** The text used while a field is empty. */
 export const defaultText = (gallery) => ({
   subject: `Your photos are ready: ${gallery.title}`,
-  message: `Hi ${gallery.client},\n\nYour gallery is ready! Have a look, pick your favorites and download the ones you love.`,
-  closing: `Enjoy!\n${gallery.photographer}`,
+  message: `Hi ${gallery.client},\n\nYour gallery is ready! Have a look, pick your favorites and download the ones you love.\n\nEnjoy!\n${gallery.photographer}`,
 })
 
 /** The link an audience opens: the shared one, or its role's own. */
@@ -84,35 +114,87 @@ export function codesFor(access, aud) {
   }
 }
 
-/** The email for one audience: { subject, body }. `include` picks which details go in; `to` fills {client_email}. */
-export function composeEmail({ gallery, access, aud, base, share, to = [] }) {
+/** Everyone's codes, one entry per audience that has a password or download PIN: [{ aud, password, pin }]. */
+export const allCodes = (access) => audiences(access).map((aud) => ({ aud, ...codesFor(access, aud) })).filter((c) => c.password || c.pin)
+
+/**
+ * The expiry that fills {expiry_date}: the shared link's, or with a link per role the soonest role
+ * date ('' when nothing expires).
+ */
+export const galleryExpiry = (access) => {
+  if (access.mode !== 'roles' || access.singleLink) return access.expiry.all
+  return access.roles.map((r) => access.expiry[r]).filter(Boolean).sort()[0] ?? ''
+}
+
+/** "Client, Guest or Vendor". */
+const orList = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`)
+
+/**
+ * The one email for the whole gallery: { subject, body }. It always links to the gallery itself; with
+ * roles the visitor picks theirs when it opens, and each role gets a line with what it needs (sign in
+ * with the email this was sent to, password, download PIN, its own expiry). `include` picks which
+ * details go in; `to` fills {client_email}.
+ */
+export function composeEmail({ gallery, access, base, share, to = [] }) {
   const def = defaultText(gallery)
   const { include } = share
-  const codes = codesFor(access, aud)
-  const expiry = expiryFor(access, aud)
-  const roles = aud !== 'anyone'
+  const roles = access.mode === 'roles'
+  const shared = !roles || access.singleLink
   const lines = []
   if (include.link) {
-    lines.push(`View the gallery: ${linkFor(access, aud, base)}`)
-    if (roles && access.singleLink) lines.push(`When it opens, choose “${roleLabel(aud)}”.`)
-    if (roles && access.data[aud].approved.on) lines.push('Sign in with the email address this was sent to.')
+    lines.push(`View the gallery: ${base}`)
+    if (roles) lines.push(`When it opens, choose ${orList(access.roles.map(roleLabel))}.`)
   }
-  if (include.password && codes.password) lines.push(`Password: ${codes.password}`)
-  if (include.pin && codes.pin) lines.push(`Download PIN: ${codes.pin}`)
-  if (include.expiry && expiry) lines.push(`The link works until ${formatDate(expiry)}.`)
-  const fill = (t) => fillVariables(t, variableValues({ gallery, expiry, to }))
-  const body = [fill(share.message.trim()) || def.message, lines.join('\n'), fill(share.closing.trim()) || def.closing].filter(Boolean).join('\n\n')
+  if (!roles) {
+    const { password, pin } = codesFor(access, 'anyone')
+    if (include.password && password) lines.push(`Password: ${password}`)
+    if (include.pin && pin) lines.push(`Download PIN: ${pin}`)
+  } else {
+    for (const r of access.roles) {
+      const { password, pin } = codesFor(access, r)
+      const own = !shared && access.expiry[r]
+      const parts = [
+        include.link && access.data[r].approved.on && 'sign in with the email address this was sent to',
+        include.password && password && `password ${password}`,
+        include.pin && pin && `download PIN ${pin}`,
+        include.expiry && own && `link works until ${formatDate(own)}`,
+      ].filter(Boolean)
+      if (parts.length) lines.push(`${rolePlural(r)}: ${parts.join(' · ')}`)
+    }
+  }
+  if (include.expiry && shared && access.expiry.all) lines.push(`The link works until ${formatDate(access.expiry.all)}.`)
+  const fill = (t) => fillVariables(t, variableValues({ gallery, expiry: galleryExpiry(access), to }))
+  // The message carries the greeting and sign-off; the access details follow it.
+  const body = [fill(share.message.trim()) || def.message, lines.join('\n')].filter(Boolean).join('\n\n')
   return { subject: fill(share.subject.trim()) || def.subject, body }
 }
 
-export const mailto = (to, { subject, body }) =>
-  `mailto:${to.map(encodeURIComponent).join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+/**
+ * The QR cards to print: [{ key, role, url, lines }]. One card for the gallery link, or with roles and
+ * a link per role, one card per role for its own link. Lines are what's printed under the code: without
+ * roles "Password 1234", "Download PIN 5678"; on a role's own card the same for that role; on the one
+ * card for every role, a line per role ("Guests · Password 1234 · PIN 5678") then which roles to pick.
+ */
+export function qrCards(access, base, qr) {
+  const own = (aud) => {
+    const { password, pin } = codesFor(access, aud)
+    return [password && `Password ${password}`, qr.pin && pin && `Download PIN ${pin}`].filter(Boolean)
+  }
+  if (access.mode !== 'roles') return [{ key: 'anyone', role: null, url: base, lines: own('anyone') }]
+  if (!access.singleLink) return access.roles.map((r) => ({ key: r, role: r, url: linkFor(access, r, base), lines: own(r) }))
+  const lines = access.roles.map((r) => {
+    const { password, pin } = codesFor(access, r)
+    const parts = [password && `Password ${password}`, qr.pin && pin && `PIN ${pin}`].filter(Boolean)
+    return parts.length ? `${rolePlural(r)} · ${parts.join(' · ')}` : null
+  }).filter(Boolean)
+  return [{ key: 'all', role: null, url: base, lines: [...lines, `Choose ${orList(access.roles.map(roleLabel))} when it opens`] }]
+}
 
 /** QR modules for a link: { size, data: boolean[][] } (no quiet zone; callers add their own margin). */
 export const qrFor = (text) => encode(text, { ecc: 'M', border: 0 })
 
-/** The QR card as a PNG data URL (1080 × 1350), for printing or slides. */
-export function qrCardPNG({ title, url, lines }) {
+/** The QR card as a PNG data URL (1080 × 1350), for printing or slides. `tag` (a role) prints small above the title. */
+export function qrCardPNG({ title, tag, url, lines }) {
   const W = 1080
   const H = 1350
   const c = document.createElement('canvas')
@@ -123,6 +205,12 @@ export function qrCardPNG({ title, url, lines }) {
   g.fillRect(0, 0, W, H)
   g.fillStyle = '#111111'
   g.textAlign = 'center'
+  if (tag) {
+    g.fillStyle = '#555555'
+    g.font = '600 32px "Geist", system-ui, sans-serif'
+    g.fillText(tag.toUpperCase(), W / 2, 100)
+    g.fillStyle = '#111111'
+  }
   g.font = '600 52px "Geist", system-ui, sans-serif'
   wrap(g, title, W / 2, 170, W - 160, 64)
 
@@ -155,6 +243,3 @@ function wrap(g, text, x, y, max, lh) {
   out.push(line)
   out.slice(0, 2).forEach((l, i) => g.fillText(l, x, y + i * lh))
 }
-
-/** Who an audience is, in words: "Clients", or "Everyone" without roles. */
-export const audienceName = (aud) => (aud === 'anyone' ? 'Everyone' : rolePlural(aud))

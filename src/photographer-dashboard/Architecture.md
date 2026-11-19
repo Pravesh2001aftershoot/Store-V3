@@ -25,9 +25,9 @@ src/photographer-dashboard/
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
-│   ├── ShareStep.jsx          Access overview (links, passwords, PINs), email composer, QR card, checklist, next steps
-│   ├── share.js               Share settings (email wording, includes, QR options), VARIABLES + fillVariables, composeEmail, mailto, qrFor (uqr), qrCardPNG
-│   ├── VariableText.jsx       Subject / Message / Sign-off field with variable suggestions, + Variable menu and tinted tokens
+│   ├── ShareStep.jsx          Two-column share page: AccessOverview (links, passwords, PINs) + EmailHistory on the left; "Send by" card (EmailComposer / QrPanel with QrRow) on the right
+│   ├── share.js               Share settings (email wording, includes, QR options), VARIABLES + fillVariables, allCodes, galleryExpiry, composeEmail, qrCards, qrFor (uqr), qrCardPNG
+│   ├── VariableText.jsx       Subject / Message field with variable suggestions, + Variable menu and tinted tokens
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
 │   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
 ├── portfolio/
@@ -175,15 +175,17 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
 Everything is derived from `useGalleryAccess()`; the step only saves the photographer's wording and choices, `useShareSettings()` = `forGallery('share', load)` under `galleryKey(id, 'share')` (`store-v3:gallery-share` for the sample):
 
 ```
-{ subject, message, closing,             // '' = use defaultText(gallery)
+{ subject, message,                      // '' = use defaultText(gallery); the message includes the sign-off
   include: { link, password, pin, expiry }, // email details, all true by default
-  qr: { password, pin } }                  // printed under the QR code (true, false)
+  qr: { pin } }                            // download PIN printed under the QR code (false); passwords always are
 ```
 
-- `linkFor(access, aud, base)` is the shared link for `anyone` or a single link, else `?role=<aud>`. `expiryFor` reads `expiry.all` or the role's own. `codesFor(access, aud)` gives `{ password, pin }` ('' when off).
-- `composeEmail({ …, to })` builds `{ subject, body }`: message, the included detail lines, sign-off. Variables in the saved wording stay as typed (`{client_name}`) and are filled at build time: `VARIABLES` lists the keys (`gallery_name`, `client_name`, `client_email`, `expiry_date`), `VARIABLE_RE` matches `{name}` or `${name}` (any case, spaces = underscores), `variableValues({ gallery, expiry, to })` gives `gallery.title`, `gallery.client`, `to[0]` and the formatted expiry ('' when missing), and `fillVariables` swaps them in, leaving unknown names alone.
-- `VariableText` is a growing `<textarea>` over a backdrop of the same box and type with transparent text, where variable runs get tints; the suggestion list is placed with a hidden mirror div measuring the caret. `mailto(to, email)` encodes it. Recipients aren't saved; they reset to the approved list when the audience changes (`EmailComposer` is keyed by audience).
-- QR codes come from `uqr` (`encode`, ECC M, no border): the card draws them as one SVG path with `crispEdges`; `qrCardPNG` draws a 1080 × 1350 canvas (title, code at whole-pixel offsets, caption, lines) and returns a data URL that's downloaded as `<gallery>[-<role>]-qr.png`.
+and the emails sent, `useShareHistory()` = `forGallery('share-history', loadHistory)` under `galleryKey(id, 'share-history')` (`store-v3:gallery-share-history` for the sample): `[{ id, at, to: [email], subject }]`, newest first, capped at `HISTORY_LIMIT` (50). `record({ to, subject })` prepends an entry; `EmailComposer`'s Send calls it with the filled-in subject after the recipient checks pass. `formatSent(at)` gives "Today, 3:42 pm", "Yesterday, 9:05 am" or "12 Nov 2026, 3:42 pm".
+
+- `linkFor(access, aud, base)` is the shared link for `anyone` or a single link, else `?role=<aud>`. `expiryFor` reads `expiry.all` or the role's own. `codesFor(access, aud)` gives `{ password, pin }` ('' when off); `allCodes(access)` lists `{ aud, password, pin }` for every audience that has one. `galleryExpiry(access)` is `expiry.all`, or with a link per role the soonest role date. `linkFor` and `expiryFor` feed the access overview and the client gallery (`visitor.js`); the email and QR always use the gallery link `base`, where a role-mode visitor picks their role.
+- `composeEmail({ gallery, access, base, share, to })` builds the one email for everyone, `{ subject, body }`: message, the included detail lines (the link; with roles "When it opens, choose Client or Guest." and a line per role: approved sign-in, password, download PIN, its own expiry). There's no separate sign-off: the default message ends with one, and a saved `closing` from older versions is ignored. Variables in the saved wording stay as typed (`{client_name}`) and are filled at build time: `VARIABLES` lists the keys (`gallery_name`, `client_name`, `client_email`, `expiry_date`), `VARIABLE_RE` matches `{name}` or `${name}` (any case, spaces = underscores), `variableValues({ gallery, expiry, to })` gives `gallery.title`, `gallery.client`, `to[0]` and the formatted `galleryExpiry` ('' when missing), and `fillVariables` swaps them in, leaving unknown names alone.
+- `VariableText` is a growing `<textarea>` over a backdrop of the same box and type with transparent text, where variable runs get tints; the suggestion list is placed with a hidden mirror div measuring the caret. Recipients aren't saved: `EmailComposer` keeps the ticked approved groups (`picked`, all to start) and the typed addresses (`typed`) and builds `to` from both, de-duplicated.
+- QR codes come from `uqr` (`encode`, ECC M, no border): the card draws them as one SVG path with `crispEdges`; `qrCardPNG` draws a 1080 × 1350 canvas (title, code at whole-pixel offsets, caption, lines) (and an optional `tag`, the role, above the title) and returns a data URL that's downloaded as `<gallery>-qr.png`, or `<gallery>-<role>-qr.png` for a role's card. `qrCards(access, base, share.qr)` gives the cards to show, `[{ key, role, url, lines }]`: one for the gallery link (lines per role plus the role hint when one link serves every role), or with a link per role (`singleLink` off) one per role for `linkFor(access, role, base)` with only that role's codes.
 
 ### Grid defaults
 
@@ -224,12 +226,13 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | Gallery registry in localStorage, slug ids | Gallery records with server ids, a share token per client link, and a `catalog_id` |
 | Active gallery / catalog in sessionStorage | The store URL carries the gallery (or the catalog comes with the client's session) |
 | `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
-| Email drafts via `mailto:` | Send from the platform (templates, tracking, per-recipient links or tokens) |
+| **Send** only toasts (`EmailComposer` `send`) | Send from the platform (templates, tracking, per-recipient links or tokens) |
 | Gallery settings saved to `localStorage` and enforced in the browser by the client gallery (`src/gallery/lib/visitor.js`) | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 
 ## Known gaps
 
+- **Email history is local.** Sends are simulated, so the history only records what was sent from this browser; there's no delivery, open or bounce status. Production would read it from the send log.
 - **Client email is the first recipient.** There's no client record with an email yet, so `{client_email}` fills from the To field and is blank until someone is added.
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
 - **Gallery settings are enforced only in the browser.** The client gallery reads the saved settings (`src/gallery/lib/visitor.js`, `downloads.js`): a sign-in screen (role, email or approved list, password, face scan, expiry) and every action (favorites + limit, hide + bulk hide on the Client role, filter by face, face scan → only their photos, sharing, set visibility, screenshot protection, downloads). Passwords and approved emails are in `localStorage`, so this is a prototype of the rules, not security. A gallery that was never saved, and the dashboard preview (`?embed=1`), stay open with no sign-in. Comments and video sharing / downloads have nothing to act on in the client gallery yet.
