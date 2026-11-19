@@ -58,13 +58,13 @@ export function useShareHistory() {
 }
 
 /** "Today, 3:42 pm", "Yesterday, 9:05 am", or "12 Nov 2026, 3:42 pm". */
-export function formatSent(at, now = Date.now()) {
+export function formatSent(at) {
   const d = new Date(at)
-  const time = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
-  const day = (x) => new Date(x).toDateString()
-  if (day(at) === day(now)) return `Today, ${time}`
-  if (day(at) === day(now - 864e5)) return `Yesterday, ${time}`
-  return `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${time}`
+  const p = (n) => String(n).padStart(2, '0')
+  return {
+    date: `${p(d.getDate())} / ${p(d.getMonth() + 1)} / ${d.getFullYear()}`,
+    time: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+  }
 }
 
 /**

@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowLeft, ArrowRight, ArrowUpRight, CopySimple, DownloadSimple, Lightbulb, LockSimple, PaperPlaneTilt,
-  CaretDown, EnvelopeSimple, UsersThree, X,
+  ArrowRight, ArrowUpRight, CopySimple, DownloadSimple, Lightbulb, LockSimple, PaperPlaneTilt,
+  CaretRight, EnvelopeSimple, UsersThree, X,
 } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented, TextField } from '../../gallery/templates/cover/controls'
-import { Checkbox, Empty, IconButton, PageHeader, Select } from '../components/ui'
+import { Checkbox, IconButton, PageHeader, Select, ease } from '../components/ui'
 import Modal from '../components/Modal'
 import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
@@ -89,12 +91,6 @@ export default function ShareStep({ ws }) {
           <EmailHistory />
         </div>
       </div>
-
-      <div className="mt-10">
-        <Button as={Link} to={`${ws.base}/settings`} variant="ghost" size="sm" className="-ml-2 max-sm:ml-0 max-sm:h-10 max-sm:w-full">
-          <ArrowLeft size={14} /> Settings
-        </Button>
-      </div>
     </div>
   )
 }
@@ -170,70 +166,131 @@ function Codes({ access, aud }) {
 }
 
 /**
- * Every email sent from this step, newest first: who it went to, when, and the subject. The latest 5
- * show; "Show all" lists the rest. A row opens to list every recipient. Empty until the first send.
+ * Every email sent from this step, newest first, in a card that opens and closes like an accordion
+ * (closed to start). Closed: a pill with "Email History" and a right caret. Open: the card shows each
+ * send as a row (first recipient, "+ n more", date • time); four rows show and the rest scroll.
+ * Hovering, focusing or tapping "+ n more" lists every recipient in a tooltip. Empty until the first send.
  */
 function EmailHistory() {
   const { history } = useShareHistory()
-  const [all, setAll] = useState(false)
-  const [open, setOpen] = useState(null)
-  const shown = all ? history : history.slice(0, 5)
+  const [open, setOpen] = useState(false)
   return (
-    <section>
-      <h2 className="text-16-sb text-type-0">
-        Email history {history.length > 0 && <span className="text-type-3">{history.length}</span>}
+    <section className={cn('border border-border bg-surface-1 transition-[border-radius] duration-300', open ? 'rounded-2xl' : 'rounded-[30px]')}>
+      <h2>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="email-history-body"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full items-center gap-2 p-5 text-left text-14-m text-type-1 transition hover:text-type-0"
+        >
+          <span className="min-w-0 flex-1">Email History</span>
+          <CaretRight size={16} className={cn('shrink-0 text-type-2 transition-transform duration-300', open && 'rotate-90')} />
+        </button>
       </h2>
-      {!history.length ? (
-        <div className="mt-3">
-          <Empty icon={EnvelopeSimple} title="No emails sent yet">
-            When you send the gallery by email, who it went to and when shows here.
-          </Empty>
-        </div>
-      ) : (
-        <>
-          <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1">
-            {shown.map((e) => {
-              const expanded = open === e.id
-              return (
-                <li key={e.id}>
-                  <button
-                    type="button"
-                    aria-expanded={expanded}
-                    onClick={() => setOpen(expanded ? null : e.id)}
-                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-surface-2/60"
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-type-1"><EnvelopeSimple size={16} /></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex min-w-0 items-baseline gap-1.5 text-14-m text-type-0">
-                        <span className="truncate">{e.to[0]}</span>
-                        {e.to.length > 1 && <span className="shrink-0 text-13-r text-type-2">+{e.to.length - 1} more</span>}
-                      </span>
-                      <span className="block truncate text-12-r text-type-2">{formatSent(e.at)}</span>
-                    </span>
-                    <CaretDown size={14} className={cn('shrink-0 text-type-2 transition-transform duration-300', expanded && 'rotate-180')} />
-                  </button>
-                  {expanded && (
-                    <div className="space-y-2 px-4 pb-4 pl-16">
-                      <p className="text-12-r text-type-3">Subject</p>
-                      <p className="-mt-1.5 break-words text-13-r text-type-1">{e.subject}</p>
-                      <p className="text-12-r text-type-3">Sent to {plural(e.to.length, 'person', 'people')}</p>
-                      <ul className="-mt-1.5 space-y-0.5">
-                        {e.to.map((x) => <li key={x} className="break-all text-13-r text-type-1">{x}</li>)}
-                      </ul>
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-          {history.length > 5 && (
-            <button type="button" onClick={() => setAll((v) => !v)} className="mt-3 text-13-m text-type-2 underline-offset-4 transition hover:text-type-0 hover:underline">
-              {all ? 'Show fewer' : `Show all ${history.length}`}
-            </button>
-          )}
-        </>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id="email-history-body"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5">
+              {!history.length ? (
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-surface-2 text-type-1"><EnvelopeSimple size={20} /></span>
+                  <div className="space-y-1.5">
+                    <p className="text-16-m text-type-1">No emails sent yet</p>
+                    <p className="text-14-r text-type-2">When you send the gallery by email, who it went to and when shows here.</p>
+                  </div>
+                </div>
+              ) : (
+                // Four rows (44px each, 33px of gap + divider between) fit; the rest scroll.
+                <ul className="-mr-2 max-h-[275px] divide-y divide-border overflow-y-auto pr-2">
+                  {history.map((e) => {
+                    const { date, time } = formatSent(e.at)
+                    return (
+                      <li key={e.id} className="space-y-2 py-4 first:pt-0 last:pb-0">
+                        <p className="flex min-w-0 items-baseline gap-1 text-16-m">
+                          <span className="truncate text-type-1" title={e.to[0]}>{e.to[0]}</span>
+                          {e.to.length > 1 && <Recipients to={e.to} />}
+                        </p>
+                        <p className="flex items-center gap-1.5 text-12-sb uppercase text-type-2">
+                          <span>{date}</span>
+                          <span aria-hidden>•</span>
+                          <span>{time}</span>
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
+  )
+}
+
+/**
+ * "+ n more": hover, focus or tap shows every recipient of that email in a dark tooltip above it
+ * (below when there's no room). Portalled with fixed positioning so the scrolling list doesn't clip it;
+ * it closes on scroll, Escape or a tap elsewhere.
+ */
+function Recipients({ to }) {
+  const ref = useRef(null)
+  const [pos, setPos] = useState(null)
+  const show = () => {
+    const r = ref.current.getBoundingClientRect()
+    const width = Math.min(280, window.innerWidth - 32)
+    const left = Math.max(16, Math.min(r.left, window.innerWidth - width - 16))
+    setPos(r.top > 200 ? { left, width, bottom: window.innerHeight - r.top + 8 } : { left, width, top: r.bottom + 8 })
+  }
+  const hide = () => setPos(null)
+  useEffect(() => {
+    if (!pos) return
+    const away = (e) => !ref.current?.contains(e.target) && hide()
+    const esc = (e) => e.key === 'Escape' && hide()
+    window.addEventListener('scroll', hide, true)
+    window.addEventListener('resize', hide)
+    document.addEventListener('pointerdown', away)
+    document.addEventListener('keydown', esc)
+    return () => {
+      window.removeEventListener('scroll', hide, true)
+      window.removeEventListener('resize', hide)
+      document.removeEventListener('pointerdown', away)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [pos])
+  return (
+    <>
+      <button
+        ref={ref}
+        type="button"
+        aria-label={`Sent to ${plural(to.length, 'person', 'people')}: ${to.join(', ')}`}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        onClick={() => (pos ? hide() : show())}
+        className="shrink-0 whitespace-nowrap text-type-2 underline-offset-4 transition hover:text-type-0 hover:underline focus-visible:text-type-0 focus-visible:underline focus-visible:outline-none"
+      >
+        + {to.length - 1} more
+      </button>
+      {pos && createPortal(
+        <div role="tooltip" style={pos} className="pointer-events-none fixed z-50 rounded-lg bg-type-0 px-3 py-2 text-left shadow-lg">
+          <p className="text-12-sb uppercase text-white/60">Sent to {plural(to.length, 'person', 'people')}</p>
+          <ul className="mt-1 max-h-[240px] space-y-0.5 overflow-hidden">
+            {to.map((x) => <li key={x} className="break-all text-13-r text-white">{x}</li>)}
+          </ul>
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }
 

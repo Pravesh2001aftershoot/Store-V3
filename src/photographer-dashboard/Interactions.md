@@ -157,10 +157,11 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - **QR code:** the tip comes first; ✕ closes it until the page reloads. Then one tile per QR card, side by side: one for the gallery link, or with a link per role one per role. Each row shows the code, its label, "Scan to open the gallery" and what's printed under it, plus a download button that saves the PNG and toasts "QR card downloaded" (with a link per role, "Clients QR card downloaded"). Copy links from the links card on the left. Passwords are always printed under the code. **Print the download PIN (2468) under the code** (with roles, **Print download PINs under the code**) only shows when there's a download PIN. It's off by default and applies to every card. A role's own card prints only its codes ("Password 1357"); the one card for a shared role link prints a line per role ("Guests · Password 1357"), then "Choose Client or Guest when it opens".
 
 ### Email history
-- Every **Send** adds a row at the top: the first recipient ("lexie@example.com +2 more") and when ("Today, 4:41 pm", "Yesterday, …", or "12 Nov 2026, …"). It's saved per gallery, so it's there after a reload.
-- Clicking a row opens it to show the subject and every recipient ("Sent to 3 people"); clicking again, or opening another row, closes it.
-- The latest 5 show; **Show all 12** lists the rest and **Show fewer** goes back. Only the latest 50 are kept.
-- Empty state: an envelope icon, "No emails sent yet" and "When you send the gallery by email, who it went to and when shows here." QR downloads aren't recorded.
+- It's an accordion, **closed** when the page opens (and after a reload). Clicking the "Email History" header (or Enter / Space on it) opens or closes it; the caret turns from right to down and the body grows or shrinks in height (0.3s, app curve).
+- Every **Send** adds a row at the top: the first recipient ("lexie@example.com + 2 more") over the date and time ("19 / 11 / 2026 • 5:20 PM"). It's saved per gallery, so it's there after a reload. Rows don't open or do anything when clicked.
+- Four rows show; with more, the list scrolls inside the card. Only the latest 50 are kept.
+- **+ n more**: hovering or focusing it shows a dark tooltip with "Sent to 3 people" and every address, one per line; it hides on mouse leave or blur. On touch, tapping toggles it. Scrolling, resizing, Escape or a tap elsewhere closes it. It opens above the link, or below when there's under 200px of room above.
+- Empty state (open, nothing sent): an envelope icon, "No emails sent yet" and "When you send the gallery by email, who it went to and when shows here." QR downloads aren't recorded.
 
 ## Gallery: Analytics
 
