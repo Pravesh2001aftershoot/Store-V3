@@ -26,7 +26,7 @@ src/photographer-dashboard/
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
 │   ├── ShareStep.jsx          Two-column share page: AccessOverview (links, passwords, PINs) + EmailHistory on the left; "Send by" card (EmailComposer / QrPanel with QrCard tiles) on the right
-│   ├── share.js               Share settings (email wording, includes, QR options), VARIABLES + fillVariables, allCodes, galleryExpiry, composeEmail, qrCards, qrFor (uqr), qrCardPNG
+│   ├── share.js               Share settings (email template, wording, includes, QR options), email templates (BUILT_IN_TEMPLATES + useEmailTemplates), VARIABLES + fillVariables, allCodes, galleryExpiry, composeEmail, qrCards, qrFor (uqr), qrCardPNG
 │   ├── VariableText.jsx       Subject / Message field with variable suggestions, + Variable menu and tinted tokens
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
 │   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
@@ -54,6 +54,7 @@ Settings modules (outside this folder, owned by their module):
 | Footer | `src/gallery/templates/footer/config.js` | `galleryKey(id, 'footer')` |
 | Portfolio | `src/portfolio/data/config.js` (`usePortfolio`) | `store-v3:portfolio` |
 | Store catalogs | `src/data/storeConfig.js` (`useCatalogs`, `useStoreConfig`) | `store-v3:store` |
+| Saved email templates | `photographer-dashboard/gallery/share.js` (`useEmailTemplates`) | `store-v3:email-templates` |
 
 `galleryKey(id, name)` is `store-v3:gallery:<id>:<name>`, except for the sample gallery (`lexie-taylor`), which keeps the keys it had before galleries existed (`store-v3:gallery-<name>`), so earlier edits survive.
 
@@ -175,10 +176,13 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
 Everything is derived from `useGalleryAccess()`; the step only saves the photographer's wording and choices, `useShareSettings()` = `forGallery('share', load)` under `galleryKey(id, 'share')` (`store-v3:gallery-share` for the sample):
 
 ```
-{ subject, message,                      // '' = use defaultText(gallery); the message includes the sign-off
+{ template,                               // id of the email template the wording started from ('ready' by default)
+  subject, message,                      // '' = use defaultText(gallery); the message includes the sign-off
   include: { link, password, pin, expiry }, // email details, all true by default
   qr: { pin } }                            // download PIN printed under the QR code (false); passwords always are
 ```
+
+Email templates: `BUILT_IN_TEMPLATES` (`ready`, `favourites`, `expiring`, `thanks`; `[{ id, name, subject, message }]`, `ready` has both empty so it is the default wording) plus the photographer's own, account-wide (not per gallery) via `persisted(TEMPLATES_KEY)` under `store-v3:email-templates`: `[{ id: 'own-<base36 time>', name, subject, message }]`, names capped at `TEMPLATE_NAME_LIMIT` (40), at most `TEMPLATE_LIMIT` (20). `useEmailTemplates()` gives `{ builtIn, own, full, find(id), create({ name, subject, message }) → id, update(id, patch), remove(id) }`; `find` falls back to `ready` for an unknown id (a template deleted while a gallery still pointed at it). `EmailComposer` treats the wording as edited when `share.subject`/`share.message` differ from the picked template's, which drives the Save changes / Reset links; `SaveTemplate` (in `ShareStep.jsx`) is the name dialog.
 
 and the emails sent, `useShareHistory()` = `forGallery('share-history', loadHistory)` under `galleryKey(id, 'share-history')` (`store-v3:gallery-share-history` for the sample): `[{ id, at, to: [email], subject }]`, newest first, capped at `HISTORY_LIMIT` (50). `record({ to, subject })` prepends an entry; `EmailComposer`'s Send calls it with the filled-in subject after the recipient checks pass. `formatSent(at)` gives "Today, 3:42 pm", "Yesterday, 9:05 am" or "12 Nov 2026, 3:42 pm".
 

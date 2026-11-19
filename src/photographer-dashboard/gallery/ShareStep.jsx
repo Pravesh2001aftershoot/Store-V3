@@ -7,13 +7,14 @@ import {
 import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
-import { Segmented } from '../../gallery/templates/cover/controls'
-import { Checkbox, Empty, IconButton, PageHeader } from '../components/ui'
+import { Segmented, TextField } from '../../gallery/templates/cover/controls'
+import { Checkbox, Empty, IconButton, PageHeader, Select } from '../components/ui'
+import Modal from '../components/Modal'
 import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
 import {
   LIMITS, allCodes, codesFor, composeEmail, defaultText, expiryFor, formatDate, formatSent, galleryExpiry, linkFor, qrCardPNG,
-  qrCards, qrFor, useShareHistory, useShareSettings, variableValues,
+  qrCards, qrFor, TEMPLATE_LIMIT, TEMPLATE_NAME_LIMIT, useEmailTemplates, useShareHistory, useShareSettings, variableValues,
 } from './share'
 import VariableText from './VariableText'
 
@@ -296,7 +297,39 @@ function EmailComposer({ ws, access, base }) {
 
   const set = (patch) => setShare((s) => ({ ...s, ...patch }))
   const include = (k, v) => setShare((s) => ({ ...s, include: { ...s.include, [k]: v } }))
-  const edited = share.subject || share.message
+  // Templates: the wording starts from one; "edited" means it no longer matches the one picked.
+  const templates = useEmailTemplates()
+  const tpl = templates.find(share.template)
+  const own = templates.own.some((t) => t.id === tpl.id)
+  const edited = share.subject !== tpl.subject || share.message !== tpl.message
+  const [saving, setSaving] = useState(false)
+  const pick = (id) => {
+    const next = templates.find(id)
+    const prev = { template: share.template, subject: share.subject, message: share.message }
+    set({ template: next.id, subject: next.subject, message: next.message })
+    if (edited) notify(`“${next.name}” applied`, { label: 'Undo', onClick: () => set(prev) })
+  }
+  const saveAs = (name) => {
+    const id = templates.create({ name, subject: share.subject, message: share.message })
+    set({ template: id })
+    setSaving(false)
+    notify(`Saved “${name.trim()}” to your templates`)
+  }
+  const saveChanges = () => {
+    templates.update(tpl.id, { subject: share.subject, message: share.message })
+    notify(`“${tpl.name}” updated`)
+  }
+  const removeTemplate = () => {
+    const gone = tpl
+    templates.remove(gone.id)
+    set({ template: 'ready' })
+    notify(`“${gone.name}” deleted`, { label: 'Undo', onClick: () => set({ template: templates.create(gone) }) })
+  }
+  const templateOptions = [
+    ...templates.builtIn.map((t) => ({ value: t.id, label: t.name })),
+    ...(templates.own.length ? [{ value: '__own', label: 'Your templates', disabled: true }, ...templates.own.map((t) => ({ value: t.id, label: t.name }))] : []),
+  ]
+  const link = 'text-13-m text-type-1 underline underline-offset-4 decoration-type-3 transition hover:text-type-0 hover:decoration-type-0'
 
   const addTo = () => {
     const parts = draftTo.split(/[,\s;]+/).map((x) => x.trim()).filter(Boolean)
@@ -351,6 +384,20 @@ function EmailComposer({ ws, access, base }) {
           )}
         </div>
 
+        <div>
+          <p className="mb-1.5 text-13-m text-type-1">Template</p>
+          <Select value={tpl.id} onChange={pick} options={templateOptions} label="Email template" className="w-full" />
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            {edited && <span className="text-12-r text-type-3">Changed from “{tpl.name}”</span>}
+            <button type="button" className={link} onClick={() => (templates.full ? notify(`You can save up to ${TEMPLATE_LIMIT} templates. Delete one first`) : setSaving(true))}>
+              Save as new template
+            </button>
+            {own && edited && <button type="button" className={link} onClick={saveChanges}>Save changes</button>}
+            {edited && <button type="button" className={link} onClick={() => set({ subject: tpl.subject, message: tpl.message })}>Reset</button>}
+            {own && !edited && <button type="button" className={cn(link, 'text-destructive hover:text-destructive')} onClick={removeTemplate}>Delete template</button>}
+          </div>
+        </div>
+
         <VariableText label="Subject" singleLine value={share.subject} onChange={(v) => set({ subject: v })} placeholder={def.subject} limit={LIMITS.subject} values={values} hint={hint} />
 
         <VariableText label="Message" value={share.message} onChange={(v) => set({ message: v })} placeholder={def.message} limit={LIMITS.message} rows={5} values={values} hint={hint} />
@@ -364,16 +411,10 @@ function EmailComposer({ ws, access, base }) {
           {password && !share.include.password && <p className="mt-2 text-12-r text-amber-700">They’ll need the password to open the gallery. Send it another way.</p>}
         </div>
 
-
-        {edited && (
-          <button type="button" onClick={() => set({ subject: '', message: '' })} className="block text-13-m text-type-2 underline-offset-4 transition hover:text-type-0 hover:underline">
-            Use the default wording
-          </button>
-        )}
-
         <Button size="md" onClick={send} className="max-sm:w-full">
           <PaperPlaneTilt size={16} /> Send
         </Button>
+        <SaveTemplate open={saving} onClose={() => setSaving(false)} onSave={saveAs} taken={[...templates.builtIn, ...templates.own].map((t) => t.name.toLowerCase())} />
       </div>
 
       <div className="min-w-0">
@@ -388,6 +429,35 @@ function EmailComposer({ ws, access, base }) {
         </div>
       </div>
     </div>
+  )
+}
+
+/** Names the current subject and message and saves them as one of the photographer's own templates. */
+function SaveTemplate({ open, onClose, onSave, taken }) {
+  const [name, setName] = useState('')
+  const clash = taken.includes(name.trim().toLowerCase())
+  const ok = name.trim() && !clash
+  const submit = (e) => {
+    e?.preventDefault()
+    if (ok) { onSave(name); setName('') }
+  }
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title="Save as template"
+      description="Saves this subject and message. It’s ready to pick in every gallery’s Share step."
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" onClick={submit} disabled={!ok}>Save template</Button>
+        </>
+      }
+    >
+      <form onSubmit={submit}>
+        <TextField label="Name" value={name} onChange={setName} limit={TEMPLATE_NAME_LIMIT} placeholder="Wedding delivery" error={clash ? 'You already have a template with this name' : null} />
+      </form>
+    </Modal>
   )
 }
 

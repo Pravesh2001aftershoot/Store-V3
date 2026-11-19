@@ -1,1 +1,22 @@
 [     559ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[  822291ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822297ms] [ERROR] [vite] Failed to reload /src/gallery/components/DownloadPane.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] Failed to reload /src/photographer-dashboard/gallery/ShareStep.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] Failed to reload /src/gallery/components/SignIn.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] Failed to reload /src/gallery/GalleryPage.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[  822298ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822299ms] [ERROR] [vite] Failed to reload /src/gallery/components/Photo.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[  822299ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822299ms] [ERROR] [vite] Failed to reload /src/gallery/components/Lightbox.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[  822301ms] [ERROR] [vite] ReferenceError: persisted is not defined
+    at http://localhost:5173/src/photographer-dashboard/gallery/share.js?t=1795087810843:165:23 @ http://localhost:5173/@vite/client:1011
+[  822302ms] [ERROR] [vite] Failed to reload /src/photographer-dashboard/gallery/VariableText.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011

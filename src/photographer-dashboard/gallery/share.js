@@ -1,5 +1,5 @@
 import { encode } from 'uqr'
-import { readJSON } from '../../lib/persisted'
+import { persisted, readJSON } from '../../lib/persisted'
 import { forGallery, useGalleryId } from '../../data/galleries'
 import { audiences, roleLabel, rolePlural } from './access'
 
@@ -10,6 +10,7 @@ import { audiences, roleLabel, rolePlural } from './access'
 export const LIMITS = { subject: 120, message: 1000 }
 
 const DEFAULTS = {
+  template: 'ready', // the email template the wording started from (see BUILT_IN_TEMPLATES)
   subject: '',
   message: '',
   include: { link: true, password: true, pin: true, expiry: true }, // email
@@ -21,6 +22,7 @@ const load = (key) => {
   const bool = (v, d) => (typeof v === 'boolean' ? v : d)
   const text = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '')
   return {
+    template: typeof s.template === 'string' && s.template ? s.template : DEFAULTS.template,
     subject: text(s.subject, LIMITS.subject),
     message: text(s.message, LIMITS.message),
     include: Object.fromEntries(Object.entries(DEFAULTS.include).map(([k, d]) => [k, bool(s.include?.[k], d)])),
@@ -91,6 +93,65 @@ export const variableValues = ({ gallery, expiry, to = [] }) => ({
 /** Text with its variables filled in. Unknown ones are left as typed. */
 export const fillVariables = (text, values) =>
   text.replace(VARIABLE_RE, (m, name) => (keyOf(name) in values ? values[keyOf(name)] : m))
+
+// Email templates: a starting wording (subject + message) the photographer picks above the fields.
+// The built-in ones ship with the product; the photographer's own are account-wide (every gallery sees
+// them) under TEMPLATES_KEY: [{ id, name, subject, message }], at most TEMPLATE_LIMIT. Empty subject or
+// message means the default wording (defaultText), so "Gallery ready" is simply both empty.
+export const TEMPLATE_LIMIT = 20
+export const TEMPLATE_NAME_LIMIT = 40
+export const DEFAULT_TEMPLATE = 'ready'
+export const BUILT_IN_TEMPLATES = [
+  { id: 'ready', name: 'Gallery ready', subject: '', message: '' },
+  {
+    id: 'favourites',
+    name: 'Pick your favourites',
+    subject: 'Pick your favourites from {gallery_name}',
+    message: 'Hi {client_name},\n\nWhen you have a moment, go through the gallery and heart the photos you love most. We’ll use your favourites for your album and prints.\n\nThank you!',
+  },
+  {
+    id: 'expiring',
+    name: 'Gallery expiring soon',
+    subject: 'Reminder: {gallery_name} closes on {expiry_date}',
+    message: 'Hi {client_name},\n\nA quick reminder that your gallery is open until {expiry_date}. Download your photos and order any prints before then.\n\nThank you!',
+  },
+  {
+    id: 'thanks',
+    name: 'Thank you',
+    subject: 'Thank you, {client_name}',
+    message: 'Hi {client_name},\n\nThank you for choosing me for {gallery_name}. It was a joy to photograph. Your full gallery is below, ready to view, share and download.\n\nWith love,',
+  },
+]
+export const TEMPLATES_KEY = 'store-v3:email-templates'
+
+const loadTemplates = (key) => {
+  const list = readJSON(key, [])
+  if (!Array.isArray(list)) return []
+  const text = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '')
+  return list
+    .filter((t) => t && typeof t.id === 'string' && typeof t.name === 'string' && t.name.trim())
+    .map((t) => ({ id: t.id, name: t.name.slice(0, TEMPLATE_NAME_LIMIT), subject: text(t.subject, LIMITS.subject), message: text(t.message, LIMITS.message) }))
+    .slice(0, TEMPLATE_LIMIT)
+}
+const templateStore = persisted(TEMPLATES_KEY, loadTemplates)
+
+/**
+ * Built-in and saved email templates: `{ builtIn, own, find(id), create({ name, subject, message }) → id,
+ * update(id, patch), remove(id) }`. `find` falls back to the default template for an unknown id
+ * (a saved template deleted while a gallery still pointed at it).
+ */
+export function useEmailTemplates() {
+  const [own, setOwn] = templateStore.use()
+  const find = (id) => BUILT_IN_TEMPLATES.find((t) => t.id === id) ?? own.find((t) => t.id === id) ?? BUILT_IN_TEMPLATES[0]
+  const create = ({ name, subject, message }) => {
+    const id = `own-${Date.now().toString(36)}`
+    setOwn((l) => [...l, { id, name: name.trim().slice(0, TEMPLATE_NAME_LIMIT), subject, message }].slice(0, TEMPLATE_LIMIT))
+    return id
+  }
+  const update = (id, patch) => setOwn((l) => l.map((t) => (t.id === id ? { ...t, ...patch } : t)))
+  const remove = (id) => setOwn((l) => l.filter((t) => t.id !== id))
+  return { builtIn: BUILT_IN_TEMPLATES, own, find, create, update, remove, full: own.length >= TEMPLATE_LIMIT }
+}
 
 /** The text used while a field is empty. */
 export const defaultText = (gallery) => ({
