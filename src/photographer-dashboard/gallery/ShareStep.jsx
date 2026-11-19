@@ -8,7 +8,7 @@ import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented } from '../../gallery/templates/cover/controls'
-import { Checkbox, Empty, IconButton, PageHeader, Tag } from '../components/ui'
+import { Checkbox, Empty, IconButton, PageHeader } from '../components/ui'
 import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
 import {
@@ -122,10 +122,9 @@ function AccessOverview({ access, base }) {
           <LinkHead
             title={rolePlural(a)}
             expiry={shared ? undefined : expiryFor(access, a)}
-            tag={access.data[a].approved.on ? `Approved list · ${access.data[a].approved.people.length}` : 'Email sign-up'}
           />
           {!shared && <LinkField url={linkFor(access, a, base)} label={`${roleLabel(a)} link`} />}
-          <Codes access={access} aud={a} empty />
+          <Codes access={access} aud={a} />
         </div>
       ))}
     </div>
@@ -133,12 +132,11 @@ function AccessOverview({ access, base }) {
 }
 
 /** "Clients  Expires on 12 Dec 2026" — `expiry` undefined hides the expiry (the shared link shows it). */
-function LinkHead({ title, expiry, tag }) {
+function LinkHead({ title, expiry }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
       <p className="text-16-sb text-type-0">{title}</p>
       {expiry !== undefined && <p className="text-13-r text-type-2">{expiry ? `Expires on ${formatDate(expiry)}` : 'Never expires'}</p>}
-      {tag && <Tag className="self-center">{tag}</Tag>}
     </div>
   )
 }
@@ -158,13 +156,13 @@ function LinkField({ url, label }) {
   )
 }
 
-/** An audience's password and download PIN chips; `empty` says "No password" when there's neither. */
-function Codes({ access, aud, empty }) {
+/** An audience's password and download PIN chips; nothing when it has neither. */
+function Codes({ access, aud }) {
   const { password, pin } = codesFor(access, aud)
-  if (!password && !pin && !empty) return null
+  if (!password && !pin) return null
   return (
     <div className="mt-2 flex flex-wrap gap-2">
-      {password ? <Code label="Password" value={password} /> : <span className="text-12-r text-type-3">No password</span>}
+      {password && <Code label="Password" value={password} />}
       {pin && <Code label="Download PIN" value={pin} />}
     </div>
   )
@@ -364,7 +362,6 @@ function EmailComposer({ ws, access, base }) {
           </div>
           {!password && !pin && <p className="mt-2 text-12-r text-type-3">No password or download PIN. Add them in Settings.</p>}
           {password && !share.include.password && <p className="mt-2 text-12-r text-amber-700">They’ll need the password to open the gallery. Send it another way.</p>}
-          {!single && (password || pin) && share.include.password && <p className="mt-2 text-12-r text-type-3">Everyone gets every role’s details. Untick a detail to send it another way.</p>}
         </div>
 
 

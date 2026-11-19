@@ -6,7 +6,7 @@ The dashboard is an admin UI over settings that the client modules already own. 
 
 ```
 src/photographer-dashboard/
-├── PhotographerDashboard.jsx  Shell: sidebar (full / rail / phone drawer), phone top bar, nested routes, Toaster
+├── PhotographerDashboard.jsx  Shell: sidebar (full / rail / phone drawer; hidden inside a gallery via `matchPath`), phone top bar, nested routes, Toaster
 ├── components/
 │   ├── PreviewFrame.jsx       Live preview: client page in an iframe, device widths, scaled to fit; optional toolbar `heading` + `actions`
 │   ├── Modal.jsx              Short-form dialog (centred card; bottom sheet on phones)

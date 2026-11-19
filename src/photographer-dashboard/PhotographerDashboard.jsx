@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { Link, NavLink, Navigate, Route, Routes, matchPath, useLocation, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowSquareOut, Images, List, Storefront, UserCircle, X } from '@phosphor-icons/react'
 import { gallery as brand } from '../data/gallery'
@@ -27,7 +27,8 @@ const RECENT = 5
  * Every change saves as it's made and shows on the client pages straight away.
  *
  * Layout: a sidebar on the left (full from 1024px, an icon rail from 640px); on phones a top bar
- * with a menu that opens the same sidebar as a drawer.
+ * with a menu that opens the same sidebar as a drawer. Inside a gallery the sidebar is hidden so the
+ * editor gets the full width; its breadcrumb leads back to Galleries.
  */
 export default function PhotographerDashboard() {
   const phone = usePhone()
@@ -35,12 +36,13 @@ export default function PhotographerDashboard() {
   const [drawer, setDrawer] = useState(false)
   const { pathname } = useLocation()
   useEffect(() => { setDrawer(false) }, [pathname])
+  const inGallery = !!matchPath('/dashboard/galleries/:galleryId/*', pathname)
 
   const nav = (full) => <Sidebar full={full} />
 
   return (
     <div className="flex min-h-svh bg-surface-0">
-      {!phone && (
+      {!phone && !inGallery && (
         <aside className={cn('sticky top-0 h-svh shrink-0 border-r border-border bg-surface-1', wide ? 'w-[248px]' : 'w-[72px]')}>
           {nav(wide)}
         </aside>
