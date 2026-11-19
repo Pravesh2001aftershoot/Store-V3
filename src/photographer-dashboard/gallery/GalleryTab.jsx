@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowSquareOut, CaretRight, ChartBar, GearSix, Images, PaintBrush, ShareNetwork, SlidersHorizontal } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowSquareOut, CaretRight, ChartBar, GearSix, Images, PaintBrush, ShareNetwork, SlidersHorizontal } from '@phosphor-icons/react'
 import { GalleryProvider, galleryPath } from '../../data/galleries'
 import { useGalleryData } from '../../gallery/lib/useGalleryData'
 import GalleryForm from '../galleries/GalleryForm'
@@ -49,9 +49,10 @@ function Workspace({ data, step }) {
   const openSettings = () => setSettings(true)
 
   return (
-    // Content on the left, the step rail docked on the right. Design is a workspace: it fills
-    // the screen instead of scrolling.
+    // Step rail on the left, then the content; on Design (docked) the parts rail on the right.
+    // Design is a workspace: it fills the screen instead of scrolling.
     <div className="flex" style={design ? { height: `calc(100svh - ${top}px)` } : undefined}>
+      <StepRail step={step} ws={ws} top={top} />
       <div className={cn('min-w-0 flex-1', design && 'flex flex-col')}>
         {/* Design merges the header into its preview toolbar, where Open already does View's job. */}
         {!design && <Header ws={ws} onSettings={openSettings} />}
@@ -62,12 +63,12 @@ function Workspace({ data, step }) {
         {step === 'share' && <ShareStep ws={ws} />}
         {step === 'analytics' && <AnalyticsStep ws={ws} />}
       </div>
-      <StepRail step={step} ws={ws} top={top} />
+      <PartsRail step={step} ws={ws} top={top} />
     </div>
   )
 }
 
-/** Photos and Share: breadcrumb + gallery name, then Settings and View. */
+/** Every step but Design: breadcrumb + gallery name, then Settings and View. */
 function Header({ ws, onSettings }) {
   return (
     <div className="shrink-0 border-b border-border bg-surface-1">
@@ -100,24 +101,30 @@ const SettingsButton = ({ onClick, small }) => (
 )
 
 /**
- * Icon-only tab switcher docked on the right edge: Photos, Design, Settings, Share, Analytics stacked vertically.
- * Sticks under the top bar while the page scrolls. Hovering or focusing a tab shows its name
- * and hint in a tooltip to the left (not on phones). On the Design step, when its editor is docked
- * (≥ 960px), the four parts (Cover, Grid, Headings, Footer) sit in a tray under the Design icon and
- * switch the open editor (`?part=`).
+ * Icon-only rail docked on the left edge: Back (to the Galleries grid), then the five steps —
+ * Photos, Design, Settings, Share, Analytics — stacked vertically. Sticks under the top bar while
+ * the page scrolls. Hovering or focusing an icon shows its name and hint in a tooltip to the right
+ * (not on phones).
  */
 function StepRail({ step, ws, top }) {
-  const docked = useDocked()
-  const [params] = useSearchParams()
-  const parts = step === 'design' && docked ? designParts(ws) : null
-  const part = parts?.some((p) => p.id === params.get('part')) ? params.get('part') : 'cover'
   return (
     <nav
       aria-label="Gallery steps"
-      className="sticky z-30 w-14 shrink-0 self-start border-l border-border bg-surface-1 md:w-16"
+      className="sticky z-30 w-14 shrink-0 self-start border-r border-border bg-surface-1 md:w-16"
       style={{ top, height: `calc(100svh - ${top}px)` }}
     >
-      <ul className="flex flex-col items-center gap-2 py-3">
+      <div className="flex justify-center pt-3">
+        <Link
+          to="/dashboard/galleries"
+          aria-label="Back to galleries"
+          className="group relative grid h-11 w-11 place-items-center rounded-xl text-type-2 transition-colors hover:bg-surface-2 hover:text-type-0"
+        >
+          <ArrowLeft size={20} />
+          <Tip side="right" title="Back" detail="All galleries" />
+        </Link>
+      </div>
+      <span aria-hidden className="mx-auto my-2 block h-px w-8 bg-border" />
+      <ul className="flex flex-col items-center gap-2 pb-3">
         {STEPS.map((s) => {
           const active = s.id === step
           const Icon = s.icon
@@ -134,43 +141,8 @@ function StepRail({ step, ws, top }) {
               >
                 {active && <motion.span layoutId="gallery-step" className="absolute inset-0 rounded-xl bg-primary" transition={{ duration: 0.35, ease }} />}
                 <Icon size={20} weight={active ? 'fill' : 'regular'} className="relative" />
-                <Tip title={s.label} detail={s.hint} />
+                <Tip side="right" title={s.label} detail={s.hint} />
               </Link>
-              <AnimatePresence initial={false}>
-                {s.id === 'design' && parts && (
-                  // Clipped only while it opens or closes, so the tooltips can spill out to the left.
-                  <motion.div
-                    initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
-                    animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
-                    exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
-                    transition={{ duration: 0.3, ease }}
-                  >
-                    <ul aria-label="Design parts" className="mt-1 flex flex-col gap-1 rounded-xl bg-surface-2 p-1">
-                      {parts.map((p) => {
-                        const on = p.id === part
-                        const PartIcon = p.icon
-                        return (
-                          <li key={p.id}>
-                            <Link
-                              to={`${ws.base}/design?part=${p.id}`}
-                              replace
-                              aria-label={p.title}
-                              aria-current={on ? 'true' : undefined}
-                              className={cn(
-                                'group relative grid h-9 w-9 place-items-center rounded-lg transition-colors',
-                                on ? 'bg-surface-1 text-type-0' : 'text-type-2 hover:text-type-0'
-                              )}
-                            >
-                              <PartIcon size={18} weight={on ? 'fill' : 'regular'} />
-                              <Tip title={p.title} detail={p.detail} />
-                            </Link>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </li>
           )
         })}
@@ -179,10 +151,69 @@ function StepRail({ step, ws, top }) {
   )
 }
 
-/** Rail tooltip: name over a hint, to the left of the icon on hover or focus. Hidden on phones. */
-function Tip({ title, detail }) {
+/**
+ * Design only, when its editor is docked (≥ 960px): the four parts (Cover, Grid, Headings, Footer)
+ * in an icon rail on the right edge, beside the editor column. Picking one switches the open
+ * editor (`?part=`). Slides in and out with the step; tooltips open to the left.
+ */
+function PartsRail({ step, ws, top }) {
+  const docked = useDocked()
+  const [params] = useSearchParams()
+  const parts = step === 'design' && docked ? designParts(ws) : null
+  const part = parts?.some((p) => p.id === params.get('part')) ? params.get('part') : 'cover'
   return (
-    <span className="pointer-events-none absolute right-full top-1/2 z-10 mr-3 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg bg-type-0 px-2.5 py-1.5 text-left opacity-0 transition duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 max-sm:hidden">
+    <AnimatePresence initial={false}>
+      {parts && (
+        // Clipped only while it opens or closes, so the tooltips can spill out to the left.
+        <motion.nav
+          key="parts"
+          aria-label="Design parts"
+          className="sticky z-30 shrink-0 self-start border-l border-border bg-surface-1"
+          style={{ top, height: `calc(100svh - ${top}px)` }}
+          initial={{ width: 0, opacity: 0, overflow: 'hidden' }}
+          animate={{ width: 64, opacity: 1, transitionEnd: { overflow: 'visible' } }}
+          exit={{ width: 0, opacity: 0, overflow: 'hidden' }}
+          transition={{ duration: 0.3, ease }}
+        >
+          <ul className="flex w-16 flex-col items-center gap-2 py-3">
+            {parts.map((p) => {
+              const on = p.id === part
+              const PartIcon = p.icon
+              return (
+                <li key={p.id}>
+                  <Link
+                    to={`${ws.base}/design?part=${p.id}`}
+                    replace
+                    aria-label={p.title}
+                    aria-current={on ? 'true' : undefined}
+                    className={cn(
+                      'group relative grid h-11 w-11 place-items-center rounded-xl transition-colors',
+                      on ? 'text-type-0' : 'text-type-2 hover:bg-surface-2 hover:text-type-0'
+                    )}
+                  >
+                    {on && <motion.span layoutId="design-part" className="absolute inset-0 rounded-xl bg-surface-2" transition={{ duration: 0.3, ease }} />}
+                    <PartIcon size={20} weight={on ? 'fill' : 'regular'} className="relative" />
+                    <Tip side="left" title={p.title} detail={p.detail} />
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </motion.nav>
+      )}
+    </AnimatePresence>
+  )
+}
+
+/** Rail tooltip: name over a hint, beside the icon (`side` it opens towards) on hover or focus. Hidden on phones. */
+function Tip({ title, detail, side }) {
+  return (
+    <span
+      className={cn(
+        'pointer-events-none absolute top-1/2 z-10 -translate-y-1/2 whitespace-nowrap rounded-lg bg-type-0 px-2.5 py-1.5 text-left opacity-0 transition duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 max-sm:hidden',
+        side === 'right' ? 'left-full ml-3 -translate-x-1' : 'right-full mr-3 translate-x-1'
+      )}
+    >
       <span className="block text-12-sb text-white">{title}</span>
       <span className="block text-12-r text-white/60">{detail}</span>
     </span>

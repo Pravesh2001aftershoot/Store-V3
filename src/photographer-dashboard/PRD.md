@@ -36,7 +36,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Shell
 
-- R1. A left sidebar with the logo, the three sections (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the breadcrumb's "Galleries" link leads back. Phones keep the top bar.
+- R1. A left sidebar with the logo, the three sections (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the step rail's **Back** button and the breadcrumb's "Galleries" link lead back. Phones keep the top bar.
 - R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio`, `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
 - R3. Each gallery has **View** (its client link), and each catalog has **Preview store** (the print store with that catalog), both in a new tab.
 
@@ -60,8 +60,8 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Gallery: Design (step 2)
 
-- R10. Four parts: Cover, Grid, Collection headings and Footer. On screens 960px and wider they're listed under the Design icon in the step rail; on narrower screens they're chips above the preview.
-- R11. Picking a part opens its editor. On screens 960px and wider the parts are listed under the Design icon in the step rail, the editor docks in a right-hand column beside the preview, and one editor is always open (Cover first, or the part in `?part=`); on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
+- R10. Four parts: Cover, Grid, Collection headings and Footer. On screens 960px and wider they're in their own icon rail on the right edge (the step rail is on the left); on narrower screens they're chips above the preview.
+- R11. Picking a part opens its editor. On screens 960px and wider the parts are in the right-hand parts rail, the editor docks in a right-hand column beside the preview, and one editor is always open (Cover first, or the part in `?part=`); on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
 - R12. Cover, heading and footer editing use the gallery's own editors, with the same tabs, controls, limits and templates.
 - R13. Grid sets the default layout clients start with: arrangement (masonry or justified rows), photo size and spacing. Clients can still change their own view.
 - R14. The preview is the real client gallery. It scrolls to the part being edited, updates as settings change, and can render at desktop (1280), tablet (820) or phone (390) width, scaled to fit.

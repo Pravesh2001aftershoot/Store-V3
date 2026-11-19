@@ -18,7 +18,7 @@ src/photographer-dashboard/
 │   ├── GalleryForm.jsx        New gallery / gallery settings (+ delete)
 │   └── GalleryCover.jsx       WithGallery: reads one gallery's cover + count inside its provider
 ├── gallery/
-│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View; on Design passed into the preview toolbar instead), the step, right-hand step rail (with the Design parts tray when docked)
+│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View; on Design passed into the preview toolbar instead), left-hand `StepRail` (Back → /dashboard/galleries, then the five steps), the step, and on Design when docked the right-hand `PartsRail` (Cover, Grid, Headings, Footer)
 │   ├── useGalleryWorkspace.js Wires the library, cover, cover photo, headings, footer and grid
 │   ├── PhotosStep.jsx         Upload, collections, selection, drag to reorder or move, selection bar
 │   ├── DesignStep.jsx         Preview + right column with the open editor (chips + sheets when narrow); `designParts(ws)` for the rail
@@ -138,7 +138,7 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 `EditorPane` gained:
 - **`inline`.** It renders in place, filling its parent, instead of as a fixed sliding panel. It still mounts a non-modal Radix `Dialog.Root` so the shared header (`Dialog.Title`, `Dialog.Close`) and Esc-to-close keep working.
 - **`resetLabel`.** For example, "Reset product".
-- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since the step rail's parts tray switches editors; `editing` falls back to `'cover'` there. The open part is the `part` search param (`cover` | `grid` | `headings` | `footer`, anything else is ignored), read by both `DesignStep` and `StepRail`; `DesignStep` sets it with `replace` and leaves other params alone. Closing a sheet removes it.
+- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since the parts rail switches editors; `editing` falls back to `'cover'` there. The open part is the `part` search param (`cover` | `grid` | `headings` | `footer`, anything else is ignored), read by both `DesignStep` and `PartsRail`; `DesignStep` sets it with `replace` and leaves other params alone. Closing a sheet removes it.
 - **No tab bar for a single tab.**
 
 `CoverEditor`, `FooterEditor` and `SectionEditor` accept `inline` and pass it through. With `inline`, `SectionEditor` drops its own preview stage and its scroll lock, because the dashboard's iframe is the preview. When not docked (under 960px), the dashboard passes `phone` to the panes so they open as bottom sheets. `SectionEditor` decides that itself, keeping its own stage.

@@ -27,17 +27,17 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 | **New gallery** | Dialog: Gallery title (required; Create is disabled until it has text), Client name, Date, Print store catalog, and Start with **Empty** or **Sample photos**. Enter submits. Creating toasts "<title> created" and opens its Photos step. |
 
 ### Inside a gallery
-- The header shows **Galleries › <client>** (the first part links back), the title and photo count, then ⚙ and **View** on the right. The steps are in the rail on the right edge.
+- The header shows **Galleries › <client>** (the first part links back), the title and photo count, then ⚙ and **View** on the right. Back and the steps are in the rail on the left edge.
 - On **Design** the header is part of the preview's toolbar: breadcrumb and title on the left, then the device switch, Reload, Open and ⚙. There is no View button there; **Open** does the same thing.
 - ⚙ opens **Gallery settings**: the same fields as New gallery (no Start with), plus **Delete gallery** (asks first; disabled for the last gallery). Save toasts "Gallery updated". Changing the catalog changes what this gallery's clients can buy straight away.
 - An unknown gallery id in the URL goes back to the list.
 
 ## Gallery: step rail
 
-- A vertical, icon-only tab switcher on the right edge: **Photos**, **Design**, **Settings**, **Share**, **Analytics**. Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
-- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Access, engagement, privacy", "Send to your client", "Visitors, downloads, revenue") to the left; on phones the icons carry `aria-label`s only.
+- A vertical, icon-only rail on the left edge: **Back**, a divider, then the tabs **Photos**, **Design**, **Settings**, **Share**, **Analytics**. **Back** (tooltip "Back · All galleries") goes to the Galleries grid (`/dashboard/galleries`). Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
+- The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Access, engagement, privacy", "Send to your client", "Visitors, downloads, revenue") to the right; on phones the icons carry `aria-label`s only.
 - Browser Back and Forward move between steps, since the step is in the URL.
-- On Design, from 960px wide, a tray under the Design icon lists the four parts: **Cover**, **Grid**, **Collection headings** and **Footer**. Clicking one opens its editor in the docked column; the open one is highlighted. Hovering one shows its name and current setting (for example "Template: Full bleed" or "Vertical · Medium · Thin"). The tray opens and closes with the step (0.3s). Below 960px there's no tray; the parts are chips above the preview.
+- On Design, from 960px wide, a second rail appears on the right edge (the **parts rail**) with the four parts: **Cover**, **Grid**, **Collection headings** and **Footer**. Clicking one opens its editor in the docked column beside it; the open one is highlighted. Hovering one shows its name and current setting (for example "Template: Full bleed" or "Vertical · Medium · Thin") to the left. The parts rail slides in when you enter Design and out when you leave (0.3s); it holds nothing else. Below 960px there's no parts rail; the parts are chips above the preview.
 
 ## Gallery: Photos
 
@@ -83,13 +83,13 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 ## Gallery: Design
 
 ### Docked (960px and wider)
-1. The four parts are in the step rail's tray under the Design icon (see Step rail). The column on the right of the preview holds only the open editor.
-2. One editor is always open, Cover to start. Clicking a part in the tray swaps the editor and the preview scrolls to that part:
+1. The four parts are in the parts rail on the right edge (see Step rail). The column on the right of the preview holds only the open editor.
+2. One editor is always open, Cover to start. Clicking a part in the parts rail swaps the editor and the preview scrolls to that part:
    - Cover: the top of the page.
    - Grid: the grid.
    - Headings: the collection being edited.
    - Footer: the bottom, after loading the whole grid.
-3. Docked editors have no ✕ or **Done**, and Esc does nothing; **Reset all** stays in the footer. Moving between steps and parts is done in the step rail.
+3. Docked editors have no ✕ or **Done**, and Esc does nothing; **Reset all** stays in the footer. Steps are switched in the left rail, parts in the right rail.
 4. The open part is in the URL (`?part=grid`), so it can be linked to and survives a reload. Switching parts replaces the history entry, so Back leaves the step instead of walking through parts.
 
 ### Not docked
