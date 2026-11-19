@@ -417,7 +417,7 @@ function QrPanel({ ws, access, base }) {
   return (
     <div className="space-y-4">
       {tip && (
-        <p className="flex items-start gap-2 rounded-xl bg-surface-2 py-1 pl-3 pr-1 text-13-r-p text-type-2">
+        <p className="flex items-start gap-2 rounded-xl border border-border bg-surface-2 py-1 pl-3 pr-1 text-13-r-p text-type-2">
           <Lightbulb size={16} className="mt-2 shrink-0 text-type-1" />
           <span className="min-w-0 flex-1 py-1.5"><span className="text-13-m text-type-1">Tip:</span> Put it on a table card, a print order slip or the last slide of a slideshow.</span>
           <IconButton small label="Close tip" onClick={() => setTip(false)}><X size={14} /></IconButton>
@@ -429,9 +429,9 @@ function QrPanel({ ws, access, base }) {
           Print {single ? `the download PIN (${codes.find((c) => c.pin).pin})` : 'download PINs'} under the code
         </Checkbox>
       )}
-      <div className="space-y-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
         {cards.map((card) => (
-          <QrRow
+          <QrCard
             key={card.key}
             card={card}
             label={card.role ? rolePlural(card.role) : access.mode === 'roles' ? 'All roles' : 'Gallery link'}
@@ -443,12 +443,13 @@ function QrPanel({ ws, access, base }) {
   )
 }
 
-/** A QR card as a row: the code, then the label, "Scan to open the gallery", the printed lines, and Download. */
-function QrRow({ card, label, onDownload }) {
+/** A QR card as a tile: label, the code, "Scan to open the gallery", then the printed lines with Download beside them. */
+function QrCard({ card, label, onDownload }) {
   const qr = useMemo(() => qrFor(card.url), [card.url])
   return (
-    <div className="flex gap-4 rounded-2xl border border-border bg-surface-1 p-4 md:gap-6 md:p-5">
-      <svg viewBox={`-1 -1 ${qr.size + 2} ${qr.size + 2}`} role="img" aria-label={`QR code for ${card.url}`} className="aspect-square w-[104px] shrink-0 sm:w-[160px]" shapeRendering="crispEdges">
+    <div className="flex flex-col items-center rounded-2xl border border-border bg-surface-1 p-5 text-center md:p-6">
+      <p className="text-12-sb uppercase text-type-2">{label}</p>
+      <svg viewBox={`-1 -1 ${qr.size + 2} ${qr.size + 2}`} role="img" aria-label={`QR code for ${card.url}`} className="mt-4 aspect-square w-full max-w-[160px]" shapeRendering="crispEdges">
         <rect x="-1" y="-1" width={qr.size + 2} height={qr.size + 2} fill="white" />
         <path
           fill="currentColor"
@@ -456,18 +457,29 @@ function QrRow({ card, label, onDownload }) {
           d={qr.data.flatMap((row, y) => row.map((on, x) => (on ? `M${x} ${y}h1v1h-1z` : ''))).join('')}
         />
       </svg>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <p className="text-12-sb uppercase text-type-2">{label}</p>
-        <div className="mt-auto flex items-end gap-3 pt-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-13-r text-type-2">Scan to open the gallery</p>
-            {card.lines.map((l) => <p key={l} className="mt-1 break-words text-14-m text-type-0 sm:text-16-m">{l}</p>)}
+      <p className="mt-2 text-13-r text-type-2">Scan to open the gallery</p>
+      <div className={`mt-auto flex w-full items-center gap-3 pt-6 ${card.lines.length ? 'justify-between' : 'justify-center'}`}>
+        {card.lines.length > 0 && (
+          <div className="min-w-0 flex-1 space-y-1 text-left">
+            {card.lines.map((l) => <QrLine key={l} line={l} />)}
           </div>
-          <IconButton label={`Download ${label.toLowerCase()} QR card`} onClick={onDownload} className="border border-border">
-            <DownloadSimple size={18} />
-          </IconButton>
-        </div>
+        )}
+        <IconButton label={`Download ${label.toLowerCase()} QR card`} onClick={onDownload} className="shrink-0">
+          <DownloadSimple size={18} />
+        </IconButton>
       </div>
     </div>
+  )
+}
+
+/** A printed line: "Password 12345" reads as "Password : 12345" with the code in bold; anything else as is. */
+function QrLine({ line }) {
+  const m = line.match(/^(Password|Download PIN|PIN) (\S+)$/)
+  if (!m) return <p className="break-words text-13-m text-type-1">{line}</p>
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-2 text-14-r text-type-1">
+      <span>{m[1]} :</span>
+      <span className="text-16-sb text-type-0">{m[2]}</span>
+    </p>
   )
 }

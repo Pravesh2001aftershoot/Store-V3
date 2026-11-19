@@ -25,7 +25,7 @@ src/photographer-dashboard/
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
-│   ├── ShareStep.jsx          Two-column share page: AccessOverview (links, passwords, PINs) + EmailHistory on the left; "Send by" card (EmailComposer / QrPanel with QrRow) on the right
+│   ├── ShareStep.jsx          Two-column share page: AccessOverview (links, passwords, PINs) + EmailHistory on the left; "Send by" card (EmailComposer / QrPanel with QrCard tiles) on the right
 │   ├── share.js               Share settings (email wording, includes, QR options), VARIABLES + fillVariables, allCodes, galleryExpiry, composeEmail, qrCards, qrFor (uqr), qrCardPNG
 │   ├── VariableText.jsx       Subject / Message field with variable suggestions, + Variable menu and tinted tokens
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
