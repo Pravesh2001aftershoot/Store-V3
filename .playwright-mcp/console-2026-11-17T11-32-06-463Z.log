@@ -2010,3 +2010,11 @@ Visit https://react.dev/link/error-boundaries to learn more about error boundari
 [85073787ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:1078
 [85075643ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
 [88549425ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[88871702ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:1078
+[88873542ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[90656704ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:1078
+[90659061ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[93594445ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:1078
+[93596277ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[112357102ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:1078
+[112358867ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802

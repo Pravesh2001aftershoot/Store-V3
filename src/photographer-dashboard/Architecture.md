@@ -26,7 +26,8 @@ src/photographer-dashboard/
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
 │   ├── ShareStep.jsx          Access overview (links, passwords, PINs), email composer, QR card, checklist, next steps
-│   ├── share.js               Share settings (email wording, includes, QR options), composeEmail, mailto, qrFor (uqr), qrCardPNG
+│   ├── share.js               Share settings (email wording, includes, QR options), VARIABLES + fillVariables, composeEmail, mailto, qrFor (uqr), qrCardPNG
+│   ├── VariableText.jsx       Subject / Message / Sign-off field with variable suggestions, + Variable menu and tinted tokens
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
 │   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
 ├── portfolio/
@@ -180,7 +181,8 @@ Everything is derived from `useGalleryAccess()`; the step only saves the photogr
 ```
 
 - `linkFor(access, aud, base)` is the shared link for `anyone` or a single link, else `?role=<aud>`. `expiryFor` reads `expiry.all` or the role's own. `codesFor(access, aud)` gives `{ password, pin }` ('' when off).
-- `composeEmail` builds `{ subject, body }`: message, the included detail lines, sign-off. `mailto(to, email)` encodes it. Recipients aren't saved; they reset to the approved list when the audience changes (`EmailComposer` is keyed by audience).
+- `composeEmail({ …, to })` builds `{ subject, body }`: message, the included detail lines, sign-off. Variables in the saved wording stay as typed (`{client_name}`) and are filled at build time: `VARIABLES` lists the keys (`gallery_name`, `client_name`, `client_email`, `expiry_date`), `VARIABLE_RE` matches `{name}` or `${name}` (any case, spaces = underscores), `variableValues({ gallery, expiry, to })` gives `gallery.title`, `gallery.client`, `to[0]` and the formatted expiry ('' when missing), and `fillVariables` swaps them in, leaving unknown names alone.
+- `VariableText` is a growing `<textarea>` over a backdrop of the same box and type with transparent text, where variable runs get tints; the suggestion list is placed with a hidden mirror div measuring the caret. `mailto(to, email)` encodes it. Recipients aren't saved; they reset to the approved list when the audience changes (`EmailComposer` is keyed by audience).
 - QR codes come from `uqr` (`encode`, ECC M, no border): the card draws them as one SVG path with `crispEdges`; `qrCardPNG` draws a 1080 × 1350 canvas (title, code at whole-pixel offsets, caption, lines) and returns a data URL that's downloaded as `<gallery>[-<role>]-qr.png`.
 
 ### Grid defaults
@@ -228,6 +230,7 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 
 ## Known gaps
 
+- **Client email is the first recipient.** There's no client record with an email yet, so `{client_email}` fills from the To field and is blank until someone is added.
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
 - **Gallery settings are enforced only in the browser.** The client gallery reads the saved settings (`src/gallery/lib/visitor.js`, `downloads.js`): a sign-in screen (role, email or approved list, password, face scan, expiry) and every action (favorites + limit, hide + bulk hide on the Client role, filter by face, face scan → only their photos, sharing, set visibility, screenshot protection, downloads). Passwords and approved emails are in `localStorage`, so this is a prototype of the rules, not security. A gallery that was never saved, and the dashboard preview (`?embed=1`), stay open with no sign-in. Comments and video sharing / downloads have nothing to act on in the client gallery yet.
 - **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).

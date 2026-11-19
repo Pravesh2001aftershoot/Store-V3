@@ -34,6 +34,33 @@ const family = forGallery('share', load)
 /** This gallery's share settings: `[settings, set]`. */
 export const useShareSettings = () => family(useGalleryId()).use()
 
+/**
+ * Variables the photographer can put in the subject, message and sign-off, written `{gallery_name}`.
+ * `${Gallery_name}`, any case and spaces for underscores (`{Gallery name}`) are read the same way.
+ * Each is filled from the gallery when the email is built.
+ */
+export const VARIABLES = [
+  { key: 'gallery_name', label: 'Gallery name' },
+  { key: 'client_name', label: 'Client name' },
+  { key: 'client_email', label: 'Client email' },
+  { key: 'expiry_date', label: 'Expiry date' },
+]
+export const VARIABLE_RE = /\$?\{\s*([a-z_ ]+?)\s*\}/gi
+const keyOf = (name) => name.trim().toLowerCase().replace(/\s+/g, '_')
+export const isVariable = (name) => VARIABLES.some((v) => v.key === keyOf(name))
+
+/** What each variable becomes for this email ('' when there's nothing to fill it with). */
+export const variableValues = ({ gallery, expiry, to = [] }) => ({
+  gallery_name: gallery.title,
+  client_name: gallery.client,
+  client_email: to[0] ?? '',
+  expiry_date: formatDate(expiry),
+})
+
+/** Text with its variables filled in. Unknown ones are left as typed. */
+export const fillVariables = (text, values) =>
+  text.replace(VARIABLE_RE, (m, name) => (keyOf(name) in values ? values[keyOf(name)] : m))
+
 /** The text used while a field is empty. */
 export const defaultText = (gallery) => ({
   subject: `Your photos are ready: ${gallery.title}`,
@@ -57,8 +84,8 @@ export function codesFor(access, aud) {
   }
 }
 
-/** The email for one audience: { subject, body }. `include` picks which details go in. */
-export function composeEmail({ gallery, access, aud, base, share }) {
+/** The email for one audience: { subject, body }. `include` picks which details go in; `to` fills {client_email}. */
+export function composeEmail({ gallery, access, aud, base, share, to = [] }) {
   const def = defaultText(gallery)
   const { include } = share
   const codes = codesFor(access, aud)
@@ -73,8 +100,9 @@ export function composeEmail({ gallery, access, aud, base, share }) {
   if (include.password && codes.password) lines.push(`Password: ${codes.password}`)
   if (include.pin && codes.pin) lines.push(`Download PIN: ${codes.pin}`)
   if (include.expiry && expiry) lines.push(`The link works until ${formatDate(expiry)}.`)
-  const body = [share.message.trim() || def.message, lines.join('\n'), share.closing.trim() || def.closing].filter(Boolean).join('\n\n')
-  return { subject: share.subject.trim() || def.subject, body }
+  const fill = (t) => fillVariables(t, variableValues({ gallery, expiry, to }))
+  const body = [fill(share.message.trim()) || def.message, lines.join('\n'), fill(share.closing.trim()) || def.closing].filter(Boolean).join('\n\n')
+  return { subject: fill(share.subject.trim()) || def.subject, body }
 }
 
 export const mailto = (to, { subject, body }) =>

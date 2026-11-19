@@ -4,7 +4,7 @@ import {
   ArrowLeft, ArrowRight, ArrowSquareOut, Check, Circle, CopySimple, DownloadSimple, EnvelopeSimple, LockSimple,
   Storefront, UserCircle, X,
 } from '@phosphor-icons/react'
-import { Button, Field } from '../../components/ui'
+import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented } from '../../gallery/templates/cover/controls'
@@ -14,8 +14,9 @@ import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
 import {
   LIMITS, audienceName, codesFor, composeEmail, defaultText, expiryFor, formatDate, linkFor, mailto, qrCardPNG, qrFor,
-  useShareSettings,
+  useShareSettings, variableValues,
 } from './share'
+import VariableText from './VariableText'
 
 const copy = async (text, ok) => {
   try {
@@ -235,9 +236,11 @@ function EmailComposer({ ws, access, aud, base }) {
   const [to, setTo] = useState(() => (approved ? d.approved.people.map((p) => p.email) : []))
   const [draftTo, setDraftTo] = useState('')
   const def = defaultText(ws.gallery)
-  const email = useMemo(() => composeEmail({ gallery: ws.gallery, access, aud, base, share }), [ws.gallery, access, aud, base, share])
+  const email = useMemo(() => composeEmail({ gallery: ws.gallery, access, aud, base, share, to }), [ws.gallery, access, aud, base, share, to])
   const { password, pin } = codesFor(access, aud)
   const expiry = expiryFor(access, aud)
+  const values = variableValues({ gallery: ws.gallery, expiry, to })
+  const hint = 'Empty uses the text shown. Type { to add a variable.'
 
   const set = (patch) => setShare((s) => ({ ...s, ...patch }))
   const include = (k, v) => setShare((s) => ({ ...s, include: { ...s.include, [k]: v } }))
@@ -291,9 +294,9 @@ function EmailComposer({ ws, access, aud, base }) {
           </p>
         </div>
 
-        <Field label="Subject" value={share.subject} onChange={(e) => set({ subject: e.target.value.slice(0, LIMITS.subject) })} placeholder={def.subject} />
+        <VariableText label="Subject" singleLine value={share.subject} onChange={(v) => set({ subject: v })} placeholder={def.subject} limit={LIMITS.subject} values={values} hint={hint} />
 
-        <TextArea label="Message" value={share.message} onChange={(v) => set({ message: v })} placeholder={def.message} limit={LIMITS.message} rows={5} />
+        <VariableText label="Message" value={share.message} onChange={(v) => set({ message: v })} placeholder={def.message} limit={LIMITS.message} rows={5} values={values} hint={hint} />
 
         <div>
           <p className="mb-2 text-13-m text-type-1">Include</p>
@@ -304,7 +307,7 @@ function EmailComposer({ ws, access, aud, base }) {
           {password && !share.include.password && <p className="mt-2 text-12-r text-amber-700">They’ll need the password to open the gallery. Send it another way.</p>}
         </div>
 
-        <TextArea label="Sign-off" value={share.closing} onChange={(v) => set({ closing: v })} placeholder={def.closing} limit={LIMITS.closing} rows={2} />
+        <VariableText label="Sign-off" value={share.closing} onChange={(v) => set({ closing: v })} placeholder={def.closing} limit={LIMITS.closing} rows={2} values={values} hint={hint} />
 
         {edited && (
           <button type="button" onClick={() => set({ subject: '', message: '', closing: '' })} className="text-13-m text-type-2 underline-offset-4 transition hover:text-type-0 hover:underline">
@@ -334,25 +337,6 @@ function EmailComposer({ ws, access, aud, base }) {
         <p className="mt-2 text-12-r text-type-3 sm:text-right">Opens a draft in your own email app. Sending from here comes later.</p>
       </div>
     </div>
-  )
-}
-
-function TextArea({ label, value, onChange, placeholder, limit, rows }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 flex items-center justify-between text-13-m text-type-1">
-        {label}
-        <span className="text-11-r tabular-nums text-type-3">{value.length}/{limit}</span>
-      </span>
-      <textarea
-        value={value}
-        rows={rows}
-        onChange={(e) => onChange(e.target.value.slice(0, limit))}
-        placeholder={placeholder}
-        className="w-full resize-y rounded-lg border border-input bg-surface-1 px-3.5 py-2.5 text-14-r-p text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0 focus:ring-4 focus:ring-black/5"
-      />
-      {!value && <span className="mt-1 block text-12-r text-type-3">Empty uses the text shown.</span>}
-    </label>
   )
 }
 
