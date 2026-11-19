@@ -23,7 +23,7 @@ export default function Hero() {
             <p className="mt-5 text-20-m text-type-2 md:mt-6">{profile.disciplines.join(', ')}</p>
           </Reveal>
           <Reveal delay={0.35} y={16}>
-            <p className="mt-6 max-w-[580px] text-16-r-p text-type-1 md:text-18-r">{profile.bio}</p>
+            <p className="mt-6 max-w-[580px] text-16-r-p text-type-1">{profile.bio}</p>
           </Reveal>
           {intro.buttons && <Reveal delay={0.45} y={16} className="mt-8 flex flex-wrap gap-2">
             <Button as="a" href="#work" size="lg" arrow>

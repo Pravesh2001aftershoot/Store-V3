@@ -60,7 +60,6 @@ export const typography = {
   '13-SB': t('header', 13, 'SB', 16),
 
   // ── Body
-  '18-R': t('body', 18, 'R', 28, 0, proposed), // lead / intro paragraph under a hero
   '16-R': t('body', 16, 'R', 20),
   '14-R': t('body', 14, 'R', 20),
   '13-R': t('body', 13, 'R', 16),

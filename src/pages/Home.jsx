@@ -44,7 +44,7 @@ function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease, delay: 0.5 }}
-            className="mt-6 max-w-[460px] text-18-r text-type-2"
+            className="mt-6 max-w-[460px] text-16-r text-type-2"
           >
             Archival prints, hand-bound albums and wall art — curated by <PhotographerLink className="hover:text-type-0" /> and made from the photos in your
             gallery.

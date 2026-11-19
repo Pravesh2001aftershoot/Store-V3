@@ -88,8 +88,7 @@ Sizes and line heights are in pixels. "Proposed" tokens were added in code to fi
 | | `16-SB` | 16 / 20 | Panel titles, summary heads |
 | | `14-SB` | 14 / 20 | |
 | | `13-SB` | 13 / 16 | |
-| Body | `18-R` | 18 / 28 | Proposed. Lead paragraph under a hero. |
-| | `16-R` | 16 / 20 | |
+| Body | `16-R` | 16 / 20 | Lead line under a hero (single line or short) |
 | | `14-R` | 14 / 20 | Default body text |
 | | `13-R` | 13 / 16 | |
 | | `12-R` | 12 / 16 | Meta text and captions (the most used token) |
@@ -111,6 +110,7 @@ Sizes and line heights are in pixels. "Proposed" tokens were added in code to fi
 ### Rules
 
 - Use a **paragraph (-P) token** for any text that wraps onto more than one line. The body tokens have line heights tuned for a single line, so wrapped text looks cramped.
+- **No 18px body size.** `18-R` has been removed from the scale. Lead lines under a hero use `16-R` (or `16-R-P` when they wrap). Don't add it back or use `text-[18px]`.
 - **Subheading tokens must be uppercase.** Tailwind can't set text-transform in a font-size token, so always add `uppercase` or use `<Eyebrow>`.
 - **Responsive type** steps between tokens, for example `text-36-sb md:text-48-sb`.
 - **Numbers** that change, such as prices and counts, use `tabular-nums`.
@@ -263,7 +263,7 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 | Template thumbnail (`FitThumb`, `src/gallery/templates/editor/`) | Renders at 1280px and scales to the card, `rounded-[10px] surface-2`, `inert`. Used by footer and heading template cards. |
 | Footer social editor | One row per profile: a `rounded-xl` input-bordered box with the platform icon, a 40px input, a trash icon button and the resolved link in `11-R type-3`. Unused platforms are `surface-2` 32px chips with a plus and the platform icon. |
 | `PortfolioHeader` | Sticky portfolio bar: back link (label hidden below `sm`), photographer name, section anchor links (`md` and up) and a small "Enquire" `mailto:` button |
-| `Hero` (portfolio) | Greeting (`text-48-sb md:text-72-sb xl:text-96-sb`), disciplines in `20-M type-2`, bio in `16-R-P` (`18-R` from `md`), CTAs, a 4:5 portrait (4:3 on `sm`–`md`), and a facts strip of `11-SB` labels over `14-M` values. "Availability" has a `success` dot. |
+| `Hero` (portfolio) | Greeting (`text-48-sb md:text-72-sb xl:text-96-sb`), disciplines in `20-M type-2`, bio in `16-R-P` at every width, CTAs, a 4:5 portrait (4:3 on `sm`–`md`), and a facts strip of `11-SB` labels over `14-M` values. "Availability" has a `success` dot. |
 | `ProjectCard` | Portfolio gallery card: 4:5 cover, title `16-M`, "Genre · Location" `13-R type-2`, photo count `13-R type-3 tabular-nums`. On hover: bottom gradient, scrub progress bars and a white arrow disc. |
 | `ProjectRow` | List-view row: 56px (72px from `md`) square thumbnail, title, genre, location, photo count and an arrow. Collapses to thumbnail, title and year on mobile. |
 | `WorkGrid` | "Selected work" section: genre tabs, search, sort select, grid/list toggle, year group headings (`24-M` + count + hairline rule) |
@@ -319,7 +319,7 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 ## Backlog
 
 - Add `primary-hover` and `surface-3` tokens to replace the hard-coded hover hex values.
-- Get the proposed type tokens (display, `24-M`, `18-R`, paragraph, `16-M`) reviewed and added to Figma.
+- Get the proposed type tokens (display, `24-M`, paragraph, `16-M`) reviewed and added to Figma.
 - Add a dark theme. Tokens are already CSS variables, so this means adding a second set of values. The gallery footer's Dark background already does this locally (`DARK_TOKENS` in `src/gallery/templates/footer/Footer.jsx`) and could seed the global set.
 - Turn the segmented control and the tab pill into shared primitives. Today they are written separately in the gallery NavBar, OptionGroup, the Builder and the portfolio WorkGrid.
 - Replace `window.confirm` for "Delete set", "Clear all" and "Unhide all" with a designed confirmation dialog.
