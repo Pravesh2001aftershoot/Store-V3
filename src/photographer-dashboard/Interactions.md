@@ -42,7 +42,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 ## Gallery: Photos
 
 ### Adding photos
-1. **Add photos** opens the file picker (multiple files). Alternatively, drag files anywhere over the page: a full-screen overlay reads "Drop to add to <collection>".
+1. **Add Images** (secondary button in the page header) opens the file picker (multiple files). Alternatively, drag files anywhere over the page: a full-screen overlay reads "Drop to add to <collection>".
 2. Photos go to the open collection. From All or Removed, they go to the first collection.
 3. While it works, the button shows a spinner and "Adding 3/12".
 4. A toast reports the result: "Added 12 photos to Golden Hour", plus "· 2 skipped" for files that aren't readable images.
@@ -50,7 +50,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 
 ### Collections
 - The collection tab row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New Set**, and **Removed** (only when something is removed). It scrolls sideways on phones.
-- **New Set** turns into an inline name field. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
+- **Create Set** (primary button in the page header) and **New Set** in the tab row both turn into an inline name field at the end of the tabs. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
 - Open a collection, then use **⋯** for **Rename** (inline field, same rules), **Add photos here**, **Move earlier** / **Move later**, or **Delete collection**.
 - **Delete** asks first if the collection has photos ("Its 89 photos move to Golden Hour"), then shows All. It's disabled when only one collection is left.
 
@@ -76,9 +76,6 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - Inside a collection, drag a photo (or the whole selection, if the dragged photo is selected) onto another photo. A bar on that photo's left edge shows where they'll land, and dropping puts them before it.
 - From any view, drop dragged photos onto a collection tab to move them there.
 - Phones can't drag. Use Move to.
-
-### Reset
-- **Reset** (shown once something has changed) asks first, then restores every photo's original collection and order and clears removals. Uploads are kept.
 
 ## Gallery: Design
 

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowCounterClockwise, ArrowLeft, ArrowRight, Check, CircleNotch, DotsThree, FolderSimple, Plus,
+  ArrowLeft, ArrowRight, Check, CircleNotch, DotsThree, FolderSimple, Plus,
   ImageSquare, PencilSimple, Star, Trash, UploadSimple, X, EyeSlash, ArrowUUpLeft,
 } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
@@ -211,21 +210,12 @@ export default function PhotosStep({ ws }) {
         description="Add photos, sort them into collections and choose what your client sees. Everything saves as you go."
         actions={
           <>
-            {library.edited && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.confirm('Put every photo back in its original collection and order? Uploads are kept.') && (library.reset(), notify('Arrangement reset'))}
-              >
-                <ArrowCounterClockwise size={14} /> Reset
-              </Button>
-            )}
-            <Button size="md" onClick={() => input.current?.click()} disabled={!!progress}>
+            <Button variant="outline" size="md" onClick={() => input.current?.click()} disabled={!!progress}>
               {progress ? <CircleNotch size={16} className="animate-spin" /> : <UploadSimple size={16} />}
-              {progress ? `Adding ${progress.done}/${progress.total}` : 'Add photos'}
+              {progress ? `Adding ${progress.done}/${progress.total}` : 'Add Images'}
             </Button>
-            <Button as={Link} to={`${ws.base}/design`} variant="outline" size="md" className="max-sm:hidden">
-              Next: Design <ArrowRight size={14} />
+            <Button size="md" onClick={() => setNaming({ mode: 'new', value: '' })}>
+              <Plus size={16} /> Create Set
             </Button>
           </>
         }
@@ -233,7 +223,7 @@ export default function PhotosStep({ ws }) {
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
 
       {/* Collections */}
-      <div style={{ top }} className="sticky z-20 -mx-4 mt-6 border-b border-border bg-surface-0 px-4 md:-mx-6 md:px-6">
+      <div style={{ top }} className="sticky z-20 -mx-4 mt-6 bg-surface-0 px-4 md:-mx-6 md:px-6">
         <div className="no-scrollbar flex items-center gap-6 overflow-x-auto">
           <Tab active={active === ALL} count={photos.length} onClick={() => setActive(ALL)}>All photos</Tab>
           <span className="h-5 w-px shrink-0 bg-border" />

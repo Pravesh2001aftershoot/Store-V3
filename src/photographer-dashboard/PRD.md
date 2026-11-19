@@ -56,7 +56,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R6. Photos are selection-first. A tap selects, Shift-click selects a range, ⌘/Ctrl+A selects everything in view, and Esc clears. Bulk actions: Move to a collection, Make cover (one photo selected), and Remove from the gallery.
 - R7. Removed photos go to a **Removed** view, where they can be restored. Uploaded photos can also be deleted for good from there, after a confirmation. Gallery photos can only be removed, never deleted.
 - R8. Reorder by dragging within a collection (desktop). Drag photos onto a collection chip to move them.
-- R9. "Reset" puts every photo back in its original collection and order. Uploads are kept.
+- R9. The Photos header has two actions: **Create Set** (primary) and **Add Images** (secondary). There is no Reset for the photo arrangement and no "Next: Design" button; steps are switched in the step rail.
 
 ### Gallery: Design (step 2)
 
