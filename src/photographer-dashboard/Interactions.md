@@ -10,7 +10,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 |---|---|
 | Open `/dashboard` | Redirects to Galleries. |
 | Click a section in the sidebar | Goes to it. The highlight slides to it and its icon fills. Galleries and Store show their counts. |
-| Open a gallery (640px and up) | The sidebar is hidden while you're inside the gallery; the editor fills the width. "Galleries" in the breadcrumb goes back to the list and brings the sidebar back. On phones the top bar and ☰ stay. |
+| Open a gallery (640px and up) | The sidebar is hidden while you're inside the gallery; the editor fills the width. The rail's Back (and "Galleries" in the Design breadcrumb) goes back to the list and brings the sidebar back. On phones the top bar and ☰ stay. |
 | Hover the rail (640–1023px) | Each icon has a tooltip with its name. The rail shows no recent galleries. |
 | Phone: tap ☰ in the top bar | The sidebar slides in from the left as a drawer over a dimmed page. Tapping the page, ✕ or any link closes it. |
 | A recent gallery | Opens it (its Photos step). The open one is highlighted. "All N galleries" appears after five. |
@@ -27,9 +27,9 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 | **New gallery** | Dialog: Gallery title (required; Create is disabled until it has text), Client name, Date, Print store catalog, and Start with **Empty** or **Sample photos**. Enter submits. Creating toasts "<title> created" and opens its Photos step. |
 
 ### Inside a gallery
-- The header shows **Galleries › <client>** (the first part links back), the title and photo count, then ⚙ and **View** on the right. Back and the steps are in the rail on the left edge.
-- On **Design** the header is part of the preview's toolbar: breadcrumb and title on the left, then the device switch, Reload, Open and ⚙. There is no View button there; **Open** does the same thing.
-- ⚙ opens **Gallery settings**: the same fields as New gallery (no Start with), plus **Delete gallery** (asks first; disabled for the last gallery). Save toasts "Gallery updated". Changing the catalog changes what this gallery's clients can buy straight away.
+- Photos, Settings, Share and Analytics have no gallery header bar; each step starts with its own content. Back and the steps are in the rail on the left edge.
+- On **Design** the preview's toolbar shows **Galleries › <client>** (the first part links back) over the title and photo count on the left, then the device switch, Reload, Open and, from 960px, the panel toggle. **Open** opens the client gallery in a new tab.
+- A gallery's title, client, date, catalog and Delete are edited in Design's **Gallery info** part. The **Gallery settings** modal (same fields, Save toasts "Gallery updated") opens from the gallery card's menu on the Galleries grid.
 - An unknown gallery id in the URL goes back to the list.
 
 ## Gallery: step rail
@@ -37,7 +37,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 - A vertical, icon-only rail on the left edge: **Back**, a divider, then the tabs **Photos**, **Design**, **Settings**, **Share**, **Analytics**. **Back** (tooltip "Back · All galleries") goes to the Galleries grid (`/dashboard/galleries`). Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
 - The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Access, engagement, privacy", "Send to your client", "Visitors, downloads, revenue") to the right; on phones the icons carry `aria-label`s only.
 - Browser Back and Forward move between steps, since the step is in the URL.
-- On Design, from 960px wide, a second rail appears on the right edge (the **parts rail**) with the four parts: **Cover**, **Grid**, **Collection headings** and **Footer**. Clicking one opens its editor in the docked column beside it; the open one is highlighted. Hovering one shows its name and current setting (for example "Template: Full bleed" or "Vertical · Medium · Thin") to the left. The parts rail slides in when you enter Design and out when you leave (0.3s); it holds nothing else. Below 960px there's no parts rail; the parts are chips above the preview.
+- On Design, from 960px wide, a second rail appears on the right edge (the **parts rail**) with **Gallery info** (ⓘ) first, a divider, then the four looks: **Cover**, **Grid**, **Collection headings** and **Footer**. Clicking a part opens its editor in the docked column beside it; the open one is highlighted. Hovering a part shows its name and current setting (for example "Template: Full bleed" or "Vertical · Medium · Thin") to the left. The parts rail slides in when you enter Design and out when you leave (0.3s). Below 960px there's no parts rail; the parts are chips above the preview.
 
 ## Gallery: Photos
 
@@ -54,12 +54,19 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 - Open a collection, then use **⋯** for **Rename** (inline field, same rules), **Add photos here**, **Move earlier** / **Move later**, or **Delete collection**.
 - **Delete** asks first if the collection has photos ("Its 89 photos move to Golden Hour"), then shows All. It's disabled when only one collection is left.
 
+### Searching
+- The search field ("Search by file name") sits right of the collection title (full width under it on phones). It filters the open view (All photos, a collection or Removed) by file name as you type: case-insensitive and anywhere in the name, so "2047" finds `LT_2047.jpg`. The subtitle reads "3 photos matching “2047”".
+- The search stays when you switch collections. **/** jumps to it (not while typing). Esc clears it, and a second Esc leaves the field. ✕ also clears it.
+- Selecting, ⌘/Ctrl+A and the selection bar work on the matches only. Dragging matches onto a collection tab still moves them, but reordering is paused while searching (the order would be ambiguous). ⌥/Alt+arrows toast "Clear the search to reorder".
+- No matches: "No photos match “2047”" with **Clear search**.
+
 ### Selecting
 | Input | Result |
 |---|---|
 | Click or tap a photo | Toggles it. The selection bar rises. |
 | Shift-click | Selects the range from the last photo toggled. |
 | Space / Enter on a focused photo | Toggles it. |
+| Arrow keys on a focused photo | Move focus: ←/→ one photo, ↑/↓ to the photo in the row above or below whose centre is nearest (rows are justified, so they hold different numbers of photos). Home/End go to the first or last photo. |
 | ⌘/Ctrl+A | Selects everything in view (not while typing). |
 | Esc, or ✕ on the bar | Clears the selection. |
 | Switching collection | Clears the selection. |
@@ -72,27 +79,36 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - **Remove:** takes the photos out of the client gallery and toasts "find them under Removed". Removing the current cover returns the cover to the default.
 - In **Removed**: **Restore** puts them back, and **Delete** (only when every selected photo is an upload) asks for confirmation, then deletes them for good.
 
-### Reordering (desktop)
-- Inside a collection, drag a photo (or the whole selection, if the dragged photo is selected) onto another photo. A bar on that photo's left edge shows where they'll land, and dropping puts them before it.
-- From any view, drop dragged photos onto a collection tab to move them there.
-- Phones can't drag. Use Move to.
+### Reordering
+- **Drag (desktop):** drag a photo (or the whole selection, if the dragged photo is selected) onto another photo. The dragged photos fade to 40%. A 4px bar on the left or right edge of the photo under the pointer shows whether they'll land before or after it; dropping puts them there, and the grid slides into the new order (0.3s, app curve).
+- Works in a collection and in **All photos**. In All, dropping on a photo in another collection moves the dragged photos into that collection at that spot and toasts "Moved 2 photos to Details".
+- From any view, drop dragged photos onto a collection tab to move them to the end of it.
+- **Keyboard:** on a focused photo, ⌥/Alt + ←/→ moves it one place, ⌥/Alt + ↑/↓ to the matching spot in the row above or below, and ⌥/Alt + Home/End to the start or end of its collection. If the photo is selected, the selected photos in that collection move together. Focus stays on the photo, and screen readers hear "Photo moved to position 4 of 20 in Golden Hour" (or "already first"). Moves stay inside the photo's own collection.
+- Not available in Removed or while searching. Phones can't drag; use Move to.
 
 ## Gallery: Design
 
 ### Docked (960px and wider)
-1. The four parts are in the parts rail on the right edge (see Step rail). The column on the right of the preview holds only the open editor.
+1. The five parts (Gallery info, then Cover, Grid, Collection headings, Footer) are in the parts rail on the right edge (see Step rail). The column on the right of the preview holds only the open editor.
 2. One editor is always open, Cover to start. Clicking a part in the parts rail swaps the editor and the preview scrolls to that part:
-   - Cover: the top of the page.
+   - Gallery info and Cover: the top of the page.
    - Grid: the grid.
    - Headings: the collection being edited.
    - Footer: the bottom, after loading the whole grid.
 3. Docked editors have no ✕ or **Done**, and Esc does nothing; **Reset all** stays in the footer. Steps are switched in the left rail, parts in the right rail.
 4. The open part is in the URL (`?part=grid`), so it can be linked to and survives a reload. Switching parts replaces the history entry, so Back leaves the step instead of walking through parts.
+5. The last button in the preview toolbar ("Hide editor panel" / "Show editor panel", a right-hand sidebar icon, filled while the panel shows) collapses the editor column so the preview takes its width, and expands it again (0.3s, app curve). The parts rail stays. Clicking a different part in the rail shows the panel again with that editor. Hidden isn't remembered: it's shown again when you come back to Design.
 
 ### Not docked
-1. Chips for the four parts sit above a full-width preview. On phones the preview renders at the screen's own width with no device switch.
+1. Chips for the five parts (Gallery info first) sit above a full-width preview. On phones the preview renders at the screen's own width with no device switch.
 2. Tapping a chip opens its editor as a bottom sheet. **Preview** collapses the sheet to a bar so the whole preview shows, and **Edit** opens it again.
 3. Headings open the gallery's own heading editor, which has its own heading-only preview stage.
+
+### Gallery info
+1. The pane (title "Gallery info", no subtitle) has three sections: **Details** (Gallery title, Client name, Date — same limits, placeholders and hints as the Gallery settings modal), **Print store** (catalog select) and **Delete gallery**.
+2. Changes save as you type, with no Save button or toast, like the other editors. An empty title shows "Required — the last title is kept" and isn't saved; an empty client name uses the title; an empty date keeps the last date.
+3. **Delete gallery** asks first, then deletes, toasts "<title> deleted" and goes to the Galleries grid. Disabled when it's the last gallery ("You need at least one gallery.").
+4. There's no Reset all. The same fields are also in the Gallery settings modal, opened from the gallery card's menu.
 
 ### Editors
 - **Cover, Collection headings, Footer** behave exactly as in the client gallery: same tabs, templates, limits and Reset all. See the app-wide [Interaction.md](../../Interaction.md).

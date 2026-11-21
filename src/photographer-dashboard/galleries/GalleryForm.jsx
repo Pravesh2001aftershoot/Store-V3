@@ -22,7 +22,7 @@ const STARTS = [
  */
 export default function GalleryForm({ open, onOpenChange, gallery }) {
   const editing = !!gallery
-  const { galleries, create, update, remove } = useGalleries()
+  const { galleries, create, update } = useGalleries()
   const { catalogs } = useCatalogs()
   const navigate = useNavigate()
   const [f, setF] = useState(null)
@@ -57,14 +57,7 @@ export default function GalleryForm({ open, onOpenChange, gallery }) {
     }
   }
 
-  const del = async () => {
-    if (!window.confirm(`Delete “${gallery.title}”? Its photos, design and link are removed for good.`)) return
-    await purgeUploads(galleryKey(gallery.id, 'library'))
-    remove(gallery.id)
-    onOpenChange(false)
-    notify(`${gallery.title} deleted`)
-    navigate('/dashboard/galleries')
-  }
+  const del = useDeleteGallery(gallery, () => onOpenChange(false))
 
   return (
     <Modal
@@ -126,4 +119,18 @@ export default function GalleryForm({ open, onOpenChange, gallery }) {
       </form>
     </Modal>
   )
+}
+
+/** Delete a gallery after confirming: purges its uploads, toasts, and goes back to the Galleries grid. */
+export function useDeleteGallery(gallery, onDone) {
+  const { remove } = useGalleries()
+  const navigate = useNavigate()
+  return async () => {
+    if (!window.confirm(`Delete “${gallery.title}”? Its photos, design and link are removed for good.`)) return
+    await purgeUploads(galleryKey(gallery.id, 'library'))
+    remove(gallery.id)
+    onDone?.()
+    notify(`${gallery.title} deleted`)
+    navigate('/dashboard/galleries')
+  }
 }

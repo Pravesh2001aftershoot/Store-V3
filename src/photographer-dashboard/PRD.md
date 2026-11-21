@@ -44,7 +44,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 - G1. A grid of gallery cards, newest first: cover photo (or "No photos yet"), title, date, photo count and catalog. Search by title, client or date. A dashed **New gallery** card leads the grid.
 - G2. **New gallery** (page header or card) asks for a title (required, up to 60 characters), client name (defaults to the title), date (defaults to this month), the store catalog, and whether to start empty or with the sample photos. Creating it opens its Photos step. A new gallery has one collection, "Highlights".
-- G3. A card's menu: Edit gallery, Settings, View as client, Delete. Inside a gallery, the header has a breadcrumb back to Galleries, the gear (Settings) and View. On the Design step the header merges into the preview's toolbar: breadcrumb and title on the left, gear after the preview's Open (which replaces View).
+- G3. A card's menu: Edit gallery, Settings, View as client, Delete. Inside a gallery only the Design step has a header, in the preview's toolbar: a breadcrumb back to Galleries and the title on the left, Open (the client gallery) on the right. Other steps have no header bar. Title, client, date and catalog are edited in Design's Gallery info part (R10) or from the card's Settings.
 - G4. **Settings** edits the title, client, date and catalog. Delete is there too, after a confirmation; it removes the gallery's photos (including uploads), design and link. The last gallery can't be deleted.
 - G5. Each gallery has its own photos, collections, cover, grid, headings and footer. Clients open it at `/g/<id>`. The app opens on the dashboard (`/` redirects to `/dashboard`). An unknown link shows "This gallery isn't available".
 - G6. The print store follows the gallery the client came from: its banner names that gallery, "Back to gallery" returns to it, and it sells from that gallery's catalog.
@@ -55,13 +55,14 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R5. Collections: create, rename, reorder (move earlier or later) and delete. Deleting moves the collection's photos to another collection; photos are never deleted with it. At least one collection always remains. Names are up to 32 characters and must be unique.
 - R6. Photos are selection-first. A tap selects, Shift-click selects a range, ⌘/Ctrl+A selects everything in view, and Esc clears. Bulk actions: Move to a collection, Make cover (one photo selected), and Remove from the gallery.
 - R7. Removed photos go to a **Removed** view, where they can be restored. Uploaded photos can also be deleted for good from there, after a confirmation. Gallery photos can only be removed, never deleted.
-- R8. Reorder by dragging within a collection (desktop). Drag photos onto a collection chip to move them.
+- R8. Reorder by dragging (desktop), in a collection or in All photos (dropping on a photo in another collection moves them there), or with ⌥/Alt + arrow keys on a focused photo. Arrow keys move focus between photos. Drag photos onto a collection tab to move them. No reordering in Removed or while searching.
+- R8a. Search photos by file name: case-insensitive, within the open view, with a no-matches state.
 - R9. The Photos header has two actions: **Create Set** (primary) and **Add Images** (secondary). There is no Reset for the photo arrangement and no "Next: Design" button; steps are switched in the step rail.
 
 ### Gallery: Design (step 2)
 
-- R10. Four parts: Cover, Grid, Collection headings and Footer. On screens 960px and wider they're in their own icon rail on the right edge (the step rail is on the left); on narrower screens they're chips above the preview.
-- R11. Picking a part opens its editor. On screens 960px and wider the parts are in the right-hand parts rail, the editor docks in a right-hand column beside the preview, and one editor is always open (Cover first, or the part in `?part=`); on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
+- R10. Five parts: Gallery info (title, client, date, print store catalog, Delete; saves as you type), then Cover, Grid, Collection headings and Footer. On screens 960px and wider they're in their own icon rail on the right edge (the step rail is on the left); on narrower screens they're chips above the preview.
+- R11. Picking a part opens its editor. On screens 960px and wider the parts are in the right-hand parts rail, the editor docks in a right-hand column beside the preview, and one editor is always open (Cover first, or the part in `?part=`), and the editor column can be hidden from the preview toolbar to see a wider preview; on narrower screens it opens as the gallery's bottom sheet over a full-width preview.
 - R12. Cover, heading and footer editing use the gallery's own editors, with the same tabs, controls, limits and templates.
 - R13. Grid sets the default layout clients start with: arrangement (masonry or justified rows), photo size and spacing. Clients can still change their own view.
 - R14. The preview is the real client gallery. It scrolls to the part being edited, updates as settings change, and can render at desktop (1280), tablet (820) or phone (390) width, scaled to fit.
@@ -144,7 +145,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - **Catalog per client in a gallery?** Today one catalog per gallery. Schools and events may need different catalogs for different viewers of one gallery.
 - **Analytics: what counts as a visitor?** Today a person is an email. Should guests without an email be tracked per device, and should the client see who else viewed their gallery?
 - **Analytics date range.** All time only for now. Photographers may want last 7 / 30 days, or activity since the link was sent.
-- **Settings vs the gear.** The header gear opens "Gallery settings" (title, client, date, catalog) and the rail's Settings step is also titled "Gallery settings" (access and permissions). Merge them, or rename one (for example "Access")?
+- **Settings vs Gallery info.** The gallery card's Settings opens a "Gallery settings" modal (title, client, date, catalog) and the rail's Settings step is also titled "Gallery settings" (access and permissions). Inside a gallery those fields are now Design's "Gallery info". Rename the modal to match, or rename the step (for example "Access")?
 - **Email templates: account or gallery?** Saved email templates are account-wide today. Open: should the photographer be able to set their own default template, rename one, or share templates across a studio team?
 - **Settings templates.** The source mockup also had saved templates of settings (Default, Wedding – Clients & Guests, Portrait – Public) and Free / Paid download sizes. Not built yet: are they needed for v1?
 - **Should clients still see edit pencils?** The gallery's own pencils remain for now, but are hidden in the dashboard preview. Once there's a photographer login they should only show to the photographer.

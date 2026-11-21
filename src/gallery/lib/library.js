@@ -228,6 +228,25 @@ export function useGalleryLibrary(base, baseCollections) {
     })
   }, [all, setState])
 
+  /**
+   * Puts photos into `collection` just before `beforeId` (or at its end when `beforeId` is null or
+   * not in it), moving them out of whatever collection they were in. One update, so it can't tear.
+   */
+  const place = useCallback((ids, collection, beforeId = null) => {
+    const set = new Set(ids)
+    setState((s) => {
+      const assign = { ...s.assign }
+      ids.forEach((id) => { assign[id] = collection })
+      const rest = all.map((p) => p.id).filter((id) => !set.has(id))
+      let at = beforeId && !set.has(beforeId) ? rest.indexOf(beforeId) : -1
+      if (at === -1) {
+        const last = all.reduce((k, p, i) => (p.collection === collection && !set.has(p.id) ? i : k), -1)
+        at = last === -1 ? rest.length : rest.indexOf(all[last].id) + 1
+      }
+      return { ...s, assign, order: [...rest.slice(0, at), ...ids, ...rest.slice(at)] }
+    })
+  }, [all, setState])
+
   const remove = useCallback((ids) => setState((s) => ({ ...s, removed: [...new Set([...s.removed, ...ids])] })), [setState])
   const restore = useCallback((ids) => {
     const set = new Set(ids)
@@ -280,7 +299,7 @@ export function useGalleryLibrary(base, baseCollections) {
   return {
     photos, removed, all, collections, ready, edited, uploads: state.uploads.length,
     addCollection, renameCollection, deleteCollection, reorderCollections,
-    moveTo, reorder, remove, restore, deleteUploads, addFiles, reset,
+    moveTo, reorder, place, remove, restore, deleteUploads, addFiles, reset,
   }
 }
 

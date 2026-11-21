@@ -15,13 +15,14 @@ src/photographer-dashboard/
 ├── lib/hooks.js               useMedia, useDocked (≥960px), usePhone (<640px), useWideNav (≥1024px), useTopOffset
 ├── galleries/
 │   ├── GalleriesPage.jsx      Gallery cards, search, card menu
-│   ├── GalleryForm.jsx        New gallery / gallery settings (+ delete)
+│   ├── GalleryForm.jsx        New gallery / gallery settings modal (+ delete); exports `useDeleteGallery(gallery, onDone)`
 │   └── GalleryCover.jsx       WithGallery: reads one gallery's cover + count inside its provider
 ├── gallery/
-│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → header (breadcrumb, settings, View; on Design passed into the preview toolbar instead), left-hand `StepRail` (Back → /dashboard/galleries, then the five steps), the step, and on Design when docked the right-hand `PartsRail` (Cover, Grid, Headings, Footer)
+│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → left-hand `StepRail` (Back → /dashboard/galleries, then the five steps), the step (Design gets the breadcrumb + title `Heading` for its preview toolbar; other steps have no header), and on Design when docked the right-hand `PartsRail` (Gallery info, a divider, then Cover, Grid, Headings, Footer)
 │   ├── useGalleryWorkspace.js Wires the library, cover, cover photo, headings, footer and grid
-│   ├── PhotosStep.jsx         Upload, collections, selection, drag to reorder or move, selection bar
+│   ├── PhotosStep.jsx         Upload, collections, search by file name, selection, drag / ⌥+arrow reorder or move, selection bar
 │   ├── DesignStep.jsx         Preview + right column with the open editor (chips + sheets when narrow); `designParts(ws)` for the rail
+│   ├── GalleryInfoEditor.jsx  Design part "Gallery info": title, client, date, catalog, Delete in the EditorPane shell; saves live via `useGalleries().update`
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
@@ -125,6 +126,7 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 ```
 
 - `useGalleryLibrary(base, baseCollections)` returns `photos` (in the gallery: grouped by collection, then by order), `removed`, `all` and `collections`, plus the actions listed in the file. A photo whose collection no longer exists is shown in the first one.
+- **`place(ids, collection, beforeId)`** is what the Photos step uses for every drag and ⌥/Alt+arrow move: it assigns the photos to `collection` and puts them just before `beforeId` (or at the end of that collection when `beforeId` is null) in one `setState`, so a move into another collection and its position can't get out of step. `reorder(collection, ids)` and `moveTo(ids, collection)` remain for whole-collection orders and "move to the end". Search (`PhotosStep`) only filters what's shown and is not persisted.
 - **Uploads.** Each file is decoded with an `<img>`, drawn to a canvas at 2400px and 720px, and saved as two JPEG blobs in IndexedDB. Only the manifest goes in localStorage, because image data would quickly fill its ~5MB. Object URLs are cached per document (`urls`), and the hook re-renders when they resolve.
 - **Collections are keyed by name.** Renaming re-assigns every photo in the collection to the new name. Heading words are also keyed by name, so a renamed collection loses its custom heading words (known gap).
 - **`GalleryPage` uses it.** The client gallery now builds its photos and collection order from `useGalleryLibrary`, so dashboard changes reach it. Client-side hiding, favourites and sets work on top as before.
@@ -138,7 +140,7 @@ A layer of edits over the gallery's base photos (`gallery/data/photos.js`), whic
 `EditorPane` gained:
 - **`inline`.** It renders in place, filling its parent, instead of as a fixed sliding panel. It still mounts a non-modal Radix `Dialog.Root` so the shared header (`Dialog.Title`, `Dialog.Close`) and Esc-to-close keep working.
 - **`resetLabel`.** For example, "Reset product".
-- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since the parts rail switches editors; `editing` falls back to `'cover'` there. The open part is the `part` search param (`cover` | `grid` | `headings` | `footer`, anything else is ignored), read by both `DesignStep` and `PartsRail`; `DesignStep` sets it with `replace` and leaves other params alone. Closing a sheet removes it.
+- **Optional `onClose` (inline).** Without it the pane can't be closed: no ✕, no Done, Esc is ignored, and the footer only shows if there's a Reset. `DesignStep` leaves it out when docked, since the parts rail switches editors; `editing` falls back to `'cover'` there. The open part is the `part` search param (`info` | `cover` | `grid` | `headings` | `footer`, anything else is ignored), read by both `DesignStep` and `PartsRail`; `DesignStep` sets it with `replace` and leaves other params alone. Closing a sheet removes it. Docked, `DesignStep` also keeps `panel` (plain state, default shown): the toolbar toggle collapses the editor column (`inert` while hidden), and a change of `part` sets it back to shown.
 - **No tab bar for a single tab.**
 
 `CoverEditor`, `FooterEditor` and `SectionEditor` accept `inline` and pass it through. With `inline`, `SectionEditor` drops its own preview stage and its scroll lock, because the dashboard's iframe is the preview. When not docked (under 960px), the dashboard passes `phone` to the panes so they open as bottom sheets. `SectionEditor` decides that itself, keeping its own stage.
@@ -243,7 +245,7 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 - **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).
 - **Per device.** All settings are local to the browser. Opening the gallery on another device shows the defaults.
 - **No drafts.** Every edit is live immediately (see the PRD's open questions).
-- **No touch reorder for photos.** HTML5 drag-and-drop doesn't fire on touch screens, so phones can move photos between collections but can't reorder them. Products, packages and portfolio categories do reorder on touch.
+- **No touch reorder for photos.** HTML5 drag-and-drop doesn't fire on touch screens, so phones can move photos between collections but can't reorder them (keyboard reorder needs a hardware keyboard). Products, packages and portfolio categories do reorder on touch.
 - **Uploads aren't in the print store's photo list.** The store builder still uses the 28 store photos (an existing gap). Quick buy from the gallery does register uploads.
 - **Collection rename loses heading words** (they're keyed by collection name).
 - **The heading editor below 960px** shows its own full-screen stage rather than the dashboard's preview.

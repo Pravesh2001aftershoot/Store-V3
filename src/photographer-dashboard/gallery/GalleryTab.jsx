@@ -1,14 +1,11 @@
-import { useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowSquareOut, CaretRight, ChartBar, GearSix, Images, PaintBrush, ShareNetwork, SlidersHorizontal } from '@phosphor-icons/react'
-import { GalleryProvider, galleryPath } from '../../data/galleries'
+import { ArrowLeft, CaretRight, ChartBar, Images, PaintBrush, ShareNetwork, SlidersHorizontal } from '@phosphor-icons/react'
+import { GalleryProvider } from '../../data/galleries'
 import { useGalleryData } from '../../gallery/lib/useGalleryData'
-import GalleryForm from '../galleries/GalleryForm'
 import { cn } from '../../lib/utils'
 import { ease } from '../components/ui'
 import { useDocked, useTopOffset } from '../lib/hooks'
-import { IconButton } from '../components/ui'
 import { useGalleryWorkspace } from './useGalleryWorkspace'
 import PhotosStep from './PhotosStep'
 import DesignStep, { designParts } from './DesignStep'
@@ -44,9 +41,7 @@ export default function GalleryTab() {
 function Workspace({ data, step }) {
   const top = useTopOffset()
   const ws = { ...useGalleryWorkspace(data), base: `/dashboard/galleries/${data.meta.id}` }
-  const [settings, setSettings] = useState(false)
   const design = step === 'design'
-  const openSettings = () => setSettings(true)
 
   return (
     // Step rail on the left, then the content; on Design (docked) the parts rail on the right.
@@ -54,28 +49,14 @@ function Workspace({ data, step }) {
     <div className="flex" style={design ? { height: `calc(100svh - ${top}px)` } : undefined}>
       <StepRail step={step} ws={ws} top={top} />
       <div className={cn('min-w-0 flex-1', design && 'flex flex-col')}>
-        {/* Design merges the header into its preview toolbar, where Open already does View's job. */}
-        {!design && <Header ws={ws} onSettings={openSettings} />}
-        <GalleryForm open={settings} onOpenChange={setSettings} gallery={data.meta} />
+        {/* Only Design has a gallery header: breadcrumb and title in its preview toolbar. */}
         {step === 'photos' && <PhotosStep ws={ws} />}
-        {design && <DesignStep ws={ws} title={<Heading ws={ws} />} actions={<SettingsButton onClick={openSettings} small />} />}
+        {design && <DesignStep ws={ws} title={<Heading ws={ws} />} />}
         {step === 'settings' && <SettingsStep ws={ws} />}
         {step === 'share' && <ShareStep ws={ws} />}
         {step === 'analytics' && <AnalyticsStep ws={ws} />}
       </div>
       <PartsRail step={step} ws={ws} top={top} />
-    </div>
-  )
-}
-
-/** Every step but Design: breadcrumb + gallery name, then Settings and View. */
-function Header({ ws, onSettings }) {
-  return (
-    <div className="shrink-0 border-b border-border bg-surface-1">
-      <div className="mx-auto flex max-w-[1800px] items-center gap-2 px-4 py-3 md:px-6">
-        <div className="min-w-0 flex-1"><Heading ws={ws} /></div>
-        <span className="flex shrink-0 gap-1"><Actions ws={ws} onSettings={onSettings} /></span>
-      </div>
     </div>
   )
 }
@@ -95,10 +76,6 @@ function Heading({ ws }) {
     </>
   )
 }
-
-const SettingsButton = ({ onClick, small }) => (
-  <IconButton small={small} label="Gallery settings" onClick={onClick}><GearSix size={small ? 16 : 18} /></IconButton>
-)
 
 /**
  * Icon-only rail docked on the left edge: Back (to the Galleries grid), then the five steps —
@@ -152,9 +129,10 @@ function StepRail({ step, ws, top }) {
 }
 
 /**
- * Design only, when its editor is docked (≥ 960px): the four parts (Cover, Grid, Headings, Footer)
- * in an icon rail on the right edge, beside the editor column. Picking one switches the open
- * editor (`?part=`). Slides in and out with the step; tooltips open to the left.
+ * Design only, when its editor is docked (≥ 960px): an icon rail on the right edge, beside the
+ * editor column. Gallery info first, a divider, then the four looks (Cover, Grid, Headings,
+ * Footer); picking one switches the open editor (`?part=`). Slides in and out with the step;
+ * tooltips open to the left.
  */
 function PartsRail({ step, ws, top }) {
   const docked = useDocked()
@@ -180,7 +158,7 @@ function PartsRail({ step, ws, top }) {
               const on = p.id === part
               const PartIcon = p.icon
               return (
-                <li key={p.id}>
+                <li key={p.id} className="flex flex-col items-center gap-2">
                   <Link
                     to={`${ws.base}/design?part=${p.id}`}
                     replace
@@ -195,6 +173,8 @@ function PartsRail({ step, ws, top }) {
                     <PartIcon size={20} weight={on ? 'fill' : 'regular'} className="relative" />
                     <Tip side="left" title={p.title} detail={p.detail} />
                   </Link>
+                  {/* Gallery info, then the gallery's look. */}
+                  {p.id === 'info' && <span aria-hidden className="block h-px w-8 bg-border" />}
                 </li>
               )
             })}
@@ -217,21 +197,5 @@ function Tip({ title, detail, side }) {
       <span className="block text-12-sb text-white">{title}</span>
       <span className="block text-12-r text-white/60">{detail}</span>
     </span>
-  )
-}
-
-function Actions({ ws, onSettings }) {
-  return (
-    <>
-      <SettingsButton onClick={onSettings} />
-      <a
-        href={galleryPath(ws.gallery.id)}
-        target="_blank"
-        rel="noreferrer"
-        className="flex h-10 items-center gap-1.5 rounded-full border border-input bg-surface-1 px-3.5 text-13-m text-type-0 transition hover:bg-surface-2"
-      >
-        View <ArrowSquareOut size={14} />
-      </a>
-    </>
   )
 }
