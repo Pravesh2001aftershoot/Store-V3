@@ -8,10 +8,12 @@ import { Button, Field } from '../components/ui'
 import { cn, money } from '../lib/utils'
 
 const REQUIRED = ['email', 'firstName', 'lastName', 'address', 'city', 'state', 'zip']
+/** A cart of only digital downloads ships nothing: just who it's for. */
+const REQUIRED_DIGITAL = ['email', 'firstName', 'lastName']
 
 /** Field → message for everything wrong with the details. Empty object means they're complete. */
-export function checkoutErrors(form) {
-  const errs = Object.fromEntries(REQUIRED.filter((k) => !form[k]?.trim()).map((k) => [k, 'Required']))
+export function checkoutErrors(form, shipped = true) {
+  const errs = Object.fromEntries((shipped ? REQUIRED : REQUIRED_DIGITAL).filter((k) => !form[k]?.trim()).map((k) => [k, 'Required']))
   if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Enter a valid email'
   return errs
 }
@@ -27,7 +29,7 @@ export const Section = ({ n, title, children }) => (
 )
 
 export default function Checkout() {
-  const { lines, checkout, shipping, dispatch } = useStore()
+  const { lines, checkout, shipping, dispatch, shipped } = useStore()
   const [form, setForm] = useState({ country: 'United States', ...checkout })
   const [errors, setErrors] = useState({})
   const nav = useNavigate()
@@ -41,7 +43,7 @@ export default function Checkout() {
 
   const submit = (e) => {
     e.preventDefault()
-    const errs = checkoutErrors(form)
+    const errs = checkoutErrors(form, shipped)
     setErrors(errs)
     dispatch({ type: 'checkout', data: form }) // keep the draft even if incomplete; Payment re-checks it
     if (!Object.keys(errs).length) nav('/payment')
@@ -62,11 +64,20 @@ export default function Checkout() {
 
         <Section n={1} title="Contact">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Email" type="email" autoComplete="email" placeholder="you@email.com" {...f('email')} />
-            <Field label="Phone (optional)" type="tel" autoComplete="tel" placeholder="For delivery updates" {...f('phone')} />
+            <Field className={shipped ? undefined : 'sm:col-span-2'} label="Email" type="email" autoComplete="email" placeholder="you@email.com" {...f('email')} />
+            {shipped ? (
+              <Field label="Phone (optional)" type="tel" autoComplete="tel" placeholder="For delivery updates" {...f('phone')} />
+            ) : (
+              <>
+                <Field label="First name" autoComplete="given-name" {...f('firstName')} />
+                <Field label="Last name" autoComplete="family-name" {...f('lastName')} />
+              </>
+            )}
           </div>
+          {!shipped && <p className="mt-4 text-12-r text-type-3">Nothing to ship: your downloads unlock in your gallery as soon as you pay, and the receipt goes to this email.</p>}
         </Section>
 
+        {shipped && <>
         <Section n={2} title="Shipping address">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="First name" autoComplete="given-name" {...f('firstName')} />
@@ -113,6 +124,7 @@ export default function Checkout() {
             })}
           </div>
         </Section>
+        </>}
 
         <Button type="submit" size="lg" className="h-14 w-full" arrow>
           Continue to payment

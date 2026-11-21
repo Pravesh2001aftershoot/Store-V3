@@ -308,16 +308,19 @@ Opens from the nav's Download button, the selection bar's Download, or a one-pho
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
 | Overlay / pane | Open / close | As [Find people](#find-people-srcgallerycomponentsfacepanejsx-facesjs) | `x 100% → 0`, `0.55s`, `ease` | framer-motion |
-| Steps (pick → PIN → preparing → done) | Download, back, PIN accepted, zip ready | Directional slide; back reverses it. The body scrolls to the top in between | `x ±24`, `opacity`, `0.3s`, `ease`, `AnimatePresence mode="wait"` | framer-motion |
+| Steps (pick → PIN → preparing → done, or pick → added to cart) | Download, back, PIN accepted, added to cart, zip ready | Directional slide; back reverses it. The body scrolls to the top in between | `x ±24`, `opacity`, `0.3s`, `ease`, `AnimatePresence mode="wait"` | framer-motion |
 | Allowance bar | Pane opens / photos downloaded | The bar shrinks to what's left; "You've used all M downloads" and "Ask {photographer} if you need more." at zero | `width`, `0.5s`, `ease` | framer-motion |
 | Source row | Tap | Ticks or unticks it: `surface-2` background, the check pops in. Any mix can be ticked; Whole gallery is on its own (ticking it clears the rest, ticking anything else unticks it). The footer's count, note and button update at once, counting shared photos once, with "N photos are in more than one of these, so they download once." under the list. Nothing ticked: "Choose what to download", disabled. Rows with no photos are disabled ("Tap the heart on a photo to add it" for Favourites) | Check `scale 0 → 1`, `0.2s`, `ease` | framer-motion |
-| Web size / High res | Tap | The white pill slides to it; the hint below changes | `layoutId="download-size"`, `0.35s`, `ease` | framer-motion |
+| Web size / High res | Tap | The white pill slides to it; the hint below changes. With high res for sale each label carries its price ("Free" / "$15"), and High res swaps the allowance card for the order card ("N photos · High res", the total, "N photos × $15", "N photos are already yours, so they're free."; or "Whole gallery · High res · $199" with "All N photos for $199, instead of $X for M at $15 each. You save $Y.") | `layoutId="download-size"`, `0.35s`, `ease` | framer-motion |
+| Whole gallery in high res: $199 · all N photos | Tap (high res for sale with a whole-gallery price; hidden once the whole gallery is owned or already ticked in High res) | Ticks Whole gallery on its own and switches the size to High res | Pill slide | framer-motion |
+| Add to cart · $X | Tap (High res with photos not bought yet) | Puts the order in the store cart (no PIN needed): Digital Download with these photos (merged into the one already in the cart, without duplicates), or the Whole Gallery Download when that's cheaper or Whole gallery is ticked. Shows the **In your cart** step. The footer summary reads "High res · N photos · K already yours" | Step slide | framer-motion |
+| In your cart step | Opens | Header "Added to cart". A green bag pops in; "In your cart", "Digital Download · N photos · $X" or "Whole Gallery Download · $199", and "Original resolution, no watermark. Pay at checkout and it unlocks here straight away." **Checkout** goes to `/checkout`, **View cart (n)** to `/cart`, **Download something else** back to the list, **Keep browsing** closes. After payment, the bought photos download in High res for free from the list | Circle `scale 0.4 → 1`, `opacity`, `0.35s`, `ease` | framer-motion |
 | Over-the-limit note | The choice has more new photos than are left | Opens above the button: "Only N downloads left, and M photos here are new to you. We'll download the first N new, plus the K you've downloaded before." (at zero: "You have no downloads left, so only the K photos you've downloaded before are included.") The button reads "Download X of Y" | `height 0 → auto`, `opacity`, `0.3s`, `ease` | framer-motion |
 | Download N photos | Tap | With a download PIN not yet entered this visit: the PIN step. Otherwise one photo saves and goes to done; 2+ go to preparing. Disabled as "Nothing to download" / "No downloads left" | Step slide | framer-motion |
 | PIN field | Fourth digit typed, or "Unlock and download" | Right PIN: unlocks for the visit and starts the download. Wrong: the field shakes, clears, gets a `destructive` border and "That PIN isn't right. Check the message from {photographer}." | `x 0, -10, 10, -6, 6, 0`, `0.4s` | framer-motion |
 | Preparing | Step opens | The bar fills, with "Packing k of N photos · size". Cancel goes back without downloading | `1.2–4s` (`1200 + 10ms` per photo), `requestAnimationFrame` | JS |
 | Done | Zip ready / one photo saved | The green check pops in: "Your download has started", the file name, "N photos · size" and, with a limit, "N downloads left". "Done" closes; "Download something else" goes back to the list | `scale 0.4 → 1`, `0.35s`, `ease` | framer-motion |
-| Tile / lightbox download | Click | Needs the PIN, or new and none left: the lightbox closes and the pane opens on "This photo". Otherwise, with both sizes allowed and no saved size: opens "Download photo" (below). With a saved size, or one size allowed: saves the photo and toasts "Downloading name · size"; after a saved size the toast has **Change**. With a download limit the toast ends "· N downloads left" ("· No downloads left") and the button's count badge drops by one (not for a photo downloaded before) | n/a | n/a |
+| Tile / lightbox download | Click | Needs the PIN, or new and none left: the lightbox closes and the pane opens on "This photo". Otherwise, with both sizes allowed and no saved size: opens "Download photo" (below). With a saved size, or one size allowed: saves the photo and toasts "Downloading name · size"; after a saved size the toast has **Change**. With a download limit the toast ends "· N downloads left" ("· No downloads left") and the button's count badge drops by one (not for a photo downloaded before). With high res for sale: High res for a photo not bought yet always opens "Download photo" (even when High res is the saved size), as does a visitor out of free downloads (it opens on High res, with Web size disabled: "You've used all your free downloads."). A bought photo downloads in High res straight away when that's the saved size | n/a | n/a |
 | Single photos: Web size / High res / Ask every time | Tap | The white pill slides to it and the line below changes. Saves the size tile and lightbox downloads use without asking (Ask every time clears it). Downloads nothing | `layoutId="single-size"`, `0.35s`, `ease` | framer-motion |
 
 ### Download photo: [src/gallery/components/SizePrompt.jsx](src/gallery/components/SizePrompt.jsx)
@@ -328,7 +331,10 @@ Opens from a tile or lightbox download when the photographer allows both sizes a
 |---|---|---|---|---|
 | Dialog | Opens / closes | Desktop: fades and scales in; phone: sheet slides up | `opacity`, `scale 0.96 → 1`, `y 8 → 0`, `0.3s`, `ease`; sheet `y 100% → 0`, `0.35s` | framer-motion |
 | Web size / High res card | Tap | Selects it: dark border, `surface-2`, the radio dot pops in. Opens on the first allowed size (Web size). *Change*: also an "Ask every time" card, and it opens on the saved size | Dot `scale 0 → 1`, `0.2s`, `ease` | framer-motion |
-| Allowance card | Opens (download limit only) | Shows "N of M downloads left" and the bar, with "This photo uses 1 download, leaving N." or "You've downloaded this photo before, so it's free." | n/a | n/a |
+| Price tags (high res for sale) | Opens | Each card shows its price beside the label: "Free" (outlined), "$15" (dark) or "Yours" (green) for a photo already bought; a bought photo opens on High res. Picking High res for a photo not bought yet shows the order card under the cards ("1 photo · High res", "$15") | n/a | n/a |
+| Whole gallery in high res: $199 · all N photos | Tap (high res for sale with a whole-gallery price, photo not bought) | Closes the dialog (and the lightbox) and opens the Download pane on Whole gallery in High res | n/a | n/a |
+| Buy for $15 | Tap (High res, photo not bought) | Closes the dialog (and the lightbox) and opens [Quick buy](#quick-buy-panel-srcgallerycomponentsquickbuyjsx) on **Digital Download** for this photo. A bought photo downloads with the toast "Downloading name · High res · Yours" and doesn't use the limit | n/a | n/a |
+| Allowance card | Opens (download limit only; hidden while High res is picked with high res for sale) | Shows "N of M downloads left" and the bar, with "This photo uses 1 download, leaving N." or "You've downloaded this photo before, so it's free." | n/a | n/a |
 | Remember my choice | Tap | Ticks or unticks. Starts unticked. Not in *Change* | Check `scale 0 → 1`, `0.2s` | framer-motion |
 | Download | Tap | Closes, saves the photo in that size and toasts "Downloading name · size". Ticked: saves the size for this gallery (next single downloads don't ask) and the toast gets **Change**. Unticked: clears any saved size, so it asks every time | n/a | n/a |
 | *Change*: Also download this photo again in {size} | Tap | Ticks or unticks (starts unticked; hidden on Ask every time). The hint says "Free · you've downloaded it before" or "Uses 1 download" with a limit, otherwise the file name. The button becomes "Save and download" | Check `scale 0 → 1`, `0.2s` | framer-motion |
@@ -417,7 +423,7 @@ Shown while multi-selecting. Esc closes the name field if it's open, otherwise l
 
 ### Quick buy panel: [src/gallery/components/QuickBuy.jsx](src/gallery/components/QuickBuy.jsx)
 
-The panel opens from "Buy print" on a tile or in the lightbox.
+The panel opens from "Buy print" on a tile or in the lightbox, or on Digital Download from "Buy for $15" in Download photo. When the gallery sells High res the title is "Buy" and, under the prints, "Or download it in high res" lists Digital Download ("$15 this photo") and Whole Gallery Download ("$199"), or "Yours: download it from the photo" once owned. A file skips Size & finish and Crop: its steps are **Product → Details → Added to cart** (the Crop bar is left out). Details shows the mockup, what the file includes and a note: "Nothing to ship or crop. Pay at checkout and the download unlocks in this gallery.", "Already in your cart. Pay at checkout and it unlocks here." (with **View cart**), or "You already own this photo in high res. Download it from the photo." (with **Close**). **Add to cart** goes to the Added step with Checkout / View cart / Keep browsing.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -601,6 +607,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | Details / Shipping / Care | Click | [Accordion](#accordion-srccomponentsuiindexjsx). The first item is open by default | n/a | framer-motion |
 | Related products | Hover | [ProductCard](#productcard-srccomponentsproductcardjsx) | n/a | Tailwind |
 | Image thumbnails (photographer's own products with images) | Click | Shows that image in the preview with the same crossfade; the first thumbnail (the mockup) goes back to it, and changing an option does too. The view switcher hides while an image shows. Selected: 2px `type-0` ring with a 2px offset; others at 70% opacity, 100% on hover | `0.4s` crossfade | framer-motion + Tailwind |
+| Whole Gallery Download button | Click | No Builder: adds the item to the cart and opens the [CartDrawer](#cartdrawer-srccomponentscartdrawerjsx). Reads "In your cart" (opens the drawer) once added, and "You own the whole gallery" (disabled) once bought. Digital products show no view switcher | n/a | n/a |
 
 ---
 
@@ -669,6 +676,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 |---|---|---|---|---|
 | Item cards | Step appears | Staggered fade up | `opacity 0 → 1`, `y 16 → 0`, `0.6s`, `ease`, delay `si × 0.08s` | framer-motion |
 | "Edit crops" | Click | Jumps back to step 2 at that item, using the step slide above | n/a | framer-motion |
+| Digital Download build | Steps | The Crop step is skipped: the top bar shows Photos → Review, the Photos button reads "Review" with "N photos → N high-res files", Review shows plain thumbnails (no "Edit crops") and a download note, and editing a cart line starts on Photos | Same step slide | framer-motion |
 
 ---
 
@@ -681,6 +689,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | Cart line | Removed | Slides left and fades | `opacity → 0`, `x → -40`, `0.3s` (the exit sets its own duration) | framer-motion |
 | Cart line | Neighbour added or removed | Moves to its new position | `layout` | framer-motion |
 | Edit / Duplicate / Remove | Hover | Ghost [Button](#button-srccomponentsuiindexjsx). Remove text turns red | Tailwind `duration-300` | Tailwind |
+| Digital lines | n/a | "Edit photos" instead of Edit, no Duplicate; "Original resolution · No watermark · Instant download". With only files in the cart, shipping reads "Instant download" and the drawer note "Taxes calculated at checkout. Downloads unlock as soon as you pay." | n/a | n/a |
 | Promo code, totals, empty state | n/a | No animation | n/a | n/a |
 
 ---
@@ -695,6 +704,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | Radio dot | Select | Fills dark | `transition`, Tailwind default | Tailwind |
 | Radio check icon | Select | Pops in | `scale 0 → 1`, framer default (spring) | framer-motion |
 | "Continue to payment" | Hover / press | [Button](#button-srccomponentsuiindexjsx) with arrow | n/a | Tailwind |
+| Files-only cart | Page load | Only Email (full row) and First / Last name, with "Nothing to ship: your downloads unlock…"; no address or delivery method. Continue checks just those three | n/a | n/a |
 
 ## Payment (`/payment`): [src/pages/Payment.jsx](src/pages/Payment.jsx)
 
@@ -705,6 +715,7 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | Method panel (card form / redirect note) | Method changes | Crossfade with a small rise | Enter `opacity 0 → 1`, `y 8 → 0`. Exit `opacity → 0`. `0.3s`. `mode="wait"` | framer-motion |
 | Card preview | Typing | Text updates live. No motion | n/a | n/a |
 | "Prototype ends here" note | "Make payment" click | Drops in | `opacity 0 → 1`, `y -6 → 0`, framer default | framer-motion |
+| "Make payment" with files in the cart | Click | Records the files as bought for the gallery, removes them from the cart and shows **Your downloads are ready** (no order summary column): the check pops in; **Download photo / N photos** (10 or fewer, not the whole gallery) saves the files; **Back to your gallery** / **Download in your gallery** returns to the gallery; "N prints are still in your cart" links to `/cart`. A files-only Payment shows Contact and "Instant download in your gallery" and no billing checkbox | Check `scale 0.4 → 1`, `0.35s`, `ease` | framer-motion |
 
 ---
 

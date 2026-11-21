@@ -17,6 +17,8 @@ import {
   Storefront,
   Warning,
   X,
+  Check,
+  DownloadSimple,
 } from '@phosphor-icons/react'
 import { productById } from '../../data/catalog'
 import { gallery } from '../../data/gallery'
@@ -29,19 +31,28 @@ import OptionGroup from '../../components/OptionGroup'
 import CropEditor from '../../components/CropEditor'
 import PhotographerLink from '../../components/PhotographerLink'
 import { cn, money } from '../../lib/utils'
+import { DIGITAL, addOrderToCart } from '../lib/downloads'
 
 // A short list of single-photo products. The full range (sets, albums, packages) lives in the store.
-const QUICK_PRODUCTS = ['framed-print', 'canvas', 'metal', 'fine-art-print'].map((id) => productById[id])
+// Read when the panel renders: the gallery's catalog can hide them.
+const PRINT_IDS = ['framed-print', 'canvas', 'metal', 'fine-art-print']
+const FILE_IDS = [DIGITAL.photo, DIGITAL.gallery]
+const offered = (ids) => ids.map((id) => productById[id]).filter((p) => p && !p.hidden)
 const STEPS = ['Product', 'Size & finish', 'Crop', 'Added to cart']
+// Files have nothing to size or crop: Product → Details → Added to cart.
+const FILE_STEPS = ['Product', 'Details', null, 'Added to cart']
 const MAX_QTY = 20
 const ease = [0.22, 1, 0.36, 1]
 
 /**
- * Quick buy: a side panel that turns one gallery photo into a print without leaving the gallery.
- * Same flow as the store (product → options → crop → cart) with fewer products, and the photo already chosen.
+ * Quick buy: a side panel that turns one gallery photo into a print, or a high-res file, without leaving
+ * the gallery. Same flow as the store (product → options → crop → cart) with fewer products, and the photo
+ * already chosen. Files (Digital Download, Whole Gallery Download) skip size and crop.
  * `photo` must already be registered with the store (see `registerPhoto`); null closes the panel.
+ * `startProduct`: a product id to open on (skipping the list). `digital`: `{ owns(photo), ownsAll }` when
+ * the gallery sells High res through the store (lib/downloads.js → rules.paid), else null: no files listed.
  */
-export default function QuickBuy({ photo, onClose }) {
+export default function QuickBuy({ photo, onClose, startProduct, digital }) {
   // Keep the last photo so the panel can animate out after `photo` goes null.
   const last = useRef(photo)
   if (photo) last.current = photo
@@ -68,7 +79,7 @@ export default function QuickBuy({ photo, onClose }) {
                 transition={{ duration: 0.55, ease }}
                 className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[460px] flex-col bg-surface-1 shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-2xl"
               >
-                <Flow key={last.current.id} photo={last.current} onClose={onClose} />
+                <Flow key={`${last.current.id}:${startProduct ?? ''}`} photo={last.current} start={startProduct} digital={digital} onClose={onClose} />
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -110,7 +121,7 @@ function flowReducer(s, a) {
     case 'back':
       return s.step === QB.OPTIONS || s.step === QB.CROP ? { ...s, step: s.step - 1, dir: -1 } : s
     case 'added':
-      return s.step === QB.CROP ? { ...s, step: QB.ADDED, dir: 1 } : s
+      return s.step === QB.CROP || (s.step === QB.OPTIONS && s.product.digital) ? { ...s, step: QB.ADDED, dir: 1 } : s
     case 'restart':
       return s.step === QB.ADDED ? { ...FLOW_START, dir: -1 } : s
     case 'option':
@@ -124,11 +135,13 @@ function flowReducer(s, a) {
   }
 }
 
-function Flow({ photo, onClose }) {
-  const { dispatch, totals } = useStore()
+function Flow({ photo, start, digital, onClose }) {
+  const { lines, dispatch, totals } = useStore()
   const nav = useNavigate()
   const bodyRef = useRef(null)
-  const [flow, send] = useReducer(flowReducer, FLOW_START)
+  const [flow, send] = useReducer(flowReducer, FLOW_START, (s) =>
+    start && productById[start] ? flowReducer(s, { type: 'pick', product: productById[start], photo }) : s
+  )
   const { step, dir, product, variant, qty, entry } = flow
 
   const pick = (p) => send({ type: 'pick', product: p, photo })
@@ -136,6 +149,11 @@ function Flow({ photo, onClose }) {
   const setEntry = (e) => send({ type: 'entry', entry: e })
 
   const addToCart = () => {
+    if (product.digital) {
+      addOrderToCart({ lines, dispatch }, product.mode === 'gallery' ? { whole: true } : { whole: false, photos: [photo] })
+      send({ type: 'added' })
+      return
+    }
     dispatch({
       type: 'add',
       line: { kind: 'product', productId: product.id, variant, photos: Array.from({ length: qty }, () => ({ ...entry })) },
@@ -148,8 +166,14 @@ function Flow({ photo, onClose }) {
     nav(to)
   }
 
-  const total = product ? unitPrice(product, variant) * qty : 0
+  const file = !!product?.digital
+  const total = product ? unitPrice(product, variant) * (file ? 1 : qty) : 0
   const size = product && sizeOf(product, variant)
+  const files = digital ? offered(FILE_IDS) : []
+  // A file already bought, or already in the cart, isn't added again.
+  const owned = file && (product.mode === 'gallery' ? digital?.ownsAll : digital?.owns(photo))
+  const inCart = file && lines.some((l) => l.productId === product.id && (product.mode === 'gallery' || l.photos.some((e) => e.photoId === photo.id)))
+  const steps = (file ? FILE_STEPS : STEPS).map((label, i) => [i, label]).filter(([, label]) => label)
 
   return (
     <>
@@ -166,14 +190,17 @@ function Flow({ photo, onClose }) {
             </button>
           ) : null}
           <Dialog.Title className="min-w-0 flex-1 truncate text-16-sb">
-            {step === QB.ADDED ? 'Added to cart' : step === QB.PRODUCT ? 'Buy a print' : product.name}
+            {step === QB.ADDED ? 'Added to cart' : step === QB.PRODUCT ? (files.length ? 'Buy' : 'Buy a print') : product.name}
           </Dialog.Title>
           <Dialog.Close className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 transition hover:bg-[#ececec]" aria-label="Close">
             <X size={16} />
           </Dialog.Close>
         </div>
-        <div className="mt-3 grid grid-cols-4 gap-1.5" aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}>
-          {STEPS.map((s, i) => (
+        <div
+          className={cn('mt-3 grid gap-1.5', steps.length === 3 ? 'grid-cols-3' : 'grid-cols-4')}
+          aria-label={`Step ${steps.findIndex(([i]) => i === step) + 1} of ${steps.length}: ${steps.find(([i]) => i === step)?.[1]}`}
+        >
+          {steps.map(([i, s]) => (
             <div key={s} className="min-w-0">
               <div className="h-1 overflow-hidden rounded-full bg-surface-2">
                 <motion.div
@@ -208,8 +235,9 @@ function Flow({ photo, onClose }) {
             transition={{ duration: 0.3, ease }}
             className="p-5"
           >
-            {step === QB.PRODUCT && <ProductStep photo={photo} onPick={pick} onStore={() => leave('/store')} />}
-            {step === QB.OPTIONS && (
+            {step === QB.PRODUCT && <ProductStep photo={photo} files={files} digital={digital} onPick={pick} onStore={() => leave('/store')} />}
+            {step === QB.OPTIONS && file && <FileStep product={product} variant={variant} entry={entry} owned={owned} inCart={inCart} />}
+            {step === QB.OPTIONS && !file && (
               <OptionsStep
                 product={product}
                 variant={variant}
@@ -242,13 +270,21 @@ function Flow({ photo, onClose }) {
         <div className="flex items-center gap-3 border-t border-border px-5 py-4">
           <div className="min-w-0 flex-1">
             <p className="truncate text-12-r text-type-2">
-              {qty} × {product.name} · {size.label}
+              {file ? `${product.name} · ${size.label}` : `${qty} × ${product.name} · ${size.label}`}
             </p>
             <p className="text-16-sb">
-              <AnimatedNumber value={total} format={money} />
+              {owned ? 'Yours' : <AnimatedNumber value={total} format={money} />}
             </p>
           </div>
-          {step === QB.OPTIONS ? (
+          {file ? (
+            owned ? (
+              <Button size="lg" variant="outline" onClick={onClose}>Close</Button>
+            ) : inCart ? (
+              <Button size="lg" onClick={() => leave('/cart')}>View cart <ArrowRight size={16} /></Button>
+            ) : (
+              <Button size="lg" onClick={addToCart}>Add to cart <ArrowRight size={16} /></Button>
+            )
+          ) : step === QB.OPTIONS ? (
             <Button size="lg" onClick={() => send({ type: 'next' })}>
               Continue<span className="max-sm:hidden"> to crop</span> <ArrowRight size={16} />
             </Button>
@@ -265,7 +301,8 @@ function Flow({ photo, onClose }) {
 
 // ---------------------------------------------------------------------------
 
-function ProductStep({ photo, onPick, onStore }) {
+function ProductStep({ photo, files, digital, onPick, onStore }) {
+  const prints = offered(PRINT_IDS)
   return (
     <div>
       <div className="flex items-center gap-3 rounded-xl bg-surface-2 p-2.5">
@@ -278,7 +315,7 @@ function ProductStep({ photo, onPick, onStore }) {
 
       <p className="mb-3 mt-6 text-13-m text-type-0">What would you like to make?</p>
       <div className="space-y-2">
-        {QUICK_PRODUCTS.map((p) => {
+        {prints.map((p) => {
           const items = [{ photoId: photo.id, crop: DEFAULT_CROP, orientation: defaultOrientation(p, photo) }]
           return (
             <button
@@ -301,6 +338,40 @@ function ProductStep({ photo, onPick, onStore }) {
         })}
       </div>
 
+      {files.length > 0 && (
+        <>
+          <p className="mb-3 mt-6 text-13-m text-type-0">Or download it in high res</p>
+          <div className="space-y-2">
+            {files.map((p) => {
+              const whole = p.mode === 'gallery'
+              if (whole && digital.ownsAll) return null
+              const mine = whole ? digital.ownsAll : digital.owns(photo)
+              const items = whole ? undefined : [{ photoId: photo.id }]
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => onPick(p)}
+                  className="group flex w-full items-center gap-3.5 rounded-xl border border-border bg-surface-1 p-2 pr-3 text-left transition hover:border-type-3"
+                >
+                  <ProductMockup product={p} items={items} scene={false} className="aspect-square w-[84px] shrink-0 rounded-lg bg-surface-2" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-14-sb text-type-0">{p.name}</p>
+                      {p.badge && <Badge tone="muted">{p.badge}</Badge>}
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 text-12-r text-type-2">{p.tagline}</p>
+                    <p className={cn('mt-1 text-13-m', mine ? 'text-success' : 'text-type-0')}>
+                      {mine ? 'Yours: download it from the photo' : whole ? money(fromPrice(p)) : `${money(fromPrice(p))} this photo`}
+                    </p>
+                  </div>
+                  <CaretRight size={16} className="shrink-0 text-type-3 transition group-hover:translate-x-0.5 group-hover:text-type-0" />
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
       <button
         onClick={onStore}
         className="mt-5 flex w-full items-center justify-between rounded-xl px-3 py-3 text-13-r text-type-1 transition hover:bg-surface-2 hover:text-type-0"
@@ -310,6 +381,42 @@ function ProductStep({ photo, onPick, onStore }) {
         </span>
         <ArrowRight size={14} />
       </button>
+    </div>
+  )
+}
+
+/** A file's details: the preview, what you get, and whether it's already yours or in the cart. */
+function FileStep({ product, variant, entry, owned, inCart }) {
+  const whole = product.mode === 'gallery'
+  return (
+    <div>
+      <ProductMockup product={product} variant={variant} items={whole ? undefined : [entry]} className="aspect-[5/4] rounded-xl" />
+      <div className="mt-4 flex items-baseline justify-between gap-3">
+        <p className="text-13-r text-type-2">{product.tagline}</p>
+        <p className="shrink-0 text-14-m">
+          {money(unitPrice(product, variant))}
+          <span className="text-12-r text-type-2">{whole ? ' all photos' : ' this photo'}</span>
+        </p>
+      </div>
+      <ul className="mt-5 space-y-2 border-t border-border pt-5 text-13-r text-type-1">
+        {product.details.map((d) => (
+          <li key={d} className="flex items-center gap-2">
+            <Check size={13} weight="bold" className="shrink-0" /> {d}
+          </li>
+        ))}
+      </ul>
+      <p
+        className={cn(
+          'mt-5 flex items-start gap-2.5 rounded-xl p-3 text-13-r',
+          owned ? 'bg-success-bg text-success' : 'bg-surface-2 text-type-1'
+        )}
+      >
+        {owned ? <CheckCircle size={17} className="mt-px shrink-0" /> : <DownloadSimple size={17} className="mt-px shrink-0" />}
+        {owned
+          ? whole ? 'You already own every photo in this gallery.' : 'You already own this photo in high res. Download it from the photo.'
+          : inCart ? 'Already in your cart. Pay at checkout and it unlocks here.'
+          : 'Nothing to ship or crop. Pay at checkout and the download unlocks in this gallery.'}
+      </p>
     </div>
   )
 }
@@ -454,7 +561,7 @@ function AddedStep({ product, variant, entry, qty, total, itemCount, onCheckout,
   return (
     <div className="flex flex-col items-center pt-2 text-center">
       <div className="relative w-full">
-        <ProductMockup product={product} variant={variant} items={[entry]} className="aspect-[5/4] rounded-xl" />
+        <ProductMockup product={product} variant={variant} items={product.mode === 'gallery' ? undefined : [entry]} className="aspect-[5/4] rounded-xl" />
         <motion.div
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -465,11 +572,12 @@ function AddedStep({ product, variant, entry, qty, total, itemCount, onCheckout,
         </motion.div>
       </div>
       <p className="mt-5 text-16-sb">
-        {qty} × {product.name}
+        {product.digital ? product.name : `${qty} × ${product.name}`}
       </p>
       <p className="mt-0.5 text-13-r text-type-2">
         {sizeOf(product, variant).label} · {money(total)}
       </p>
+      {product.digital && <p className="mt-2 max-w-[320px] text-13-r text-type-2">Pay at checkout and it unlocks in this gallery straight away.</p>}
 
       <div className="mt-6 grid w-full gap-2">
         <Button size="lg" onClick={onCheckout} arrow>
@@ -479,7 +587,7 @@ function AddedStep({ product, variant, entry, qty, total, itemCount, onCheckout,
           View cart ({itemCount})
         </Button>
         <Button variant="ghost" onClick={onAnother}>
-          Make something else with this photo
+          {product.digital ? 'Buy something else with this photo' : 'Make something else with this photo'}
         </Button>
       </div>
       <Dialog.Close asChild>

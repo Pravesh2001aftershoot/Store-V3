@@ -37,7 +37,7 @@ src/photographer-dashboard/
 ├── store/
 │   ├── CatalogsPage.jsx       Catalog cards, New catalog (everything / nothing / copy), rename, duplicate, delete
 │   ├── StoreTab.jsx           One catalog (/store/:catalogId): summary, product and package lists, New product, New package
-│   ├── ProductEditor.jsx      Catalog products: Details, Sizes, Options
+│   ├── ProductEditor.jsx      Catalog products: Details, Sizes (Price for digital products), Options
 │   ├── CustomProductEditor.jsx The photographer's own products: Details, Images, Sizes, Options
 │   └── PackageEditor.jsx      Details (+ editable contents for custom packages), Pricing
 └── *.md                       PRD, Architecture, DesignSystem, Interactions
@@ -162,7 +162,8 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
   data: { anyone, client, guest, vendor } }  // one audience each:
 { collectEmail: { on }, approved: { on, people: [{ id, name, email, phone }] }, pin: { on, value },
   faceSearch: { on, scope: 'all' | 'own' }, comments, filterByFace, favoriting: { on, limit }, hideImages: { on, bulk },
-  screenshot, downloads: { on, pin: { on, code }, image: { on, sizes: { web, high }, limit }, video: { on } },
+  screenshot, downloads: { on, pin: { on, code }, image: { on, sizes: { web, high }, highFree, limit,   // highFree: false = High res is paid when the store sells it
+    web: { edge: 1200 | 2048, watermark } }, video: { on } },   // Web size's long edge (default 2048) and watermark (default off)
   sharing: { on, image, video }, sets: { on, hidden: [collection title] } }
 ```
 
@@ -217,6 +218,8 @@ and the emails sent, `useShareHistory()` = `forGallery('share-history', loadHist
 So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 - Hidden products and packages stay in the `…ById` maps, so existing cart lines still price correctly.
 - An option value that's switched off falls back to the option's first value through `getValue()`.
+
+**Digital products** (`digital-download`, `digital-gallery`, category `digital`; `digital: true`) are ordinary catalog products, so hiding or repricing them works like any other. `catalogProduct(catalogId, productId)` (`src/data/storeConfig.js`) returns one product as a given catalog resolves it (prices, `hidden`); Settings → Downloads uses it to say whether the gallery sells High res, and the client gallery's `useDownloadRules()` reads the active catalog for the same decision. `StoreTab` shows their mode (`MODE.gallery`), `PackageEditor` leaves them out of package contents and `CustomProductEditor` leaves the `digital` category out of its Category select. Purchases are stored per gallery under `galleryKey(id, 'purchases')` (`src/data/purchases.js`, listed in `GALLERY_SETTINGS`, so they're cleared with the gallery).
 
 `Layout` keys its outlet on `useCatalogVersion()`, so store pages re-mount and re-read the catalog after a change.
 

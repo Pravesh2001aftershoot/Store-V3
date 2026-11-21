@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import {
   X, Check, CheckCircle, ArrowLeft, ArrowRight, ArrowsOut, CaretLeft, CaretRight, MagnifyingGlassMinus, MagnifyingGlassPlus,
-  ArrowCounterClockwise, Rectangle, Warning, Hand, Trash, PencilSimple, Tag, ShieldCheck, Info, Swap, PlusCircle,
+  ArrowCounterClockwise, Rectangle, Warning, Hand, Trash, PencilSimple, Tag, ShieldCheck, Info, Swap, PlusCircle, DownloadSimple,
 } from '@phosphor-icons/react'
 import { productById, packageById } from '../data/catalog'
 import { gallery, photos, getPhoto } from '../data/gallery'
@@ -154,7 +154,7 @@ function switchSlotVariant(slots, si, pi, variant) {
 
 // ---------------------------------------------------------------------------
 
-function TopBar({ title, step, goTo, canGo, total, compareAt, onClose }) {
+function TopBar({ title, step, goTo, canGo, total, compareAt, onClose, noCrop }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface-0/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-3 px-3 md:px-6">
@@ -166,8 +166,11 @@ function TopBar({ title, step, goTo, canGo, total, compareAt, onClose }) {
         </div>
         <nav className="flex items-center gap-1">
           {STEPS.map((s, i) => {
+            // Digital files have no crop: the pills are Photos and Review, numbered 1 and 2.
+            if (noCrop && i === STEP.CROP) return null
             const done = i < step
             const active = i === step
+            const n = noCrop && i > STEP.CROP ? i : i + 1
             return (
               <div key={s} className="flex items-center gap-1">
                 {i > 0 && <span className={cn('h-px w-4 transition-colors sm:w-8', done || active ? 'bg-type-0' : 'bg-border')} />}
@@ -181,7 +184,7 @@ function TopBar({ title, step, goTo, canGo, total, compareAt, onClose }) {
                 >
                   {active && <motion.span layoutId="step-pill" className="absolute inset-0 rounded-full bg-type-0" transition={{ duration: 0.45, ease }} />}
                   <span className={cn('relative grid h-5 w-5 place-items-center rounded-full text-11-m', active ? 'bg-white/15' : done ? 'bg-type-0 text-white' : 'bg-surface-2')}>
-                    {done ? <Check size={11} weight="bold" /> : i + 1}
+                    {done ? <Check size={11} weight="bold" /> : n}
                   </span>
                   <span className="relative hidden sm:inline">{s}</span>
                 </button>
@@ -641,13 +644,13 @@ function CropStep({ slots, items, index, setIndex, updatePhoto, removePhoto, loc
 // ---------------------------------------------------------------------------
 // Step 3 – Review
 
-function ReviewStep({ state, slots, goCrop, total, compareAt }) {
+function ReviewStep({ state, slots, goCrop, total, compareAt, noCrop }) {
   const pkg = state.packageId && packageById[state.packageId]
   return (
     <div className="mx-auto max-w-3xl space-y-4 py-4">
       <div>
         <h2 className="text-36-sb">Review your order</h2>
-        <p className="mt-1 text-16-r text-type-2">Check sizes, quantities and crops before adding to your cart.</p>
+        <p className="mt-1 text-16-r text-type-2">{noCrop ? 'Check the photos before adding them to your cart.' : 'Check sizes, quantities and crops before adding to your cart.'}</p>
       </div>
 
       {!pkg && slots.length > 1 && (
@@ -707,21 +710,31 @@ function ReviewStep({ state, slots, goCrop, total, compareAt }) {
                 {extras > 0 && <Badge tone="muted">+{money(extras)} extra photos</Badge>}
               </div>
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {s.photos.slice(0, 14).map((e, i) => (
-                  <CroppedImage key={i} photo={getPhoto(e.photoId)} crop={e.crop} aspect={cellAspect(s.product, s.variant, e.orientation)} className="h-12 rounded-[3px] ring-1 ring-black/5" />
-                ))}
+                {s.photos.slice(0, 14).map((e, i) =>
+                  s.product.digital ? (
+                    <img key={i} src={getPhoto(e.photoId).thumb} alt="" className="h-12 w-auto rounded-[3px] object-cover ring-1 ring-black/5" />
+                  ) : (
+                    <CroppedImage key={i} photo={getPhoto(e.photoId)} crop={e.crop} aspect={cellAspect(s.product, s.variant, e.orientation)} className="h-12 rounded-[3px] ring-1 ring-black/5" />
+                  )
+                )}
                 {s.photos.length > 14 && <span className="self-center text-12-r text-type-2">+{s.photos.length - 14}</span>}
               </div>
-              <button onClick={() => goCrop(si)} className="mt-4 inline-flex items-center gap-1.5 text-13-m text-type-1 hover:text-type-0">
-                <PencilSimple size={14} /> Edit crops
-              </button>
+              {!s.product.digital && (
+                <button onClick={() => goCrop(si)} className="mt-4 inline-flex items-center gap-1.5 text-13-m text-type-1 hover:text-type-0">
+                  <PencilSimple size={14} /> Edit crops
+                </button>
+              )}
             </div>
           </motion.div>
         )
       })}
 
       <div className="flex items-center gap-2 rounded-xl bg-surface-2 p-4 text-13-r text-type-1">
-        <ShieldCheck size={18} className="shrink-0" /> <PhotographerLink className="hover:text-type-0" /> will review your crops and colour before printing.
+        {noCrop ? (
+          <><DownloadSimple size={18} className="shrink-0" /> The original files unlock in your gallery as soon as you pay.</>
+        ) : (
+          <><ShieldCheck size={18} className="shrink-0" /> <PhotographerLink className="hover:text-type-0" /> will review your crops and colour before printing.</>
+        )}
       </div>
     </div>
   )
@@ -735,7 +748,9 @@ export default function Builder() {
   const nav = useNavigate()
   const { lines, dispatch, setDrawer } = useStore()
   const [state, setState] = useState(() => initFrom(kind, id, Object.fromEntries(params), lines))
-  const [wizard, send] = useReducer(wizardReducer, { step: kind === 'edit' ? STEP.CROP : STEP.PHOTOS, active: 0, cropIndex: 0 })
+  // Digital files (Digital Download) have nothing to crop: the wizard goes Photos → Review.
+  const noCrop = !!state?.slots?.length && state.slots.every((s) => s.product.digital)
+  const [wizard, send] = useReducer(wizardReducer, { step: kind === 'edit' && !noCrop ? STEP.CROP : STEP.PHOTOS, active: 0, cropIndex: 0 })
   const { step, active, cropIndex } = wizard
   const setActive = (index) => send({ type: 'slot', index })
   const setCropIndex = (index) => send({ type: 'crop', index })
@@ -814,7 +829,8 @@ export default function Builder() {
   const canGo = (to) => to <= step || allValid
 
   /** The only way to change step. `cropIndex` picks the photo to open when landing on CROP. */
-  const goTo = (to, cropIndex) => {
+  const goTo = (target, cropIndex) => {
+    const to = noCrop && target === STEP.CROP ? (target > step ? STEP.REVIEW : STEP.PHOTOS) : target
     if (to === step || to < STEP.PHOTOS || to > STEP.REVIEW) return
     if (to > step) {
       const bad = firstInvalid()
@@ -862,6 +878,7 @@ export default function Builder() {
   if (step === STEP.PHOTOS) {
     if (!slot.photos.length) summary = requirementText(slot.product, slot.qty)
     else if (slot.product.mode === 'book') summary = `${plural(slot.photos.length, 'photo')} → 1 × ${slot.product.name} ${sizeOf(slot.product, slot.variant).label}`
+    else if (slot.product.digital) summary = `${plural(slot.photos.length, 'photo')} → ${plural(qty, 'high-res file')}`
     else summary = `${plural(slot.photos.length, 'photo')} → ${qty} × ${slot.product.name} ${sizeOf(slot.product, slot.variant).label}`
   } else if (step === STEP.CROP) summary = 'Adjust each crop, then review your order'
   else summary = 'Everything look right?'
@@ -881,7 +898,7 @@ export default function Builder() {
         )}
       </AnimatePresence>
 
-      <TopBar title={title} step={step} goTo={goTo} canGo={canGo} total={total} compareAt={compareAt} onClose={close} />
+      <TopBar title={title} step={step} goTo={goTo} canGo={canGo} total={total} compareAt={compareAt} onClose={close} noCrop={noCrop} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -939,7 +956,7 @@ export default function Builder() {
               <CropStep slots={slots} items={items} index={Math.min(cropIndex, items.length - 1)} setIndex={setCropIndex} updatePhoto={updatePhoto} removePhoto={removePhoto} locked={pkg ? pkg.name : null} onSwitch={switchVariant} />
             </div>
           )}
-          {step === STEP.REVIEW && <ReviewStep state={state} slots={slots} goCrop={goCrop} total={total} compareAt={compareAt} />}
+          {step === STEP.REVIEW && <ReviewStep state={state} slots={slots} goCrop={goCrop} total={total} compareAt={compareAt} noCrop={noCrop} />}
         </motion.div>
       </AnimatePresence>
 
@@ -981,12 +998,12 @@ export default function Builder() {
             </p>
           </div>
           {step > STEP.PHOTOS && (
-            <Button variant="outline" size="lg" onClick={() => goTo(step - 1)} className="max-sm:px-4">
+            <Button variant="outline" size="lg" onClick={() => goTo(noCrop ? STEP.PHOTOS : step - 1)} className="max-sm:px-4">
               <ArrowLeft size={16} /> <span className="max-sm:hidden">Back</span>
             </Button>
           )}
           <Button size="lg" onClick={next} disabled={step === STEP.PHOTOS && slots.every((s) => !s.photos.length)} className="max-sm:flex-1">
-            {step === STEP.PHOTOS ? 'Continue to crop' : step === STEP.CROP ? 'Review' : state.editId ? 'Update cart' : !pkg && slots.length > 1 ? `Add ${slots.length} items to cart` : 'Add to cart'}
+            {step === STEP.PHOTOS ? (noCrop ? 'Review' : 'Continue to crop') : step === STEP.CROP ? 'Review' : state.editId ? 'Update cart' : !pkg && slots.length > 1 ? `Add ${slots.length} items to cart` : 'Add to cart'}
             <ArrowRight size={16} />
           </Button>
         </div>

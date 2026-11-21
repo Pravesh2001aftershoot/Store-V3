@@ -19,6 +19,8 @@ export const IMAGE_SIZES = [
   { id: 'high', label: 'High res' },
 ]
 export const LIMIT_MAX = 99999
+/** Long edge of Web size downloads, in px. */
+export const WEB_EDGES = [1200, 2048]
 
 /** One audience's settings: the whole gallery ("anyone"), or one role. */
 const audience = (on) => ({
@@ -31,7 +33,7 @@ const audience = (on) => ({
   favoriting: { on, limit: '' },
   hideImages: { on, bulk: false },
   screenshot: { on },
-  downloads: { on, pin: { on: false, code: '' }, image: { on, sizes: { web: on, high: on }, limit: '' }, video: { on } },
+  downloads: { on, pin: { on: false, code: '' }, image: { on, sizes: { web: on, high: on }, highFree: false, limit: '', web: { edge: 2048, watermark: false } }, video: { on } },
   sharing: { on, image: on, video: on },
   sets: { on, hidden: [] }, // collection titles kept off the main gallery
 })

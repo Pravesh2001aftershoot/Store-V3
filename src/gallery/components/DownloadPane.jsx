@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Check, FileZip, Images, Info, LockSimple, X } from '@phosphor-icons/react'
+import { ArrowLeft, Check, FileZip, Handbag, Images, Info, LockSimple, X } from '@phosphor-icons/react'
+import { useNavigate } from 'react-router-dom'
+import { useStore } from '../../state/store'
 import { Button } from '../../components/ui'
-import { cn } from '../../lib/utils'
+import { cn, money } from '../../lib/utils'
 import { downloadPhotos } from '../lib/actions'
-import { fitAllowance } from '../lib/downloads'
+import { addOrderToCart, fitAllowance } from '../lib/downloads'
+import { GalleryOffer, OrderSummary } from './BuyDownloads'
 
 const ease = [0.22, 1, 0.36, 1]
 /** Up to this many photos are saved as real files. Above it the zip is simulated (prototype). */
@@ -22,6 +25,13 @@ const plural = (n, word = 'photo') => `${n.toLocaleString()} ${word}${n === 1 ? 
  * `dl` comes from useDownloads(). `onStarted(sourceIds)` runs once the files are on their way.
  * `sizePref` is the size saved for single photos ("Remember my choice", or null to ask each time); the
  * pane starts on it, and its "Single photos" switch changes it with `onSizePref(sizeId | null)`.
+ * `initialSize` overrides that (e.g. 'high' when opened from "Whole gallery in high res").
+ *
+ * High res sold in the store (dl.rules.paid): Web size is free and counts against the limit; High res
+ * is bought. With High res chosen the pane shows the price (photos already bought are free; past the
+ * whole-gallery price the order becomes the Whole Gallery Download), and Download becomes "Add to cart ·
+ * $X", which puts the order in the store cart (addOrderToCart) and shows "Added to cart" with Checkout.
+ * Bought photos download in High res for free and don't use the allowance.
  */
 export default function DownloadPane({ open, onClose, ...props }) {
   return (
@@ -56,14 +66,18 @@ export default function DownloadPane({ open, onClose, ...props }) {
 }
 
 // step: 'pick' → 'pin' (only with a download PIN, once per visit) → 'preparing' (2+ photos) → 'done'
-function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hiddenCount, onStarted }) {
+//       'pick' → 'added' (High res not bought yet: the order went to the store cart)
+function Pane({ onClose, sources, initial, initialSize, dl, sizePref, onSizePref, gallery, hiddenCount, onStarted }) {
   const { rules } = dl
   const [step, setStep] = useState('pick')
   const [dir, setDir] = useState(1)
   // The sources ticked, in the order chosen. Whole gallery is all-or-nothing: it already has everything.
   const [chosen, setChosen] = useState(() => [sources.some((s) => s.id === initial && s.photos.length) ? initial : 'all'])
-  const [size, setSize] = useState(sizePref ?? rules.sizes[0]?.id)
+  const [size, setSize] = useState(() => [initialSize, sizePref].find((id) => rules.sizes.some((z) => z.id === id)) ?? rules.sizes[0]?.id)
   const [job, setJob] = useState(null) // { photos, sourceIds, sizeLabel, file }
+  const [added, setAdded] = useState(null) // the order put in the cart
+  const store = useStore()
+  const nav = useNavigate()
   const bodyRef = useRef(null)
 
   const toggle = (id) => setChosen((cur) => {
@@ -73,7 +87,11 @@ function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hi
   })
   const picked = sources.filter((s) => chosen.includes(s.id))
   const photos = mergePhotos(picked, sources.find((s) => s.id === 'all')?.photos ?? [])
-  const fit = fitAllowance(photos, dl.isNew, dl.left)
+  const everything = sources.find((s) => s.id === 'all')?.photos ?? []
+  // High res for sale: priced, and outside the free allowance.
+  const paidSize = dl.isPaid(size)
+  const quote = paidSize ? dl.quote(photos, everything) : null
+  const fit = paidSize ? { take: photos, fresh: 0, cut: 0 } : fitAllowance(photos, dl.isNew, dl.left)
   // Ticked sources can share photos (a set made from a collection); each downloads once.
   const overlap = picked.reduce((sum, s) => sum + s.photos.length, 0) - photos.length
   const sizeLabel = rules.sizes.find((z) => z.id === size)?.label ?? rules.sizes[0]?.label
@@ -81,7 +99,7 @@ function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hi
   const go = (s, d = 1) => { setDir(d); setStep(s) }
 
   const deliver = (j) => {
-    dl.record(j.photos)
+    if (!j.paid) dl.record(j.photos)
     if (j.photos.length <= REAL_FILES_MAX) downloadPhotos(j.photos)
     onStarted?.(j.sourceIds)
   }
@@ -94,22 +112,35 @@ function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hi
       sourceIds: picked.map((s) => s.id),
       sizeLabel,
       file: one ? take[0].name : `${gallery.title} – ${zipName(picked)}.zip`,
+      paid: paidSize,
     }
     setJob(j)
-    if (one) {
+    proceed(j)
+  }
+
+  // High res not bought yet: the order goes to the store cart instead (no PIN needed to buy).
+  const toCart = () => {
+    addOrderToCart(store, quote)
+    setAdded(quote)
+    go('added')
+  }
+
+  const proceed = (j) => {
+    if (j.photos.length === 1) {
       deliver(j)
       go('done')
     } else go('preparing')
   }
 
-  const start = () => (dl.locked ? go('pin') : run())
+  const start = () => (quote?.count ? toCart() : dl.locked ? go('pin') : run())
 
-  const title = step === 'pin' ? 'Download PIN' : 'Download'
+  const title = step === 'pin' ? 'Download PIN' : step === 'added' ? 'Added to cart' : 'Download'
+  const back = step === 'pin'
 
   return (
     <>
       <div className="flex items-center gap-2 border-b border-border px-5 pb-3 pt-4">
-        {step === 'pin' && (
+        {back && (
           <button onClick={() => go('pick', -1)} aria-label="Back" className="-ml-1.5 grid h-9 w-9 place-items-center rounded-full transition hover:bg-surface-2">
             <ArrowLeft size={16} />
           </button>
@@ -152,6 +183,20 @@ function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hi
                 dl={dl}
                 photographer={gallery.photographer}
                 hiddenCount={hiddenCount}
+                quote={quote}
+                galleryCount={everything.length}
+                onWholeGallery={() => { setChosen(['all']); setSize('high') }}
+              />
+            )}
+            {step === 'added' && added && (
+              <AddedStep
+                order={added}
+                galleryCount={everything.length}
+                itemCount={store.totals.itemCount}
+                onCheckout={() => { onClose(); nav('/checkout') }}
+                onCart={() => { onClose(); nav('/cart') }}
+                onAgain={() => go('pick', -1)}
+                onClose={onClose}
               />
             )}
             {step === 'pin' && <PinStep photographer={gallery.photographer} onUnlock={(code) => dl.unlock(code) && (run(), true)} />}
@@ -166,7 +211,7 @@ function Pane({ onClose, sources, initial, dl, sizePref, onSizePref, gallery, hi
       </div>
 
       {step === 'pick' && (
-        <PickFooter picked={picked} photos={photos} fit={fit} dl={dl} sizeLabel={sizeLabel} onStart={start} />
+        <PickFooter picked={picked} photos={photos} fit={fit} dl={dl} sizeLabel={sizeLabel} quote={quote} onStart={start} />
       )}
     </>
   )
@@ -190,7 +235,7 @@ function mergePhotos(picked, order) {
 const zipName = (picked) =>
   picked.length <= 2 ? picked.map((s) => s.label).join(' + ') : `${picked[0].label} + ${picked.length - 1} more`
 
-function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, onSizePref, dl, photographer, hiddenCount }) {
+function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, onSizePref, dl, photographer, hiddenCount, quote, galleryCount, onWholeGallery }) {
   const { rules } = dl
   // Ungrouped sources first, then each group under its heading, in the order they come.
   const groups = []
@@ -218,7 +263,10 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, 
                   {size === z.id && (
                     <motion.span layoutId="download-size" className="absolute inset-0 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]" transition={{ duration: 0.35, ease }} />
                   )}
-                  <span className="relative">{z.label}</span>
+                  <span className="relative">
+                    {z.label}
+                    {rules.paid && <span className="ml-1 text-12-r tabular-nums text-type-3">{z.price ? money(z.price) : 'Free'}</span>}
+                  </span>
                 </button>
               ))}
             </div>
@@ -232,7 +280,16 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, 
         )}
       </div>
 
-      {rules.limit != null && <Allowance limit={rules.limit} used={dl.used} left={dl.left} photographer={photographer} />}
+      {quote ? (
+        <OrderSummary quote={quote} galleryCount={galleryCount} />
+      ) : (
+        rules.limit != null && <Allowance limit={rules.limit} used={dl.used} left={dl.left} photographer={photographer} />
+      )}
+      {rules.paid && !dl.ownsAll && !(quote && chosen.includes('all')) && (
+        <div className="-mt-3">
+          <GalleryOffer quote={quote ?? dl.quote([], [])} galleryCount={galleryCount} onPick={onWholeGallery} />
+        </div>
+      )}
 
       <div role="group" aria-label="What to download" className="space-y-5">
         {groups.map((g) => (
@@ -365,7 +422,7 @@ function SourceRow({ source, on, onPick, isNew }) {
   )
 }
 
-function PickFooter({ picked, photos, fit, dl, sizeLabel, onStart }) {
+function PickFooter({ picked, photos, fit, dl, sizeLabel, quote, onStart }) {
   const n = photos.length
   const limited = dl.rules.limit != null
   const uses = Math.min(fit.fresh, dl.left)
@@ -374,10 +431,13 @@ function PickFooter({ picked, photos, fit, dl, sizeLabel, onStart }) {
   const label = !picked.length ? 'Choose what to download'
     : !n ? 'Nothing to download'
     : !fit.take.length ? 'No downloads left'
+    : quote?.count ? `Add to cart · ${money(quote.total)}`
     : fit.cut > 0 ? `Download ${fit.take.length.toLocaleString()} of ${n.toLocaleString()}`
     : `Download ${plural(n)}`
 
-  const summary = [sizeLabel, limited && n > 0 && (uses ? `uses ${plural(uses, 'download')}` : 'free re-download')]
+  const summary = (quote
+    ? [sizeLabel, plural(n), quote.owned > 0 && !quote.whole && (quote.count ? `${quote.owned.toLocaleString()} already yours` : 'already yours')]
+    : [sizeLabel, limited && n > 0 && (uses ? `uses ${plural(uses, 'download')}` : 'free re-download')])
     .filter(Boolean)
     .join(' · ')
 
@@ -529,7 +589,7 @@ function DoneStep({ job, dl, onAgain, onClose }) {
       <p className="mt-0.5 text-13-r tabular-nums text-type-2">
         {plural(n)} · {job.sizeLabel}
       </p>
-      {dl.rules.limit != null && (
+      {dl.rules.limit != null && !job.paid && (
         <p className="mt-4 rounded-full bg-surface-2 px-3 py-1 text-12-r tabular-nums text-type-1">
           {dl.left ? `${plural(dl.left, 'download')} left` : 'No downloads left'}
         </p>
@@ -537,6 +597,35 @@ function DoneStep({ job, dl, onAgain, onClose }) {
       <div className="mt-6 grid w-full gap-2">
         <Button size="lg" onClick={onClose}>Done</Button>
         <Button variant="ghost" onClick={onAgain}>Download something else</Button>
+      </div>
+    </div>
+  )
+}
+
+/** The High res order went to the store cart: what was added, then Checkout / View cart / back. */
+function AddedStep({ order, galleryCount, itemCount, onCheckout, onCart, onAgain, onClose }) {
+  return (
+    <div className="flex flex-col items-center pt-2 text-center">
+      <motion.span
+        initial={{ scale: 0.4, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.35, ease }}
+        className="grid h-14 w-14 place-items-center rounded-full bg-success text-white"
+      >
+        <Handbag size={24} />
+      </motion.span>
+      <p className="mt-5 text-20-m text-type-0">In your cart</p>
+      <p className="mt-1 text-14-m tabular-nums text-type-1">
+        {order.whole ? 'Whole Gallery Download' : `Digital Download · ${plural(order.count)}`} · {money(order.total)}
+      </p>
+      <p className="mt-1 max-w-[320px] text-13-r text-type-2">
+        {order.whole ? `All ${plural(galleryCount)} in high res, no watermark.` : 'Original resolution, no watermark.'} Pay at checkout and {order.whole || order.count > 1 ? 'they unlock' : 'it unlocks'} here straight away.
+      </p>
+      <div className="mt-6 grid w-full gap-2">
+        <Button size="lg" onClick={onCheckout}>Checkout</Button>
+        <Button variant="outline" size="lg" onClick={onCart}>View cart ({itemCount.toLocaleString()})</Button>
+        <Button variant="ghost" onClick={onAgain}>Download something else</Button>
+        <Button variant="ghost" onClick={onClose}>Keep browsing</Button>
       </div>
     </div>
   )

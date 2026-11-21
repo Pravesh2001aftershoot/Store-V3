@@ -112,3 +112,15 @@ Visit https://react.dev/link/error-boundaries to learn more about error boundari
 [107409616ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ http://localhost:5173/src/lib/persisted.js:1
 [107409616ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ http://localhost:5173/src/data/catalog.js:1
 [107409616ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ http://localhost:5173/src/data/galleries.js?t=1795086626110:1
+[146421387ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[146428947ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[146446507ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[146643864ms] [ERROR] [vite] SyntaxError: The requested module '/src/photographer-dashboard/gallery/access.js?t=1795233632496' does not provide an export named 'FREE_EDGES' @ http://localhost:5173/@vite/client:1011
+[146643866ms] [ERROR] [vite] Failed to reload /src/photographer-dashboard/gallery/SettingsStep.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[146665770ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d88625ec:15802
+[146688060ms] [ERROR] [vite] SyntaxError: The requested module '/src/gallery/components/BuyDownloads.jsx?t=1795233676688' does not provide an export named 'PayStep' @ http://localhost:5173/@vite/client:1011
+[146688060ms] [ERROR] [vite] Failed to reload /src/gallery/components/SizePrompt.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[146688060ms] [ERROR] [vite] SyntaxError: The requested module '/src/gallery/components/BuyDownloads.jsx?t=1795233676688' does not provide an export named 'PayStep' @ http://localhost:5173/@vite/client:1011
+[146688060ms] [ERROR] [vite] Failed to reload /src/gallery/components/DownloadPane.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011
+[146699649ms] [ERROR] [vite] SyntaxError: The requested module '/src/gallery/components/BuyDownloads.jsx?t=1795233676688' does not provide an export named 'PayStep' @ http://localhost:5173/@vite/client:1011
+[146699649ms] [ERROR] [vite] Failed to reload /src/gallery/components/SizePrompt.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:1011

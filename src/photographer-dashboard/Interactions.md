@@ -138,6 +138,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - Password: digits only, 4 max ("4 digits"); under 4 shows "Enter 4 digits to save." in amber.
 - Download PIN: ticking **Require a download PIN** makes a random 4-digit PIN; copy toasts "Download PIN copied", ↻ makes a new one and toasts "New download PIN made".
 - Photo download sizes are toggle chips; with none picked, "Pick at least one size." Limits take whole numbers up to 99999; empty is "No limit".
+- With **Web size** picked: a **Web size** `Select` (1,200px / 2,048px long edge; a bottom sheet on phones) and **Watermark web-size downloads**. With **High res** picked and Digital Download shown in this gallery's store catalog: a **High res** radio pair, **Paid · $15 a photo** (default; "Sold as Digital Download in your store, or $199 for the whole gallery. Visitors download it free once bought. Change prices in Store.") and **Free** ("Anyone with downloads can save the original file."). Without Digital Download in the catalog: "High res downloads are free. To charge for them, show Digital Download in this gallery's store catalog (Store)." Both follow the catalog picked in Gallery info. While selling, the Download limit hint reads "Most free photos each visitor can download. Bought photos don't count."
 - Set visibility lists the gallery's sets as checkboxes (ticked = shown). With no sets: "No sets yet. Add them in Photos."
 
 ### Saving
@@ -241,6 +242,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
   - Each choice has a price field and an offered switch. Typing updates prices across the store as you type.
   - A changed price shows "was $65 ↺"; clicking it restores the original. Clearing the field and leaving it also restores the original.
   - Switching off the last offered choice of an option is blocked, with a toast.
+- **Digital Download / Whole Gallery Download:** the second tab is **Price** (one price field, no sizes to add). Switching Digital Download off in the store stops every gallery on this catalog selling High res.
 - **Reset product** restores the catalog values and toasts.
 
 ### Your own product editor

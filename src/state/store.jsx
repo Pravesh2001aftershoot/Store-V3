@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react'
-import { lineSubtotal, lineCompareAt, lineItemCount } from '../lib/pricing'
+import { lineSubtotal, lineCompareAt, lineItemCount, needsShipping } from '../lib/pricing'
 import { uid } from '../lib/utils'
 import { packageById, productById } from '../data/catalog'
 
@@ -80,13 +80,16 @@ export function StoreProvider({ children }) {
     const savings = state.lines.reduce((s, l) => s + (lineCompareAt(l) ? lineCompareAt(l) - lineSubtotal(l) : 0), 0)
     const itemCount = state.lines.reduce((s, l) => s + lineItemCount(l), 0)
     const promoOff = state.promo ? Math.round(subtotal * PROMOS[state.promo]) : 0
-    const ship = state.lines.length ? SHIPPING.find((s) => s.id === state.shipping).price : 0
+    // Digital downloads don't ship: a cart of only files has no shipping step or fee.
+    const shipped = needsShipping(state.lines)
+    const ship = shipped ? SHIPPING.find((s) => s.id === state.shipping).price : 0
     const tax = Math.round((subtotal - promoOff) * 0.0825 * 100) / 100
     return {
       ...state,
       dispatch,
       drawer,
       setDrawer,
+      shipped,
       totals: { subtotal, savings, itemCount, promoOff, ship, tax, total: subtotal - promoOff + ship + tax },
     }
   }, [state, drawer])

@@ -23,9 +23,17 @@ export function LineThumb({ line, className }) {
   )
 }
 
+/** What a line lets the client change: digital files have no crop, and the whole gallery nothing at all. */
+export const lineEditable = (line) => lineParts(line).some((p) => p.product.mode !== 'gallery')
+export const lineEditLabel = (line) => (lineParts(line).every((p) => p.product.digital) ? 'Edit photos' : 'Edit crops & options')
+/** A file can't be bought twice, so digital lines have no Duplicate. */
+export const lineDuplicable = (line) => !lineParts(line).every((p) => p.product.digital)
+
 export function PartSummary({ part }) {
   const qty = lineQty(part.product, part.photos.length)
   const size = sizeOf(part.product, part.variant)
+  if (part.product.mode === 'gallery') return <span>Every photo in your gallery · {size.label}</span>
+  if (part.product.digital) return <span>{plural(qty, 'high-res file')} · {size.label}</span>
   return (
     <span>
       {qty} × {part.product.name} {size.label}
@@ -39,7 +47,10 @@ export function PhotoStrip({ part, max = 8, size = 'h-9' }) {
   const more = part.photos.length - shown.length
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {shown.map((p, i) => (
+      {shown.map((p, i) => part.product.digital ? (
+        // Files aren't cropped: the photo as it is.
+        <img key={i} src={getPhoto(p.photoId).thumb} alt="" className={`${size} w-auto rounded-[3px] object-cover ring-1 ring-black/5`} />
+      ) : (
         <CroppedImage
           key={i}
           photo={getPhoto(p.photoId)}

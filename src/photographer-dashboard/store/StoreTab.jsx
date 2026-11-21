@@ -59,7 +59,8 @@ function CatalogEditor({ catalogId }) {
   const pane = { onClose: () => setOpenId(null), inline: docked, phone: !docked, peek, onPeek: setPeek, open: !!openId, id: openId ?? last.current, s }
   const editor = view === 'packages' ? <PackageEditor {...pane} /> : s.isOwnProduct(pane.id) ? <CustomProductEditor {...pane} /> : <ProductEditor {...pane} />
   const newProduct = () => {
-    const p = s.createProduct(cat === 'all' ? s.categories[0].id : cat)
+    // The photographer's own products are printed: a new one in Digital Downloads goes to the first category.
+    const p = s.createProduct(cat === 'all' || cat === 'digital' ? s.categories[0].id : cat)
     setOpenId(p.id)
     notify('Product added — it stays hidden until you switch it on')
   }
@@ -240,7 +241,7 @@ function Row({ active, hidden, onOpen, handle, thumb, title, tags, meta, price, 
   )
 }
 
-const MODE = { unit: 'One photo per item', set: 'Photo set', book: 'Album / book' }
+const MODE = { unit: 'One photo per item', set: 'Photo set', book: 'Album / book', gallery: 'Whole gallery' }
 
 function ProductRow({ p, s, active, onOpen, handle }) {
   const own = s.isOwnProduct(p.id)
@@ -257,7 +258,7 @@ function ProductRow({ p, s, active, onOpen, handle }) {
       thumb={<span className="block h-[224px] w-[224px] origin-top-left scale-[0.25]"><ProductImage product={p} className="h-full" /></span>}
       title={p.name}
       tags={<>{p.hidden && <Tag>Hidden</Tag>}{own && !p.hidden && <Tag tone="dark">Yours</Tag>}{s.isEdited(p.id) && !p.hidden && <Tag tone="success">Edited</Tag>}{p.badge && !p.hidden && <Tag className="max-sm:hidden">{p.badge}</Tag>}</>}
-      meta={`${category} · ${MODE[p.mode]} · ${plural(p.options.find((o) => o.id === 'size').values.length, 'size')}`}
+      meta={p.digital ? `${category} · ${p.mode === 'gallery' ? 'Every photo, one price' : 'Price per photo'} · Unlocks High res in the gallery` : `${category} · ${MODE[p.mode]} · ${plural(p.options.find((o) => o.id === 'size').values.length, 'size')}`}
       price={
         <>
           <span className="block text-11-r text-type-3">from</span>

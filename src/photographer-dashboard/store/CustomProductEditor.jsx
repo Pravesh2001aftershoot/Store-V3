@@ -84,7 +84,7 @@ function Details({ def, live, s, edit, onClose }) {
         <TextField label="Badge" value={def.badge} onChange={(v) => edit({ badge: v })} limit={LIMITS.badge} placeholder="e.g. New" hint="A small label on the product card. Empty for none." />
         <div>
           <p className="mb-1.5 text-13-m text-type-0">Category</p>
-          <Select label="Category" value={def.category} options={s.categories.map((c) => ({ value: c.id, label: c.name }))} onChange={(v) => edit({ category: v })} className="w-full" />
+          <Select label="Category" value={def.category} options={s.categories.filter((c) => c.id !== 'digital').map((c) => ({ value: c.id, label: c.name }))} onChange={(v) => edit({ category: v })} className="w-full" />
           <p className="mt-1.5 text-12-r text-type-3">Where it’s listed in the store.</p>
         </div>
       </Section>

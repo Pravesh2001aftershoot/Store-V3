@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Info, ImagesSquare, Package as PackageIcon, ArrowRight, Truck, ArrowsOut, Image as ImageIcon, FrameCorners } from '@phosphor-icons/react'
+import { Check, Info, ImagesSquare, Package as PackageIcon, ArrowRight, Truck, ArrowsOut, Image as ImageIcon, FrameCorners, DownloadSimple, Handbag } from '@phosphor-icons/react'
 import { categories, packages, productById, products } from '../data/catalog'
 import { getPhoto } from '../data/gallery'
 import { defaultVariant, sizeOf, unitPrice, packagePrice, packageValue } from '../lib/pricing'
@@ -10,13 +10,28 @@ import ProductMockup from '../components/ProductMockup'
 import ProductCard from '../components/ProductCard'
 import OptionGroup from '../components/OptionGroup'
 import { cn, money } from '../lib/utils'
+import { useStore } from '../state/store'
+import { getActiveGalleryId } from '../data/galleries'
+import { usePurchases } from '../data/purchases'
 
 const ease = [0.22, 1, 0.36, 1]
 
 function HowManyNote({ product, variant }) {
   const size = sizeOf(product, variant)
   let text
-  if (product.mode === 'unit')
+  if (product.mode === 'gallery')
+    text = (
+      <>
+        <b className="font-medium text-type-0">Every photo in your gallery</b>, including any your photographer adds later. No photos to pick: it’s ready to download as soon as you pay.
+      </>
+    )
+  else if (product.digital)
+    text = (
+      <>
+        You can select <b className="font-medium text-type-0">multiple photos</b> next. Each photo is one high-res file, e.g. 3 photos = <b className="font-medium text-type-0">3 downloads</b>. They unlock in your gallery as soon as you pay.
+      </>
+    )
+  else if (product.mode === 'unit')
     text = (
       <>
         You can select <b className="font-medium text-type-0">multiple photos</b> next. Each photo becomes its own {product.name.toLowerCase()} in{' '}
@@ -51,6 +66,8 @@ export default function Product() {
   // A photographer's own product can carry images: null shows the mockup, a number shows that image.
   const [shot, setShot] = useState(null)
   const nav = useNavigate()
+  const { lines, dispatch, setDrawer } = useStore()
+  const purchases = usePurchases(getActiveGalleryId())
 
   if (!product) return <p className="p-20 text-center">Product not found.</p>
   const images = product.images ?? []
@@ -69,7 +86,18 @@ export default function Product() {
     { id: 'photo', label: 'Photo', icon: ImageIcon },
   ]
 
-  const start = () => nav(`/build/product/${product.id}?${new URLSearchParams(variant)}`)
+  const digital = !!product.digital
+  const wholeGallery = product.mode === 'gallery'
+  const inCart = wholeGallery && lines.some((l) => l.productId === product.id)
+  const owned = wholeGallery && purchases.all
+  // Whole Gallery Download has no photos to pick: it goes straight into the cart.
+  const start = () => {
+    if (!wholeGallery) return nav(`/build/product/${product.id}?${new URLSearchParams(variant)}`)
+    if (!inCart) dispatch({ type: 'add', line: { kind: 'product', productId: product.id, variant, photos: [] } })
+    setDrawer(true)
+  }
+  // A file has one fixed "size" (Original resolution): nothing to choose.
+  const choices = product.options.filter((o) => !(digital && o.values.length < 2))
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pt-6 md:px-8 md:pt-10">
@@ -99,7 +127,7 @@ export default function Product() {
               </motion.div>
             </AnimatePresence>
             {product.badge && <Badge className="absolute left-4 top-4">{product.badge}</Badge>}
-            {!image && <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 gap-1 rounded-full bg-surface-1/85 p-1 shadow-sm ring-1 ring-border backdrop-blur">
+            {!image && !digital && <div className="absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 gap-1 rounded-full bg-surface-1/85 p-1 shadow-sm ring-1 ring-border backdrop-blur">
               {views.map((v) => (
                 <button
                   key={v.id}
@@ -136,7 +164,9 @@ export default function Product() {
               ))}
             </div>
           )}
-          <p className="mt-3 text-center text-12-r text-type-3">Preview updates as you change options. You’ll pick your own photos next.</p>
+          <p className="mt-3 text-center text-12-r text-type-3">
+            {wholeGallery ? 'Every photo in your gallery, as the original files.' : digital ? 'A preview with sample photos. You’ll pick your own next.' : 'Preview updates as you change options. You’ll pick your own photos next.'}
+          </p>
         </div>
 
         {/* Configurator */}
@@ -147,22 +177,32 @@ export default function Product() {
             <span className="text-30-m">
               <AnimatedNumber value={price} format={money} />
             </span>
-            <span className="text-14-r text-type-2">{product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? `per set of ${product.setSize}` : `incl. ${product.book.min} photos`}</span>
+            <span className="text-14-r text-type-2">{wholeGallery ? 'whole gallery' : digital ? 'per photo' : product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? `per set of ${product.setSize}` : `incl. ${product.book.min} photos`}</span>
           </div>
 
-          <div className="mt-8 space-y-7 border-t border-border pt-7">
-            {product.options.map((o) => (
+          <div className={cn('mt-8 space-y-7 border-t border-border pt-7', !choices.length && 'hidden')}>
+            {choices.map((o) => (
               <OptionGroup key={o.id} option={o} value={variant[o.id]} onChange={(v) => setOpt(o.id, v)} />
             ))}
           </div>
 
           <div className="mt-8 space-y-3">
             <HowManyNote product={product} variant={variant} />
-            <Button size="lg" className="h-14 w-full" onClick={start} arrow>
-              <ImagesSquare size={18} /> Choose photos from gallery
+            <Button size="lg" className="h-14 w-full" onClick={start} disabled={owned} arrow={!owned}>
+              {owned ? (
+                <><Check size={18} /> You own the whole gallery</>
+              ) : wholeGallery ? (
+                <><Handbag size={18} /> {inCart ? 'In your cart' : 'Add to cart'}</>
+              ) : (
+                <><ImagesSquare size={18} /> Choose photos from gallery</>
+              )}
             </Button>
             <p className="flex items-center justify-center gap-1.5 text-12-r text-type-3">
-              <Truck size={14} /> Ships in 5–7 business days · Free returns on damaged items
+              {digital ? (
+                <><DownloadSimple size={14} /> Download instantly after payment, from your gallery</>
+              ) : (
+                <><Truck size={14} /> Ships in 5–7 business days · Free returns on damaged items</>
+              )}
             </p>
           </div>
 
@@ -204,8 +244,15 @@ export default function Product() {
                   </>
                 ),
               },
-              { q: 'Shipping & production', a: 'Produced by a professional lab within 5–7 business days (albums 3–4 weeks), then shipped tracked and insured.' },
-              { q: 'Care', a: 'Display out of direct sunlight. Dust with a soft dry cloth. Avoid household cleaners on glazing and prints.' },
+              ...(digital
+                ? [
+                    { q: 'Delivery', a: 'Nothing is shipped. As soon as you pay, the files unlock in your gallery: download them in High res from a photo, a selection or the whole gallery, as often as you like.' },
+                    { q: 'Licence', a: 'For personal use: print them anywhere, share them with family and friends and post them online with credit. Ask your photographer about commercial use.' },
+                  ]
+                : [
+                    { q: 'Shipping & production', a: 'Produced by a professional lab within 5–7 business days (albums 3–4 weeks), then shipped tracked and insured.' },
+                    { q: 'Care', a: 'Display out of direct sunlight. Dust with a soft dry cloth. Avoid household cleaners on glazing and prints.' },
+                  ]),
             ]}
           />
         </div>

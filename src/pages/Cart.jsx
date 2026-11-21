@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Handbag, PencilSimple, Copy, Trash, Package as PackageIcon, ShieldCheck, Truck } from '@phosphor-icons/react'
+import { Handbag, PencilSimple, Copy, Trash, Package as PackageIcon, ShieldCheck, Truck, DownloadSimple } from '@phosphor-icons/react'
 import { useStore } from '../state/store'
 import { lineCompareAt, lineSubtotal, unitPrice, sizeOf } from '../lib/pricing'
 import { money, plural } from '../lib/utils'
 import { Badge, Button, SplitText } from '../components/ui'
-import { LineThumb, lineParts, lineTitle, PartSummary, PhotoStrip, partVariantText } from '../components/CartBits'
+import { LineThumb, lineDuplicable, lineEditLabel, lineEditable, lineParts, lineTitle, PartSummary, PhotoStrip, partVariantText } from '../components/CartBits'
 import { PromoField, Totals } from '../components/OrderSummary'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -39,7 +39,13 @@ function CartLine({ line }) {
                   </Badge>
                 )}
               </div>
-              {!pkg && <p className="mt-0.5 text-13-r text-type-2">{sizeOf(parts[0].product, parts[0].variant).label} · {partVariantText(parts[0])}</p>}
+              {!pkg && (
+                <p className="mt-0.5 text-13-r text-type-2">
+                  {parts[0].product.digital
+                    ? `${sizeOf(parts[0].product, parts[0].variant).label} · No watermark · Instant download`
+                    : `${sizeOf(parts[0].product, parts[0].variant).label} · ${partVariantText(parts[0])}`}
+                </p>
+              )}
             </div>
             <div className="shrink-0 text-right">
               <p className="text-16-sb">{money(lineSubtotal(line))}</p>
@@ -47,7 +53,9 @@ function CartLine({ line }) {
             </div>
           </div>
 
-          {!pkg ? (
+          {!pkg && parts[0].product.mode === 'gallery' ? (
+            <p className="mt-3 text-13-r text-type-1">Every photo in your gallery, including any added later</p>
+          ) : !pkg ? (
             <div className="mt-3 space-y-2">
               <p className="text-13-r text-type-1">
                 <span className="font-medium">Qty {parts[0].product.mode === 'book' ? 1 : parts[0].product.mode === 'set' ? parts[0].photos.length / parts[0].product.setSize : parts[0].photos.length}</span>
@@ -73,12 +81,16 @@ function CartLine({ line }) {
           )}
 
           <div className="mt-4 flex flex-wrap gap-1">
-            <Button variant="ghost" size="sm" onClick={() => nav(`/build/edit/${line.id}`)}>
-              <PencilSimple size={14} /> Edit crops & options
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => dispatch({ type: 'duplicate', id: line.id })}>
-              <Copy size={14} /> Duplicate
-            </Button>
+            {lineEditable(line) && (
+              <Button variant="ghost" size="sm" onClick={() => nav(`/build/edit/${line.id}`)}>
+                <PencilSimple size={14} /> {lineEditLabel(line)}
+              </Button>
+            )}
+            {lineDuplicable(line) && (
+              <Button variant="ghost" size="sm" onClick={() => dispatch({ type: 'duplicate', id: line.id })}>
+                <Copy size={14} /> Duplicate
+              </Button>
+            )}
             <Button variant="ghost" size="sm" className="hover:text-destructive" onClick={() => dispatch({ type: 'remove', id: line.id })}>
               <Trash size={14} /> Remove
             </Button>
@@ -90,8 +102,10 @@ function CartLine({ line }) {
 }
 
 export default function Cart() {
-  const { lines, totals } = useStore()
+  const { lines, totals, shipped } = useStore()
   const nav = useNavigate()
+  const hasPrints = lines.some((l) => !lineParts(l).every((p) => p.product.digital))
+  const hasFiles = lines.some((l) => lineParts(l).every((p) => p.product.digital))
 
   if (!lines.length)
     return (
@@ -138,8 +152,9 @@ export default function Cart() {
               Checkout
             </Button>
             <div className="space-y-2 border-t border-border pt-4 text-12-r text-type-2">
-              <p className="flex items-center gap-2"><ShieldCheck size={15} /> Every crop reviewed by your photographer</p>
-              <p className="flex items-center gap-2"><Truck size={15} /> Tracked & insured shipping</p>
+              {hasPrints && <p className="flex items-center gap-2"><ShieldCheck size={15} /> Every crop reviewed by your photographer</p>}
+              {shipped && <p className="flex items-center gap-2"><Truck size={15} /> Tracked & insured shipping</p>}
+              {hasFiles && <p className="flex items-center gap-2"><DownloadSimple size={15} /> Downloads unlock as soon as you pay</p>}
             </div>
           </div>
         </aside>

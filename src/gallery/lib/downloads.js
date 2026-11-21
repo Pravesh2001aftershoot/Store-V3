@@ -1,6 +1,13 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { IMAGE_SIZES } from '../../photographer-dashboard/gallery/access'
 import { persistedFamily, readJSON } from '../../lib/persisted'
+import { productById } from '../../data/catalog'
+import { useCatalogVersion } from '../../data/storeConfig'
+import { useGalleryId } from '../../data/galleries'
+import { usePurchases } from '../../data/purchases'
+import { registerPhoto } from '../../data/gallery'
+import { defaultOrientation, defaultVariant, unitPrice } from '../../lib/pricing'
+import { DEFAULT_CROP } from '../../lib/crop'
 import { usePersistedIds } from './actions'
 import { useVisitor } from './visitor'
 
@@ -17,33 +24,61 @@ const HINTS = {
 }
 export const SIZES = IMAGE_SIZES.map((z) => ({ ...z, hint: HINTS[z.id] }))
 
-const OPEN = { on: true, pin: null, sizes: SIZES, limit: null }
-
-/** `{ on, pin, sizes, limit }` for this visitor. `pin` is the 4-digit code or null; `limit` a number or null. */
-export function useDownloadRules() {
-  const d = useVisitor()?.visitor.d
-  return useMemo(() => {
-    if (!d) return OPEN
-    const dl = d.downloads
-    const sizes = SIZES.filter((z) => dl.image.sizes[z.id])
-    const limit = Number(dl.image.limit)
-    return {
-      on: dl.on && dl.image.on && sizes.length > 0,
-      pin: dl.pin.on && /^\d{4}$/.test(dl.pin.code) ? dl.pin.code : null,
-      sizes,
-      limit: limit > 0 ? limit : null,
-    }
-  }, [d])
+export const DIGITAL = { photo: 'digital-download', gallery: 'digital-gallery' }
+const offered = (id) => {
+  const p = productById[id]
+  return p && !p.hidden ? p : null
 }
 
 /**
- * Rules + the visitor's allowance. The limit counts distinct photos (saved per gallery under
+ * `{ on, pin, sizes, limit, paid }` for this visitor. `pin` is the 4-digit code or null; `limit` a number
+ * or null (it counts free downloads only). Web size uses the photographer's long edge and watermark.
+ *
+ * `paid`: High res is sold whenever it's offered, the photographer hasn't made it free (`image.highFree`)
+ * and the gallery's store shows the Digital Download product. It's then priced from that product:
+ * `{ photo, gallery }` (the Whole Gallery Download price, or null when that product isn't shown).
+ * Otherwise null, and High res (if offered) is free. Prices live in the store catalog (dashboard → Store).
+ * An OPEN visitor (settings never saved, or the dashboard preview) gets both sizes, no PIN and no limit,
+ * so an unconfigured gallery isn't locked by the defaults; High res is still sold if the store sells it.
+ */
+export function useDownloadRules() {
+  const d = useVisitor()?.visitor.d
+  const catalog = useCatalogVersion() // the gallery's catalog can change prices or hide the products
+  return useMemo(() => {
+    const image = d?.downloads.image
+    const web = image?.web ?? { edge: 2048, watermark: false }
+    const webSize = d ? { ...SIZES[0], hint: `${web.edge.toLocaleString()}px long edge${web.watermark ? ', watermarked' : ''}. Good for phones, screens and sharing.` } : SIZES[0]
+    const offers = d ? image.sizes : { web: true, high: true }
+    const photo = offers.high && !image?.highFree && offered(DIGITAL.photo)
+    const whole = photo && offered(DIGITAL.gallery)
+    const paid = photo ? { photo: unitPrice(photo, defaultVariant(photo)), gallery: whole ? unitPrice(whole, defaultVariant(whole)) : null } : null
+    const sizes = [
+      offers.web && (paid ? { ...webSize, price: 0 } : webSize),
+      offers.high && (paid ? { ...SIZES[1], hint: 'Original resolution, no watermark. Best for printing.', price: paid.photo } : SIZES[1]),
+    ].filter(Boolean)
+    if (!d) return { on: true, pin: null, sizes, limit: null, paid }
+    const dl = d.downloads
+    const limit = Number(image.limit)
+    return {
+      on: dl.on && image.on && sizes.length > 0,
+      pin: dl.pin.on && /^\d{4}$/.test(dl.pin.code) ? dl.pin.code : null,
+      sizes,
+      limit: limit > 0 ? limit : null,
+      paid,
+    }
+  }, [d, catalog]) // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/**
+ * Rules + the visitor's allowance and purchases. The limit counts distinct photos (saved per gallery under
  * `gallery-downloads:<clientKey>`), so downloading a photo again never uses the allowance twice.
- * The PIN, once entered, holds for the visit.
+ * The PIN, once entered, holds for the visit. High-res photos bought in the store (src/data/purchases.js)
+ * download again for free and never use the allowance.
  */
 export function useDownloads(clientKey) {
   const rules = useDownloadRules()
   const [done, , , setMany] = usePersistedIds(`gallery-downloads:${clientKey}`)
+  const purchases = usePurchases(useGalleryId())
   const [unlocked, setUnlocked] = useState(false)
   const left = rules.limit == null ? Infinity : Math.max(0, rules.limit - done.size)
 
@@ -55,7 +90,68 @@ export function useDownloads(clientKey) {
     return ok
   }, [rules.pin])
 
-  return { rules, used: done.size, left, isNew, record, locked: !!rules.pin && !unlocked, unlock }
+  /** True when this size has to be bought (High res while the store sells it). */
+  const isPaid = useCallback((sizeId) => !!rules.paid && sizeId === 'high', [rules.paid])
+  const { owns, all: ownsAll } = purchases
+
+  /**
+   * The price of `photos` in High res. `everything` is the whole gallery's photos, for the whole-gallery
+   * price: past it, the order becomes the Whole Gallery Download (never pay more than that). Photos
+   * already bought are free. `{ photos, count, owned, each, perPhoto, gallery, whole, total, saves }`:
+   * `photos` are the ones to buy.
+   */
+  const quote = useCallback((photos, everything) => {
+    const paid = rules.paid
+    if (!paid) return null
+    const toBuy = photos.filter((p) => !owns(p))
+    const perPhoto = toBuy.length * paid.photo
+    const whole = paid.gallery != null && toBuy.length > 0 && paid.gallery < perPhoto
+    return {
+      photos: whole ? everything.filter((p) => !owns(p)) : toBuy,
+      count: toBuy.length,
+      owned: photos.length - toBuy.length,
+      each: paid.photo,
+      perPhoto,
+      gallery: paid.gallery,
+      whole,
+      total: whole ? paid.gallery : perPhoto,
+      saves: whole ? perPhoto - paid.gallery : 0,
+    }
+  }, [rules.paid, owns])
+
+  return {
+    rules, used: done.size, left, isNew, record, locked: !!rules.pin && !unlocked, unlock,
+    isPaid, owns, ownsAll, quote,
+  }
+}
+
+/**
+ * Puts a High res order (from `quote`) in the store cart: the Whole Gallery Download, or the photos on
+ * the Digital Download line (joining the line already in the cart, so a photo is never in it twice).
+ * Returns false when there's nothing new to add.
+ */
+export function addOrderToCart({ lines, dispatch }, order) {
+  if (order.whole) {
+    if (lines.some((l) => l.productId === DIGITAL.gallery)) return false
+    const product = productById[DIGITAL.gallery]
+    dispatch({ type: 'add', line: { kind: 'product', productId: product.id, variant: defaultVariant(product), photos: [] } })
+    return true
+  }
+  const product = productById[DIGITAL.photo]
+  const entries = order.photos.map((p) => {
+    registerPhoto(p)
+    return { photoId: p.id, crop: DEFAULT_CROP, orientation: defaultOrientation(product, p) }
+  })
+  const line = lines.find((l) => l.kind === 'product' && l.productId === product.id)
+  if (!line) {
+    if (!entries.length) return false
+    dispatch({ type: 'add', line: { kind: 'product', productId: product.id, variant: defaultVariant(product), photos: entries } })
+    return true
+  }
+  const fresh = entries.filter((e) => !line.photos.some((x) => x.photoId === e.photoId))
+  if (!fresh.length) return false
+  dispatch({ type: 'update', id: line.id, line: { ...line, photos: [...line.photos, ...fresh] } })
+  return true
 }
 
 /**

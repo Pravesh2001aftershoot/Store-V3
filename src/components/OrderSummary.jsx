@@ -48,7 +48,7 @@ export function PromoField() {
 }
 
 export function Totals({ showShipping = true }) {
-  const { totals, promo } = useStore()
+  const { totals, promo, shipped } = useStore()
   const row = (l, v, cls = '') => (
     <div className={`flex items-center justify-between ${cls}`}>
       <span className="text-type-2">{l}</span>
@@ -59,7 +59,7 @@ export function Totals({ showShipping = true }) {
     <div className="space-y-2 text-14-r">
       {row('Subtotal', money(totals.subtotal))}
       {promo && row(`Discount (${promo})`, `−${money(totals.promoOff)}`, '[&>span:last-child]:text-success')}
-      {showShipping ? row('Shipping', totals.ship ? money(totals.ship) : 'Free') : row('Shipping', 'Calculated next')}
+      {!shipped ? row('Delivery', 'Instant download') : showShipping ? row('Shipping', totals.ship ? money(totals.ship) : 'Free') : row('Shipping', 'Calculated next')}
       {row('Estimated tax', money(totals.tax))}
       <div className="flex items-center justify-between border-t border-border pt-3 text-16-sb">
         <span>Total</span>

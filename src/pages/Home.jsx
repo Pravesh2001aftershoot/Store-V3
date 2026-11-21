@@ -142,7 +142,7 @@ function Categories() {
         </Button>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        {categories.map((c, i) => {
+        {categories.filter((c) => products.some((p) => p.category === c.id)).map((c, i) => {
           const items = products.filter((p) => p.category === c.id)
           return (
             <Reveal key={c.id} delay={(i % 2) * 0.1}>

@@ -5,7 +5,8 @@ import { Wordmark } from './Layout'
 import OrderSummary, { Totals } from './OrderSummary'
 import { cn } from '../lib/utils'
 
-export default function CheckoutShell({ step, children }) {
+/** `summary={false}` leaves out the order summary (the order is complete). */
+export default function CheckoutShell({ step, children, summary = true }) {
   const steps = [
     ['Cart', '/cart'],
     ['Details', '/checkout'],
@@ -33,15 +34,17 @@ export default function CheckoutShell({ step, children }) {
           </span>
         </div>
       </header>
-      <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-10 px-4 py-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className={cn('mx-auto grid max-w-[1200px] grid-cols-1 gap-10 px-4 py-10 md:px-8', summary && 'lg:grid-cols-[minmax(0,1fr)_400px]')}>
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
           {children}
         </motion.div>
-        <aside className="lg:sticky lg:top-8 lg:self-start">
-          <OrderSummary>
-            <Totals showShipping={step >= 1} />
-          </OrderSummary>
-        </aside>
+        {summary && (
+          <aside className="lg:sticky lg:top-8 lg:self-start">
+            <OrderSummary>
+              <Totals showShipping={step >= 1} />
+            </OrderSummary>
+          </aside>
+        )}
       </div>
     </div>
   )

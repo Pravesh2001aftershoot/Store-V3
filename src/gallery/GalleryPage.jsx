@@ -123,9 +123,9 @@ function ClientGallery({ data }) {
   const [selected, setSelected] = useState(() => new Set()) // selected photo ids
   const anchor = useRef(null) // id of the last photo toggled — the start of a Shift-click range
   const [lightboxId, setLightboxId] = useState(null) // id of the photo open in the lightbox
-  const [buying, setBuying] = useState(null) // photo open in the quick-buy panel
+  const [buying, setBuying] = useState(null) // { photo, product? } open in the quick-buy panel (product: start on it)
   const dl = useDownloads(data.clientKey) // the photographer's download rules + what this visitor has downloaded
-  const [downloading, setDownloading] = useState(null) // the download pane: { initial, pick? } while open
+  const [downloading, setDownloading] = useState(null) // the download pane: { initial, pick?, size? } while open
   const [sizePrompt, setSizePrompt] = useState(null) // SizePrompt: { mode: 'download' | 'change', photo, size, remember? } while open
   const [minCount, setMinCount] = useState(0)
   const [jump, setJump] = useState(null)
@@ -299,39 +299,51 @@ function ClientGallery({ data }) {
   }
 
   // Quick buy works on store photos, so register this gallery photo with the store first.
-  const buy = (photo) => {
+  // `productId` starts the panel on that product (e.g. the Digital Download from "Buy for $15").
+  const buy = (photo, productId) => {
     setLightboxId(null)
-    setBuying(registerPhoto(photo))
+    setSizePrompt(null)
+    setBuying({ photo: registerPhoto(photo), product: productId ?? null })
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
   // One photo (tile or lightbox) asks which size first (web or high res) when the photographer offers
   // both, unless the visitor ticked "Remember my choice"; then it downloads straight away in that size,
   // and the toast's "Change" reopens the question. It needs the PIN or is past the limit: the pane
-  // opens on that photo to explain.
+  // opens on that photo to explain. With High res sold in the store (dl.rules.paid), a photo not bought yet
+  // always asks when High res is the remembered size (its "Buy for $15" opens Quick buy on the Digital
+  // Download), and a visitor out of free downloads is asked too, since High res can still be bought.
   const [sizePref, setSizePref] = useSizePref(data.clientKey, dl.rules.sizes)
   const saveOne = useCallback((photo, sizeId, remembered) => {
     const size = dl.rules.sizes.find((z) => z.id === sizeId) ?? dl.rules.sizes[0]
     const action = remembered && dl.rules.sizes.length > 1
       ? { label: 'Change', onClick: () => setSizePrompt({ mode: 'change', photo, size: sizeId }) }
       : undefined
+    // High res bought: outside the free allowance.
+    const paid = dl.isPaid(size?.id)
     // With a limit, the toast says what's left after this one (a photo downloaded before is free).
     const after = dl.left - (dl.isNew(photo) ? 1 : 0)
-    const note = dl.rules.limit != null ? (after ? `${after.toLocaleString()} download${after === 1 ? '' : 's'} left` : 'No downloads left') : undefined
+    const note = paid ? 'Yours'
+      : dl.rules.limit == null ? undefined
+      : after ? `${after.toLocaleString()} download${after === 1 ? '' : 's'} left` : 'No downloads left'
     downloadPhoto(photo, { label: size?.label, note, action })
-    dl.record([photo])
+    if (!paid) dl.record([photo])
   }, [dl])
   const downloadOne = useCallback((photo) => {
-    if (dl.locked || (dl.isNew(photo) && dl.left < 1)) {
+    const selling = !!dl.rules.paid
+    if (dl.locked || (!selling && dl.isNew(photo) && dl.left < 1)) {
       setLightboxId(null)
       setDownloading({ initial: 'pick', pick: [photo] })
       return
     }
-    if (dl.rules.sizes.length > 1 && !sizePref) {
-      setSizePrompt({ mode: 'download', photo, size: null, remember: false })
+    const size = sizePref ?? (dl.rules.sizes.length === 1 ? dl.rules.sizes[0]?.id : null)
+    const mustBuy = dl.isPaid(size) && !dl.owns(photo)
+    const freeOut = selling && !dl.isPaid(size) && dl.isNew(photo) && dl.left < 1
+    if (!size || mustBuy || freeOut) {
+      setSizePrompt({ mode: 'download', photo, size: freeOut ? 'high' : size, remember: !!sizePref })
       return
     }
-    saveOne(photo, sizePref ?? dl.rules.sizes[0]?.id, !!sizePref)
+    saveOne(photo, size, !!sizePref)
   }, [dl, sizePref, saveOne])
   // "Download photo" answers with (size, remember) and downloads. "Download size" (the toast's Change)
   // only saves the size — null is Ask every time — and downloads the photo again only if asked to.
@@ -346,6 +358,12 @@ function ClientGallery({ data }) {
     }
     setSizePref(flag ? sizeId : null)
     saveOne(photo, sizeId, flag)
+  }
+  // "Whole gallery in high res" from the size prompt: the pane, on the whole gallery in High res.
+  const buyGallery = () => {
+    setSizePrompt(null)
+    setLightboxId(null)
+    setDownloading({ initial: 'all', size: 'high' })
   }
   // `left`: downloads left with a limit (badge on the tile and lightbox buttons), else null.
   const downloadLeft = dl.rules.limit != null ? dl.left : null
@@ -556,6 +574,7 @@ function ClientGallery({ data }) {
         onClose={() => setDownloading(null)}
         sources={downloadSources}
         initial={downloading?.initial}
+        initialSize={downloading?.size}
         dl={dl}
         sizePref={sizePref}
         onSizePref={setSizePref}
@@ -563,9 +582,24 @@ function ClientGallery({ data }) {
         hiddenCount={hidden.size}
         onStarted={(ids) => ids.includes('pick') && selecting && exitSelect()}
       />
-      <SizePrompt prompt={sizePrompt} sizes={dl.rules.sizes} dl={dl} photographer={gallery.photographer} onClose={() => setSizePrompt(null)} onDone={answerSize} />
+      <SizePrompt
+        prompt={sizePrompt}
+        sizes={dl.rules.sizes}
+        dl={dl}
+        photographer={gallery.photographer}
+        galleryPhotos={ordered}
+        onBuy={(photo) => buy(photo, 'digital-download')}
+        onBuyGallery={buyGallery}
+        onClose={() => setSizePrompt(null)}
+        onDone={answerSize}
+      />
       <FacePane open={facesOpen} onClose={() => setFacesOpen(false)} photos={ordered} filter={faceFilter} onApply={applyFaces} />
-      <QuickBuy photo={buying} onClose={() => setBuying(null)} />
+      <QuickBuy
+        photo={buying?.photo ?? null}
+        startProduct={buying?.product}
+        digital={dl.rules.paid ? { owns: dl.owns, ownsAll: dl.ownsAll } : null}
+        onClose={() => setBuying(null)}
+      />
       <SelectionBar
         open={selecting}
         count={selectedPhotos.length}

@@ -14,6 +14,8 @@ const DEFAULT_PHOTOS = {
   'fine-art-print': ['p1043', 'p91'],
   'acrylic-block': ['p64'],
   'desk-frame': ['p338'],
+  'digital-download': ['p1015'],
+  'digital-gallery': ['p1011', 'p1027', 'p1043'],
 }
 
 const TABLE_STYLES = ['album', 'photobook', 'acrylic', 'print']
@@ -46,6 +48,40 @@ export default function ProductMockup({ product, variant: v, items, className, s
   const img = (item, aspect, extra) => (
     <CroppedImage photo={getPhoto(item.photoId)} crop={item.crop} aspect={aspect} hi className={extra} />
   )
+
+  // Digital files show the photos uncropped, as files: one, or a fanned stack of up to three.
+  if (product.digital) {
+    const stack = (product.mode === 'gallery' && !(items && items.length) ? list : list.slice(0, 3)).slice(0, 3)
+    return (
+      <div className={cn('@container relative aspect-[4/5] w-full overflow-hidden', scene && 'bg-surface-2', className)}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          {stack.map((it, i) => {
+            const ph = getPhoto(it.photoId)
+            const n = stack.length
+            const turn = n === 1 ? 0 : (i - (n - 1) / 2) * 7
+            return (
+              <motion.div
+                key={`${it.photoId}-${i}`}
+                initial={false}
+                animate={{ rotate: turn, x: `${(i - (n - 1) / 2) * 14}%` }}
+                transition={{ duration: 0.5, ease }}
+                className="absolute overflow-hidden rounded-[4px] bg-white p-[2.5%] shadow-[0_24px_40px_-16px_rgba(0,0,0,.4),0_1px_2px_rgba(0,0,0,.12)]"
+                style={{ width: ph.w >= ph.h ? '62%' : '44%', zIndex: i }}
+              >
+                <img src={ph.thumb || ph.src} alt="" draggable={false} className="block w-full rounded-[2px]" style={{ aspectRatio: `${ph.w || 3} / ${ph.h || 2}`, objectFit: 'cover' }} />
+              </motion.div>
+            )
+          })}
+        </div>
+        {scene && (
+          // Only where there's room for it (not on cart thumbnails).
+          <span className="absolute bottom-[6%] left-1/2 hidden -translate-x-1/2 whitespace-nowrap @[180px]:block rounded-full bg-surface-1/90 px-2.5 py-1 text-11-sb uppercase text-type-1 shadow-sm backdrop-blur">
+            {product.mode === 'gallery' ? 'Whole gallery · JPG' : 'Original · JPG'}
+          </span>
+        )}
+      </div>
+    )
+  }
 
   let piece
   switch (product.style) {

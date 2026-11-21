@@ -297,6 +297,13 @@ subscribeActiveGallery(() => {
 
 const setOverride = (id) => { if (override !== id) { override = id; refresh() } }
 
+/** One product as a catalog offers it (its prices and `hidden`), or null. Doesn't change the live catalog. */
+export const catalogProduct = (catalogId, productId) => {
+  const c = findCatalog(catalogId) ?? findCatalog(DEFAULT_CATALOG)
+  const def = c && productDefs(c).find((p) => p.id === productId)
+  return def ? resolveDef(c, def) : null
+}
+
 /** Changes whenever the live catalog does. The store layout keys its pages on it so they re-read the catalog. */
 export const useCatalogVersion = () => useSyncExternalStore((fn) => { versionSubs.add(fn); return () => versionSubs.delete(fn) }, () => version)
 

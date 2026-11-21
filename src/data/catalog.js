@@ -1,7 +1,10 @@
 // Store catalog as configured by the photographer.
-// mode: 'unit' → 1 photo per item (more photos = higher quantity of the same variant)
-//       'set'  → N photos per item (e.g. a triptych takes 3)
-//       'book' → one item holding a range of photos (albums / books)
+// mode: 'unit'    → 1 photo per item (more photos = higher quantity of the same variant)
+//       'set'     → N photos per item (e.g. a triptych takes 3)
+//       'book'    → one item holding a range of photos (albums / books)
+//       'gallery' → one item covering every photo in the gallery; no photos are picked (digital only)
+// digital: true → a file, not a print: no crop, no shipping, and paying unlocks the high-res download
+//                 in the client gallery (src/data/purchases.js).
 
 const FRAME_COLORS = [
   { id: 'black-oak', label: 'Black Oak', hex: '#1d1d1d', delta: 0 },
@@ -34,6 +37,12 @@ export const categories = [
     name: 'Desk & Gifts',
     blurb: 'Small keepsakes for shelves, desks and the people you love.',
     hero: 'p64',
+  },
+  {
+    id: 'digital',
+    name: 'Digital Downloads',
+    blurb: 'Your photos in full resolution, without a watermark. Yours to keep, no shipping.',
+    hero: 'p1015',
   },
 ]
 
@@ -380,9 +389,53 @@ export const products = [
       { id: 'frame', label: 'Frame', type: 'swatch', values: FRAME_COLORS },
     ],
   },
+  {
+    id: 'digital-download',
+    name: 'Digital Download',
+    category: 'digital',
+    style: 'digital',
+    mode: 'unit',
+    digital: true,
+    allowOrientation: true,
+    tagline: 'The original file: full resolution, no watermark.',
+    description:
+      'Download the photos you love exactly as your photographer delivered them: full resolution and without the watermark on free downloads. Print them anywhere, share them, keep them forever.',
+    details: [
+      'Original resolution JPG',
+      'No watermark',
+      'Download again any time from your gallery',
+      'Personal use licence',
+    ],
+    options: [
+      { id: 'size', label: 'File', type: 'size', values: [{ id: 'original', label: 'Original resolution', w: 2, h: 3, price: 15 }] },
+    ],
+  },
+  {
+    id: 'digital-gallery',
+    name: 'Whole Gallery Download',
+    category: 'digital',
+    style: 'digital-gallery',
+    mode: 'gallery',
+    digital: true,
+    badge: 'Best value',
+    tagline: 'Every photo in your gallery, full resolution, no watermark.',
+    description:
+      'Every photo in your gallery as the original file: full resolution and without the watermark. Including photos your photographer adds later.',
+    details: [
+      'Every photo in the gallery',
+      'Original resolution JPGs, no watermark',
+      'Download again any time from your gallery',
+      'Personal use licence',
+    ],
+    options: [
+      { id: 'size', label: 'File', type: 'size', values: [{ id: 'original', label: 'Original resolution', w: 2, h: 3, price: 199 }] },
+    ],
+  },
 ]
 
 export const productById = Object.fromEntries(products.map((p) => [p.id, p]))
+
+export const isDigital = (product) => !!product?.digital
 
 // Packages: curated bundles at a discounted price.
 export const packages = [

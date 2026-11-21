@@ -6,12 +6,12 @@ import { useStore } from '../state/store'
 import { lineSubtotal, lineCompareAt } from '../lib/pricing'
 import { money } from '../lib/utils'
 import { Button } from './ui'
-import { LineThumb, lineParts, lineTitle, PartSummary } from './CartBits'
+import { LineThumb, lineDuplicable, lineEditable, lineParts, lineTitle, PartSummary } from './CartBits'
 
 const ease = [0.22, 1, 0.36, 1]
 
 export default function CartDrawer() {
-  const { drawer, setDrawer, lines, totals, dispatch } = useStore()
+  const { drawer, setDrawer, lines, totals, dispatch, shipped } = useStore()
   const nav = useNavigate()
   const go = (to) => {
     setDrawer(false)
@@ -90,18 +90,22 @@ export default function CartDrawer() {
                                 ))}
                               </div>
                               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <button
-                                  onClick={() => go(`/build/edit/${line.id}`)}
-                                  className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
-                                >
-                                  <PencilSimple size={12} /> Edit
-                                </button>
-                                <button
-                                  onClick={() => dispatch({ type: 'duplicate', id: line.id })}
-                                  className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
-                                >
-                                  <Copy size={12} /> Duplicate
-                                </button>
+                                {lineEditable(line) && (
+                                  <button
+                                    onClick={() => go(`/build/edit/${line.id}`)}
+                                    className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
+                                  >
+                                    <PencilSimple size={12} /> Edit
+                                  </button>
+                                )}
+                                {lineDuplicable(line) && (
+                                  <button
+                                    onClick={() => dispatch({ type: 'duplicate', id: line.id })}
+                                    className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
+                                  >
+                                    <Copy size={12} /> Duplicate
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => dispatch({ type: 'remove', id: line.id })}
                                   className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-destructive"
@@ -127,7 +131,7 @@ export default function CartDrawer() {
                         <span className="text-type-1">Subtotal</span>
                         <span className="text-20-m">{money(totals.subtotal)}</span>
                       </div>
-                      <p className="text-12-r text-type-3">Shipping and taxes calculated at checkout.</p>
+                      <p className="text-12-r text-type-3">{shipped ? 'Shipping and taxes calculated at checkout.' : 'Taxes calculated at checkout. Downloads unlock as soon as you pay.'}</p>
                       <div className="grid gap-2 sm:grid-cols-2">
                         <Button variant="outline" size="lg" onClick={() => go('/shop')}>
                           Continue shopping

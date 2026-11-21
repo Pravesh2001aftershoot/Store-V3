@@ -11,6 +11,7 @@ const MODE_HINT = {
   unit: 'Each photo the client picks makes one item, so more photos means a higher quantity.',
   set: 'Every few photos make one item (a triptych takes three).',
   book: 'One item holding a range of photos. Photos above the minimum cost extra.',
+  gallery: 'One item covering every photo in the gallery, including ones added later. Nothing to pick.',
 }
 
 /**
@@ -29,7 +30,7 @@ export default function ProductEditor({ id, s, ...pane }) {
   const extras = orig.options.filter((o) => o.id !== 'size')
   const tabs = [
     { id: 'details', label: 'Details' },
-    { id: 'sizes', label: 'Sizes' },
+    { id: 'sizes', label: orig.digital ? 'Price' : 'Sizes' },
     ...(extras.length ? [{ id: 'options', label: 'Options' }] : []),
   ]
 
@@ -56,7 +57,12 @@ export default function ProductEditor({ id, s, ...pane }) {
     >
       {tab === 'details' && <Details id={id} s={s} orig={orig} live={live} edit={edit} />}
       {tab === 'sizes' && (
-        <Section title="Sizes" hint="Base price for each size. Switch a size off to stop offering it.">
+        <Section
+          title={orig.digital ? 'Price' : 'Sizes'}
+          hint={orig.digital
+            ? orig.mode === 'gallery' ? 'One price for every photo in the gallery, as original files.' : 'Price per photo, as the original file. Galleries sell High res at this price unless they make it free.'
+            : 'Base price for each size. Switch a size off to stop offering it.'}
+        >
           <ValueList opt={orig.options.find((o) => o.id === 'size')} priceOf={priceOf} isOff={isOff} onToggle={toggle} onPrice={(opt, v, n) => s.setPrice(id, opt.id, v.id, n)} />
         </Section>
       )}

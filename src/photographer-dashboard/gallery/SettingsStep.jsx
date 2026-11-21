@@ -2,17 +2,18 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowsClockwise, CaretDown, ChatCircleDots, Check, CopySimple, DownloadSimple, EnvelopeSimple, EyeSlash, FolderSimple,
-  Heart, ImageBroken, LockSimple, MagnifyingGlass, Plus, ScanSmiley, ShareFat, UserFocus, X,
+  Heart, ImageBroken, LockSimple, MagnifyingGlass, Plus, ScanSmiley, ShareFat, Storefront, UserFocus, X,
 } from '@phosphor-icons/react'
 import { Button, Field } from '../../components/ui'
 import { Segmented, Switch } from '../../gallery/templates/cover/controls'
 import { notify } from '../../gallery/lib/actions'
-import { cn } from '../../lib/utils'
-import { galleryPath } from '../../data/galleries'
-import { Checkbox, Chip, IconButton, PageHeader, Tag, ease } from '../components/ui'
+import { cn, money } from '../../lib/utils'
+import { galleryPath, getGallery, useGalleryId } from '../../data/galleries'
+import { catalogProduct, useCatalogs } from '../../data/storeConfig'
+import { Checkbox, Chip, IconButton, PageHeader, PriceInput, Select, Tag, ease } from '../components/ui'
 import Modal from '../components/Modal'
 import {
-  IMAGE_SIZES, LIMIT_MAX, MIN_ROLES, ROLES, filterIncluded, initials, normalize, pinRequired, randomPin, roleLabel,
+  WEB_EDGES, IMAGE_SIZES, LIMIT_MAX, MIN_ROLES, ROLES, filterIncluded, initials, normalize, pinRequired, randomPin, roleLabel,
   rolePlural, saveBlocker, useGalleryAccess,
 } from './access'
 
@@ -312,6 +313,15 @@ function SettingCard({ setting: s, on, locked, note, onChange, children }) {
 
 /** The options under a setting that's on. */
 function Options({ id, d, editCur, sets }) {
+  // High res is sold through the store: the Digital Download product in this gallery's catalog.
+  useCatalogs() // re-reads when a catalog changes
+  const galleryId = useGalleryId()
+  const catalogId = getGallery(galleryId)?.catalogId
+  const photoProduct = catalogProduct(catalogId, 'digital-download')
+  const wholeProduct = catalogProduct(catalogId, 'digital-gallery')
+  const sellsDigital = photoProduct && !photoProduct.hidden
+    ? { price: photoProduct.options[0].values[0].price, gallery: wholeProduct && !wholeProduct.hidden ? wholeProduct.options[0].values[0].price : null }
+    : null
   if (id === 'pin') {
     return (
       <label className="block">
@@ -357,6 +367,7 @@ function Options({ id, d, editCur, sets }) {
   }
   if (id === 'downloads') {
     const dl = d.downloads
+    const selling = dl.image.sizes.high && !dl.image.highFree && !!sellsDigital
     return (
       <>
         <p className="rounded-xl bg-surface-2 px-3 py-2.5 text-12-r-p text-type-2">These rules apply to every download: one photo, a selection or the whole gallery.</p>
@@ -390,7 +401,14 @@ function Options({ id, d, editCur, sets }) {
                 </div>
                 {!IMAGE_SIZES.some((z) => dl.image.sizes[z.id]) && <p className="mt-1.5 text-12-r text-amber-700">Pick at least one size.</p>}
               </div>
-              <LimitField label="Download limit" hint="Most photos each visitor can download." value={dl.image.limit} onChange={(v) => editCur((x) => { x.downloads.image.limit = v })} />
+              {dl.image.sizes.web && <WebSizeOptions web={dl.image.web} edit={(fn) => editCur((x) => fn(x.downloads.image.web))} />}
+              {dl.image.sizes.high && <HighResPrice product={sellsDigital} free={dl.image.highFree} onChange={(v) => editCur((x) => { x.downloads.image.highFree = v })} />}
+              <LimitField
+                label="Download limit"
+                hint={selling ? 'Most free photos each visitor can download. Bought photos don’t count.' : 'Most photos each visitor can download.'}
+                value={dl.image.limit}
+                onChange={(v) => editCur((x) => { x.downloads.image.limit = v })}
+              />
             </div>
           )}
         </div>
@@ -562,6 +580,55 @@ function Radios({ label, value, onChange, options }) {
         })}
       </div>
     </div>
+  )
+}
+
+/** Web size: its long edge (1,200 or 2,048px) and whether it's watermarked. */
+function WebSizeOptions({ web, edit }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <span className="mb-1.5 block text-12-m text-type-2">Web size</span>
+        <Select
+          label="Web size"
+          value={String(web.edge)}
+          onChange={(v) => edit((w) => { w.edge = Number(v) })}
+          options={WEB_EDGES.map((e) => ({ value: String(e), label: `${e.toLocaleString()}px long edge` }))}
+          className="w-[200px] max-sm:w-full"
+        />
+      </div>
+      <Checkbox checked={web.watermark} onChange={(v) => edit((w) => { w.watermark = v })}>Watermark web-size downloads</Checkbox>
+    </div>
+  )
+}
+
+/**
+ * Whether High res is free or paid. Paid High res is sold through the store's Digital Download product
+ * (priced in Store), so the choice only exists while this gallery's catalog shows it.
+ */
+function HighResPrice({ product, free, onChange }) {
+  if (!product) {
+    return (
+      <p className="flex gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-12-r-p text-type-2">
+        <Storefront size={16} className="mt-px shrink-0" />
+        <span>High res downloads are free. To charge for them, show <span className="text-type-0">Digital Download</span> in this gallery’s store catalog (Store).</span>
+      </p>
+    )
+  }
+  return (
+    <Radios
+      label="High res"
+      value={free ? 'free' : 'paid'}
+      onChange={(v) => onChange(v === 'free')}
+      options={[
+        {
+          id: 'paid',
+          label: `Paid · ${money(product.price)} a photo`,
+          hint: `Sold as Digital Download in your store${product.gallery ? `, or ${money(product.gallery)} for the whole gallery` : ''}. Visitors download it free once bought. Change prices in Store.`,
+        },
+        { id: 'free', label: 'Free', hint: 'Anyone with downloads can save the original file.' },
+      ]}
+    />
   )
 }
 

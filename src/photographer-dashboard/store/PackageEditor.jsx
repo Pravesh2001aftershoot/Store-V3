@@ -158,7 +158,8 @@ function Contents({ live, prices }) {
 /** A custom package's contents: product, size and quantity per line, plus add and remove. */
 function EditContents({ pkg, s }) {
   // Catalog products and the photographer's own, in shop order.
-  const products = s.allProducts.map((p) => ({ value: p.id, label: `${p.name}${p.hidden ? ' (hidden)' : ''}` }))
+  // Files aren't printed, so they can't go in a package.
+  const products = s.allProducts.filter((p) => !p.digital).map((p) => ({ value: p.id, label: `${p.name}${p.hidden ? ' (hidden)' : ''}` }))
   return (
     <Section title="In this package" hint={`Up to ${LIMITS.slots} lines. The client picks a photo for each item.`}>
       {pkg.slots.length === 0 && <p className="rounded-xl bg-surface-2 p-3 text-13-r text-type-2">Empty packages stay hidden from the store. Add a product to sell it.</p>}

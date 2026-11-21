@@ -36,14 +36,16 @@ export const bookExtras = (product, photoCount) =>
 
 export const fromPrice = (product) => Math.min(...getOption(product, 'size').values.map((v) => v.price))
 
-/** How many physical items a set of photos produces. */
+/** How many items a set of photos produces. */
 export const lineQty = (product, photoCount) => {
+  if (product.mode === 'gallery') return 1
   if (product.mode === 'set') return Math.floor(photoCount / product.setSize)
   if (product.mode === 'book') return photoCount > 0 ? 1 : 0
   return photoCount
 }
 
 export const lineTotal = (product, variant, photoCount) => {
+  if (product.mode === 'gallery') return unitPrice(product, variant)
   if (product.mode === 'book') return photoCount ? unitPrice(product, variant, photoCount) : 0
   return unitPrice(product, variant) * lineQty(product, photoCount)
 }
@@ -53,6 +55,7 @@ export const lineTotal = (product, variant, photoCount) => {
  * Returns { min, max, step }.
  */
 export const requirement = (product, slotQty) => {
+  if (product.mode === 'gallery') return { min: 0, max: 0, step: 1 }
   if (product.mode === 'book') return { min: product.book.min, max: product.book.max, step: 1 }
   const per = product.mode === 'set' ? product.setSize : 1
   if (slotQty) return { min: slotQty * per, max: slotQty * per, step: per }
@@ -73,6 +76,7 @@ export const requirementText = (product, slotQty) => {
   if (product.mode === 'book') return `${min}–${max} photos · ${min} included`
   if (min === max) return `Choose ${plural(min, 'photo')}`
   if (product.mode === 'set') return `Choose photos in multiples of ${product.setSize}`
+  if (product.digital) return 'Each photo is one high-res file'
   return 'Each photo becomes one print'
 }
 
@@ -130,3 +134,14 @@ export const lineItemCount = (line) =>
   line.kind === 'package'
     ? line.slots.reduce((s, slot) => s + lineQty(productById[slot.productId], slot.photos.length), 0)
     : lineQty(productById[line.productId], line.photos.length)
+
+// ---- Digital --------------------------------------------------------------
+
+/** The products a line holds (one, or one per package slot). */
+const lineProducts = (line) =>
+  line.kind === 'package' ? line.slots.map((s) => productById[s.productId]) : [productById[line.productId]]
+
+/** True when a line is a file (Digital Download, Whole Gallery Download): no crop, no shipping. */
+export const lineIsDigital = (line) => lineProducts(line).every((p) => p?.digital)
+/** True when anything in the cart has to be printed and shipped. */
+export const needsShipping = (lines) => lines.some((l) => !lineIsDigital(l))
