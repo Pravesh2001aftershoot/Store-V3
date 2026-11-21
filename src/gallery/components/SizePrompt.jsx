@@ -34,7 +34,7 @@ const ASK = { id: 'ask', label: 'Ask every time', hint: 'Choose a size each time
  *   photo again" for the photo just saved.
  *
  * With High res sold in the store (dl.rules.paid) each size card shows its price (Free / $15 / Yours).
- * Choosing High res for a photo not bought yet turns the button into "Buy for $15": `onBuy(photo)`
+ * Choosing a paid size for a photo not bought in it yet turns the button into "Buy for $15": `onBuy(photo, sizeId)`
  * closes this and opens Quick buy on the Digital Download for that photo, so it goes through the store
  * cart and checkout. A card under the sizes offers the Whole Gallery Download (`onBuyGallery`).
  *
@@ -117,26 +117,29 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
   const limited = dl?.rules.limit != null
   const isNew = dl ? dl.isNew(photo) : true
   const paid = !!dl?.rules.paid
+  // Bought in the original resolution (or the whole gallery): every paid size is free for this photo.
   const owned = paid && dl.owns(photo)
+  const ownsSize = (z) => paid && dl.ownsSize(photo, z.id)
   // Out of free downloads: the free size can't be picked for a new photo (High res can still be bought).
   const freeOut = paid && limited && isNew && dl.left < 1
   const usable = (z) => !(freeOut && z.id === 'web')
   const [size, setSize] = useState(() => {
-    // A photo already bought starts on High res: it's free for them.
-    const want = options.find((z) => z.id === (prompt.size ?? (owned ? 'high' : null)) && usable(z))
+    // A photo already bought starts on the best size they own: it's free for them.
+    const mine = paid && !prompt.size && options.find((z) => dl.isPaid(z.id) && ownsSize(z))
+    const want = options.find((z) => z.id === (prompt.size ?? mine?.id) && usable(z))
     return (want ?? options.find(usable) ?? options[0])?.id
   })
   const [remember, setRemember] = useState(!!prompt.remember)
   const [again, setAgain] = useState(false)
   const sizeLabel = sizes.find((z) => z.id === size)?.label
-  const mustBuy = paid && dl.isPaid(size) && !owned
-  const quote = paid ? dl.quote([photo], galleryPhotos) : null
+  const mustBuy = paid && dl.isPaid(size) && !dl.ownsSize(photo, size)
+  const quote = paid ? dl.quote([photo], galleryPhotos, size) : null
   // The allowance only matters for free downloads.
   const showAllowance = limited && !(paid && dl.isPaid(size))
   const priceOf = (z) => {
     if (!paid || z.id === ASK.id) return null
     if (z.price == null || z.price === 0) return { text: 'Free' }
-    return owned ? { text: 'Yours', tone: 'owned' } : { text: money(z.price), tone: 'paid' }
+    return ownsSize(z) ? { text: 'Yours', tone: 'owned' } : { text: money(z.price), tone: 'paid' }
   }
 
   return (
@@ -191,7 +194,7 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
         </div>
       )}
       {!changing && paid && !owned && !dl.ownsAll && onBuyGallery && (
-        <GalleryOffer quote={quote} galleryCount={galleryPhotos.length} onPick={onBuyGallery} />
+        <GalleryOffer quote={quote} galleryCount={galleryPhotos.length} onPick={() => onBuyGallery(`file:${quote.version}`)} />
       )}
 
       {changing ? (
@@ -220,7 +223,7 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
             {again && size !== ASK.id ? 'Save and download' : 'Save'}
           </Button>
         ) : (
-          <Button size="md" onClick={() => (mustBuy ? onBuy(photo) : onDone(size, remember))} className="max-sm:flex-1 tabular-nums">
+          <Button size="md" onClick={() => (mustBuy ? onBuy(photo, size) : onDone(size, remember))} className="max-sm:flex-1 tabular-nums">
             {mustBuy ? `Buy for ${money(quote.total)}` : 'Download'}
           </Button>
         )}

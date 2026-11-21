@@ -49,10 +49,11 @@ const ease = [0.22, 1, 0.36, 1]
  * the gallery. Same flow as the store (product → options → crop → cart) with fewer products, and the photo
  * already chosen. Files (Digital Download, Whole Gallery Download) skip size and crop.
  * `photo` must already be registered with the store (see `registerPhoto`); null closes the panel.
- * `startProduct`: a product id to open on (skipping the list). `digital`: `{ owns(photo), ownsAll }` when
+ * `startProduct`: a product id to open on (skipping the list), and `startVariant` its choices (e.g. the
+ * Digital Download version picked in Download photo). `digital`: `{ owns(photo), ownsAll }` when
  * the gallery sells High res through the store (lib/downloads.js → rules.paid), else null: no files listed.
  */
-export default function QuickBuy({ photo, onClose, startProduct, digital }) {
+export default function QuickBuy({ photo, onClose, startProduct, startVariant, digital }) {
   // Keep the last photo so the panel can animate out after `photo` goes null.
   const last = useRef(photo)
   if (photo) last.current = photo
@@ -79,7 +80,7 @@ export default function QuickBuy({ photo, onClose, startProduct, digital }) {
                 transition={{ duration: 0.55, ease }}
                 className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[460px] flex-col bg-surface-1 shadow-2xl sm:inset-y-2 sm:right-2 sm:rounded-2xl"
               >
-                <Flow key={`${last.current.id}:${startProduct ?? ''}`} photo={last.current} start={startProduct} digital={digital} onClose={onClose} />
+                <Flow key={`${last.current.id}:${startProduct ?? ''}:${startVariant?.size ?? ''}`} photo={last.current} start={startProduct} startVariant={startVariant} digital={digital} onClose={onClose} />
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -112,7 +113,7 @@ function flowReducer(s, a) {
         step: QB.OPTIONS,
         dir: 1,
         product: a.product,
-        variant: defaultVariant(a.product),
+        variant: { ...defaultVariant(a.product), ...validChoices(a.product, a.variant) },
         qty: 1,
         entry: { photoId: a.photo.id, crop: DEFAULT_CROP, orientation: defaultOrientation(a.product, a.photo) },
       }
@@ -135,12 +136,17 @@ function flowReducer(s, a) {
   }
 }
 
-function Flow({ photo, start, digital, onClose }) {
+/** The parts of `variant` that are real choices of `product` (unknown ones are dropped). */
+const validChoices = (product, variant) => Object.fromEntries(
+  Object.entries(variant ?? {}).filter(([k, v]) => product.options.some((o) => o.id === k && o.values.some((x) => x.id === v)))
+)
+
+function Flow({ photo, start, startVariant, digital, onClose }) {
   const { lines, dispatch, totals } = useStore()
   const nav = useNavigate()
   const bodyRef = useRef(null)
   const [flow, send] = useReducer(flowReducer, FLOW_START, (s) =>
-    start && productById[start] ? flowReducer(s, { type: 'pick', product: productById[start], photo }) : s
+    start && productById[start] ? flowReducer(s, { type: 'pick', product: productById[start], photo, variant: startVariant }) : s
   )
   const { step, dir, product, variant, qty, entry } = flow
 
@@ -150,7 +156,7 @@ function Flow({ photo, start, digital, onClose }) {
 
   const addToCart = () => {
     if (product.digital) {
-      addOrderToCart({ lines, dispatch }, product.mode === 'gallery' ? { whole: true } : { whole: false, photos: [photo] })
+      addOrderToCart({ lines, dispatch }, product.mode === 'gallery' ? { whole: true, version: variant.size } : { whole: false, photos: [photo], version: variant.size })
       send({ type: 'added' })
       return
     }
@@ -171,8 +177,9 @@ function Flow({ photo, start, digital, onClose }) {
   const size = product && sizeOf(product, variant)
   const files = digital ? offered(FILE_IDS) : []
   // A file already bought, or already in the cart, isn't added again.
-  const owned = file && (product.mode === 'gallery' ? digital?.ownsAll : digital?.owns(photo))
-  const inCart = file && lines.some((l) => l.productId === product.id && (product.mode === 'gallery' || l.photos.some((e) => e.photoId === photo.id)))
+  // Per file version: owning the original covers every version; the cart is checked for this one.
+  const owned = file && (product.mode === 'gallery' ? digital?.ownsGallery(variant.size) : digital?.owns(photo, variant.size))
+  const inCart = file && lines.some((l) => l.productId === product.id && l.variant.size === variant.size && (product.mode === 'gallery' || l.photos.some((e) => e.photoId === photo.id)))
   const steps = (file ? FILE_STEPS : STEPS).map((label, i) => [i, label]).filter(([, label]) => label)
 
   return (
@@ -236,7 +243,7 @@ function Flow({ photo, start, digital, onClose }) {
             className="p-5"
           >
             {step === QB.PRODUCT && <ProductStep photo={photo} files={files} digital={digital} onPick={pick} onStore={() => leave('/store')} />}
-            {step === QB.OPTIONS && file && <FileStep product={product} variant={variant} entry={entry} owned={owned} inCart={inCart} />}
+            {step === QB.OPTIONS && file && <FileStep product={product} variant={variant} entry={entry} owned={owned} inCart={inCart} onOption={(id, value) => send({ type: 'option', id, value })} />}
             {step === QB.OPTIONS && !file && (
               <OptionsStep
                 product={product}
@@ -361,7 +368,7 @@ function ProductStep({ photo, files, digital, onPick, onStore }) {
                     </div>
                     <p className="mt-0.5 line-clamp-2 text-12-r text-type-2">{p.tagline}</p>
                     <p className={cn('mt-1 text-13-m', mine ? 'text-success' : 'text-type-0')}>
-                      {mine ? 'Yours: download it from the photo' : whole ? money(fromPrice(p)) : `${money(fromPrice(p))} this photo`}
+                      {mine ? 'Yours: download it from the photo' : `${p.options[0].values.length > 1 ? 'From ' : ''}${money(fromPrice(p))}${whole ? '' : ' this photo'}`}
                     </p>
                   </div>
                   <CaretRight size={16} className="shrink-0 text-type-3 transition group-hover:translate-x-0.5 group-hover:text-type-0" />
@@ -386,8 +393,9 @@ function ProductStep({ photo, files, digital, onPick, onStore }) {
 }
 
 /** A file's details: the preview, what you get, and whether it's already yours or in the cart. */
-function FileStep({ product, variant, entry, owned, inCart }) {
+function FileStep({ product, variant, entry, owned, inCart, onOption }) {
   const whole = product.mode === 'gallery'
+  const versions = product.options.find((o) => o.id === 'size')
   return (
     <div>
       <ProductMockup product={product} variant={variant} items={whole ? undefined : [entry]} className="aspect-[5/4] rounded-xl" />
@@ -398,6 +406,11 @@ function FileStep({ product, variant, entry, owned, inCart }) {
           <span className="text-12-r text-type-2">{whole ? ' all photos' : ' this photo'}</span>
         </p>
       </div>
+      {versions.values.length > 1 && (
+        <div className="mt-5 border-t border-border pt-5">
+          <OptionGroup option={versions} value={variant.size} onChange={(v) => onOption('size', v)} compact />
+        </div>
+      )}
       <ul className="mt-5 space-y-2 border-t border-border pt-5 text-13-r text-type-1">
         {product.details.map((d) => (
           <li key={d} className="flex items-center gap-2">
@@ -413,7 +426,7 @@ function FileStep({ product, variant, entry, owned, inCart }) {
       >
         {owned ? <CheckCircle size={17} className="mt-px shrink-0" /> : <DownloadSimple size={17} className="mt-px shrink-0" />}
         {owned
-          ? whole ? 'You already own every photo in this gallery.' : 'You already own this photo in high res. Download it from the photo.'
+          ? whole ? `You already own every photo in this gallery in ${sizeOf(product, variant).label.toLowerCase()}.` : `You already own this photo in ${sizeOf(product, variant).label.toLowerCase()}. Download it from the photo.`
           : inCart ? 'Already in your cart. Pay at checkout and it unlocks here.'
           : 'Nothing to ship or crop. Pay at checkout and the download unlocks in this gallery.'}
       </p>

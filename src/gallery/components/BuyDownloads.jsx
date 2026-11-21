@@ -14,14 +14,17 @@ const plural = (n, word = 'photo') => `${n.toLocaleString()} ${word}${n === 1 ? 
  */
 export function OrderSummary({ quote, galleryCount, compact = false }) {
   if (!quote) return null
-  const { count, owned, each, perPhoto, whole, total, saves, gallery } = quote
+  const { count, owned, each, perPhoto, whole, total, saves, gallery, galleryWas, label } = quote
   return (
     <div className="rounded-xl bg-surface-2 p-4">
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-14-sb text-type-0">
-          {count === 0 ? 'Already yours' : whole ? 'Whole gallery · High res' : `${plural(count)} · High res`}
+          {count === 0 ? 'Already yours' : whole ? `Whole gallery · ${label}` : `${plural(count)} · ${label}`}
         </p>
-        <p className="shrink-0 text-16-sb tabular-nums text-type-0">{count === 0 ? 'Free' : money(total)}</p>
+        <p className="shrink-0 text-16-sb tabular-nums text-type-0">
+          {count === 0 ? 'Free' : money(total)}
+          {whole && galleryWas && <s className="ml-1.5 text-12-r text-type-3">{money(galleryWas)}</s>}
+        </p>
       </div>
       <div className="mt-1.5 space-y-0.5 text-12-r-p text-type-2">
         {count > 0 && !whole && <p className="tabular-nums">{plural(count)} × {money(each)}</p>}
@@ -31,7 +34,7 @@ export function OrderSummary({ quote, galleryCount, compact = false }) {
           </p>
         )}
         {owned > 0 && !whole && <p>{owned === 1 ? '1 photo is' : `${owned.toLocaleString()} photos are`} already yours, so {owned === 1 ? 'it’s' : 'they’re'} free.</p>}
-        {!compact && <p>Original resolution, no watermark. Pay at checkout, then download here any time.</p>}
+        {!compact && <p>{label}, {quote.note.toLowerCase()}. Pay at checkout, then download here any time.</p>}
       </div>
     </div>
   )
@@ -47,7 +50,8 @@ export function GalleryOffer({ quote, galleryCount, onPick }) {
     >
       <Sparkle size={16} className="shrink-0 text-type-2" />
       <span className="min-w-0 flex-1 text-12-r-p text-type-2">
-        <span className="text-type-0">Whole gallery in high res: {money(quote.gallery)}</span> · all {plural(galleryCount)}
+        <span className="text-type-0">Whole gallery in {quote.label.toLowerCase()}: {money(quote.gallery)}</span>
+        {quote.galleryWas && <s className="ml-1 text-type-3">{money(quote.galleryWas)}</s>} · all {plural(galleryCount)}
       </span>
     </button>
   )

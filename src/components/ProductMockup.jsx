@@ -76,7 +76,11 @@ export default function ProductMockup({ product, variant: v, items, className, s
         {scene && (
           // Only where there's room for it (not on cart thumbnails).
           <span className="absolute bottom-[6%] left-1/2 hidden -translate-x-1/2 whitespace-nowrap @[180px]:block rounded-full bg-surface-1/90 px-2.5 py-1 text-11-sb uppercase text-type-1 shadow-sm backdrop-blur">
-            {product.mode === 'gallery' ? 'Whole gallery · JPG' : 'Original · JPG'}
+            {(() => {
+              const file = getOption(product, 'size').values.find((x) => x.id === variant.size)
+              const res = file?.edge ? `${file.edge.toLocaleString('en-US')}px` : 'Original'
+              return product.mode === 'gallery' ? `Whole gallery · ${res}` : `${res} · JPG${file?.watermark ? ' · Watermarked' : ''}`
+            })()}
           </span>
         )}
       </div>

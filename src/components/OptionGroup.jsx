@@ -1,8 +1,13 @@
 import { money, cn } from '../lib/utils'
 
-/** One product option (size / swatch / segmented / card). `compact` fits narrow side panels. */
+/**
+ * One product option (size / swatch / segmented / card). `compact` fits narrow side panels.
+ * Sizes with a `note` (Digital Download file versions: "3,600px long edge" · "No watermark") show as
+ * cards with the note and the price.
+ */
 export default function OptionGroup({ option, value, onChange, compact = false }) {
   const current = option.values.find((v) => v.id === value)
+  const files = option.type === 'size' && option.values.some((v) => v.note)
   return (
     <div>
       <div className={cn('flex items-baseline justify-between', compact ? 'mb-2' : 'mb-2.5')}>
@@ -32,7 +37,32 @@ export default function OptionGroup({ option, value, onChange, compact = false }
         </div>
       )}
 
-      {(option.type === 'size' || option.type === 'segmented') && (
+      {files && (
+        <div className={cn('grid gap-2', !compact && 'sm:grid-cols-2')}>
+          {option.values.map((v) => (
+            <button
+              key={v.id}
+              onClick={() => onChange(v.id)}
+              className={cn(
+                'flex items-start justify-between gap-2 rounded-xl border bg-surface-1 text-left transition',
+                compact ? 'px-3 py-2.5' : 'px-3.5 py-3',
+                value === v.id ? 'border-type-0 shadow-[0_0_0_1px_var(--type-0)]' : 'border-border hover:border-type-3'
+              )}
+            >
+              <span>
+                <span className={cn('block', compact ? 'text-13-m' : 'text-14-m')}>{v.label}</span>
+                <span className="block text-12-r text-type-2">{v.note}</span>
+              </span>
+              <span className="shrink-0 text-right text-13-m tabular-nums text-type-0">
+                {money(v.price)}
+                {v.compareAt && <s className="block text-12-r text-type-3">{money(v.compareAt)}</s>}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {((option.type === 'size' && !files) || option.type === 'segmented') && (
         <div className={cn('grid gap-2', option.type === 'size' ? (compact ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-4') : 'grid-cols-2')}>
           {option.values.map((v) => (
             <button

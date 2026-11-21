@@ -88,8 +88,9 @@ export default function Product() {
 
   const digital = !!product.digital
   const wholeGallery = product.mode === 'gallery'
-  const inCart = wholeGallery && lines.some((l) => l.productId === product.id)
-  const owned = wholeGallery && purchases.all
+  // Per file version: the whole gallery in 3,600px is a different item from the originals.
+  const inCart = wholeGallery && lines.some((l) => l.productId === product.id && l.variant.size === variant.size)
+  const owned = wholeGallery && purchases.ownsGallery(variant.size)
   // Whole Gallery Download has no photos to pick: it goes straight into the cart.
   const start = () => {
     if (!wholeGallery) return nav(`/build/product/${product.id}?${new URLSearchParams(variant)}`)
@@ -165,7 +166,7 @@ export default function Product() {
             </div>
           )}
           <p className="mt-3 text-center text-12-r text-type-3">
-            {wholeGallery ? 'Every photo in your gallery, as the original files.' : digital ? 'A preview with sample photos. You’ll pick your own next.' : 'Preview updates as you change options. You’ll pick your own photos next.'}
+            {wholeGallery ? 'Every photo in your gallery, in the file you choose.' : digital ? 'A preview with sample photos. You’ll pick your own next.' : 'Preview updates as you change options. You’ll pick your own photos next.'}
           </p>
         </div>
 
@@ -177,6 +178,9 @@ export default function Product() {
             <span className="text-30-m">
               <AnimatedNumber value={price} format={money} />
             </span>
+            {sizeOf(product, variant).compareAt && (
+              <s className="text-16-r tabular-nums text-type-3">{money(sizeOf(product, variant).compareAt)}</s>
+            )}
             <span className="text-14-r text-type-2">{wholeGallery ? 'whole gallery' : digital ? 'per photo' : product.mode === 'unit' ? 'per piece' : product.mode === 'set' ? `per set of ${product.setSize}` : `incl. ${product.book.min} photos`}</span>
           </div>
 
@@ -190,7 +194,7 @@ export default function Product() {
             <HowManyNote product={product} variant={variant} />
             <Button size="lg" className="h-14 w-full" onClick={start} disabled={owned} arrow={!owned}>
               {owned ? (
-                <><Check size={18} /> You own the whole gallery</>
+                <><Check size={18} /> You own the whole gallery in this file</>
               ) : wholeGallery ? (
                 <><Handbag size={18} /> {inCart ? 'In your cart' : 'Add to cart'}</>
               ) : (

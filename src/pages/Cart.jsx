@@ -42,7 +42,7 @@ function CartLine({ line }) {
               {!pkg && (
                 <p className="mt-0.5 text-13-r text-type-2">
                   {parts[0].product.digital
-                    ? `${sizeOf(parts[0].product, parts[0].variant).label} · No watermark · Instant download`
+                    ? `${sizeOf(parts[0].product, parts[0].variant).label} · ${sizeOf(parts[0].product, parts[0].variant).note ?? 'No watermark'} · Instant download`
                     : `${sizeOf(parts[0].product, parts[0].variant).label} · ${partVariantText(parts[0])}`}
                 </p>
               )}

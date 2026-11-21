@@ -5,12 +5,62 @@
 //       'gallery' → one item covering every photo in the gallery; no photos are picked (digital only)
 // digital: true → a file, not a print: no crop, no shipping, and paying unlocks the high-res download
 //                 in the client gallery (src/data/purchases.js).
+//                 Digital Download's `size` option lists the file versions on sale: each value has
+//                 `edge` (long edge in px, or null for the original resolution) and `watermark`; see
+//                 `fileValue()`. Photographers add, change and remove them per catalog (data/storeConfig.js).
 
 const FRAME_COLORS = [
   { id: 'black-oak', label: 'Black Oak', hex: '#1d1d1d', delta: 0 },
   { id: 'natural-oak', label: 'Natural Oak', hex: '#c8a679', delta: 0 },
   { id: 'white-ash', label: 'White Ash', hex: '#efece6', delta: 0 },
   { id: 'walnut', label: 'Walnut', hex: '#5a3a25', delta: 12 },
+]
+
+/**
+ * One Digital Download file version as an option value: `{ id, edge, watermark, price, gallery }` plus
+ * the label ("Original resolution" / "3,600px long edge") and note ("No watermark" / "Watermarked")
+ * every page shows. `gallery` is the whole-gallery offer in this version: `{ on, price, discount }`
+ * (discount a fraction, 0–0.4); the Whole Gallery Download sells it (see `galleryValue`). `w`/`h` only
+ * give the mockup a shape.
+ */
+export function fileValue({ id, edge = null, watermark = false, price = 0, gallery = { on: false, price: 0, discount: 0 } }) {
+  return {
+    id,
+    edge,
+    watermark,
+    price,
+    gallery,
+    label: edge ? `${edge.toLocaleString('en-US')}px long edge` : 'Original resolution',
+    note: watermark ? 'Watermarked' : 'No watermark',
+    w: 2,
+    h: 3,
+  }
+}
+
+/** What clients pay for a whole-gallery offer: its price less the discount, to the dollar. */
+export const gallerySale = (g) => Math.round(g.price * (1 - g.discount))
+
+/**
+ * A file version's whole-gallery offer as a Whole Gallery Download option value: priced at the sale
+ * price, with `compareAt` (the full price) while discounted.
+ */
+export const galleryValue = (v) => ({
+  id: v.id,
+  edge: v.edge,
+  watermark: v.watermark,
+  label: v.label,
+  note: v.note,
+  price: gallerySale(v.gallery),
+  ...(v.gallery.discount > 0 ? { compareAt: v.gallery.price, discount: v.gallery.discount } : {}),
+  w: 2,
+  h: 3,
+})
+
+/** Digital Download's delivered file versions (each with a whole-gallery offer). */
+const FILES = [
+  fileValue({ id: 'original', edge: null, watermark: false, price: 15, gallery: { on: true, price: 199, discount: 0 } }),
+  fileValue({ id: 'px3600', edge: 3600, watermark: false, price: 12, gallery: { on: true, price: 149, discount: 0 } }),
+  fileValue({ id: 'px2800', edge: 2800, watermark: false, price: 9, gallery: { on: true, price: 99, discount: 0 } }),
 ]
 
 export const categories = [
@@ -397,17 +447,21 @@ export const products = [
     mode: 'unit',
     digital: true,
     allowOrientation: true,
-    tagline: 'The original file: full resolution, no watermark.',
+    tagline: 'Your photo as a high-res file, in the size you choose.',
     description:
-      'Download the photos you love exactly as your photographer delivered them: full resolution and without the watermark on free downloads. Print them anywhere, share them, keep them forever.',
+      'Download the photos you love as high-res files: the original resolution or a smaller size, without the watermark on free downloads unless noted. Print them anywhere, share them, keep them forever.',
     details: [
-      'Original resolution JPG',
-      'No watermark',
+      'High-res JPG in the size you choose',
       'Download again any time from your gallery',
       'Personal use licence',
     ],
     options: [
-      { id: 'size', label: 'File', type: 'size', values: [{ id: 'original', label: 'Original resolution', w: 2, h: 3, price: 15 }] },
+      {
+        id: 'size',
+        label: 'File',
+        type: 'size',
+        values: FILES,
+      },
     ],
   },
   {
@@ -417,18 +471,21 @@ export const products = [
     style: 'digital-gallery',
     mode: 'gallery',
     digital: true,
+    // Its files and prices are Digital Download's versions that have a whole-gallery offer
+    // (data/storeConfig.js keeps them in step per catalog).
+    galleryOf: 'digital-download',
     badge: 'Best value',
-    tagline: 'Every photo in your gallery, full resolution, no watermark.',
+    tagline: 'Every photo in your gallery, in the file size you choose.',
     description:
-      'Every photo in your gallery as the original file: full resolution and without the watermark. Including photos your photographer adds later.',
+      'Every photo in your gallery as a high-res file: the original resolution or a smaller size. Including photos your photographer adds later.',
     details: [
       'Every photo in the gallery',
-      'Original resolution JPGs, no watermark',
+      'High-res JPGs in the size you choose',
       'Download again any time from your gallery',
       'Personal use licence',
     ],
     options: [
-      { id: 'size', label: 'File', type: 'size', values: [{ id: 'original', label: 'Original resolution', w: 2, h: 3, price: 199 }] },
+      { id: 'size', label: 'File', type: 'size', values: FILES.filter((v) => v.gallery.on).map(galleryValue) },
     ],
   },
 ]

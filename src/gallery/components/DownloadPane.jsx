@@ -90,7 +90,7 @@ function Pane({ onClose, sources, initial, initialSize, dl, sizePref, onSizePref
   const everything = sources.find((s) => s.id === 'all')?.photos ?? []
   // High res for sale: priced, and outside the free allowance.
   const paidSize = dl.isPaid(size)
-  const quote = paidSize ? dl.quote(photos, everything) : null
+  const quote = paidSize ? dl.quote(photos, everything, size) : null
   const fit = paidSize ? { take: photos, fresh: 0, cut: 0 } : fitAllowance(photos, dl.isNew, dl.left)
   // Ticked sources can share photos (a set made from a collection); each downloads once.
   const overlap = picked.reduce((sum, s) => sum + s.photos.length, 0) - photos.length
@@ -185,7 +185,7 @@ function Pane({ onClose, sources, initial, initialSize, dl, sizePref, onSizePref
                 hiddenCount={hiddenCount}
                 quote={quote}
                 galleryCount={everything.length}
-                onWholeGallery={() => { setChosen(['all']); setSize('high') }}
+                onWholeGallery={() => { setChosen(['all']); if (!dl.isPaid(size)) setSize(rules.paid.full) }}
               />
             )}
             {step === 'added' && added && (
@@ -237,6 +237,16 @@ const zipName = (picked) =>
 
 function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, onSizePref, dl, photographer, hiddenCount, quote, galleryCount, onWholeGallery }) {
   const { rules } = dl
+  // Paid file versions (Digital Download). One shows as "High res" in the pill; several share a
+  // "High res" tab (from the lowest price) with the versions listed under it.
+  const paidSizes = rules.sizes.filter((z) => dl.isPaid(z.id))
+  const freeSizes = rules.sizes.filter((z) => !dl.isPaid(z.id))
+  const tiers = paidSizes.length > 1
+    ? [...freeSizes, { id: 'paid', label: 'High res', price: rules.paid.from, from: true }]
+    : rules.sizes.map((z) => (dl.isPaid(z.id) ? { ...z, label: 'High res' } : z))
+  const tier = paidSizes.length > 1 && dl.isPaid(size) ? 'paid' : size
+  const lastPaid = useRef(null)
+  if (dl.isPaid(size)) lastPaid.current = size
   // Ungrouped sources first, then each group under its heading, in the order they come.
   const groups = []
   for (const s of sources) {
@@ -251,27 +261,63 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, 
         <p className="mb-2 text-11-sb uppercase text-type-2">Size</p>
         {rules.sizes.length > 1 ? (
           <>
-            <div role="radiogroup" aria-label="Size" className="grid grid-cols-2 gap-1 rounded-full bg-surface-2 p-1">
-              {rules.sizes.map((z) => (
+            {/* With several paid file versions, the pill picks Web size or High res and the versions list below. */}
+            <div role="radiogroup" aria-label="Size" className="grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${tiers.length}, minmax(0, 1fr))` }}>
+              {tiers.map((z) => (
                 <button
                   key={z.id}
                   role="radio"
-                  aria-checked={size === z.id}
-                  onClick={() => onSize(z.id)}
-                  className={cn('relative h-8 rounded-full text-13-m text-type-2 transition hover:text-type-0', size === z.id && 'text-type-0')}
+                  aria-checked={tier === z.id}
+                  onClick={() => onSize(z.id === 'paid' ? (paidSizes.some((x) => x.id === lastPaid.current) ? lastPaid.current : rules.paid.full) : z.id)}
+                  className={cn('relative h-8 rounded-full px-1 text-13-m text-type-2 transition hover:text-type-0', tier === z.id && 'text-type-0')}
                 >
-                  {size === z.id && (
+                  {tier === z.id && (
                     <motion.span layoutId="download-size" className="absolute inset-0 rounded-full bg-surface-1 shadow-[0_1px_2px_rgba(0,0,0,.08)]" transition={{ duration: 0.35, ease }} />
                   )}
                   <span className="relative">
                     {z.label}
-                    {rules.paid && <span className="ml-1 text-12-r tabular-nums text-type-3">{z.price ? money(z.price) : 'Free'}</span>}
+                    {rules.paid && <span className="ml-1 text-12-r tabular-nums text-type-3">{z.price ? `${z.from ? 'from ' : ''}${money(z.price)}` : 'Free'}</span>}
                   </span>
                 </button>
               ))}
             </div>
+            <AnimatePresence initial={false}>
+              {tier === 'paid' && paidSizes.length > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3, ease }}
+                  className="overflow-hidden"
+                >
+                  <div role="radiogroup" aria-label="File" className="space-y-1.5 pt-2">
+                    {paidSizes.map((z) => (
+                      <button
+                        key={z.id}
+                        role="radio"
+                        aria-checked={size === z.id}
+                        onClick={() => onSize(z.id)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition',
+                          size === z.id ? 'border-type-0 bg-surface-2' : 'border-border hover:bg-surface-2'
+                        )}
+                      >
+                        <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded-full border', size === z.id ? 'border-type-0' : 'border-type-3')}>
+                          {size === z.id && <span className="h-2 w-2 rounded-full bg-type-0" />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-13-m text-type-0">{z.label}</span>
+                          <span className="block truncate text-12-r text-type-3">{rules.paid.versions.find((v) => v.id === z.version)?.note}</span>
+                        </span>
+                        <span className="shrink-0 text-13-m tabular-nums text-type-0">{money(z.price)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <p className="mt-1.5 text-12-r text-type-3">{rules.sizes.find((z) => z.id === size)?.hint}</p>
-            <SingleSize sizes={rules.sizes} value={sizePref} onChange={onSizePref} />
+            <SingleSize sizes={paidSizes.length > 1 ? freeSizes : tiers} all={rules.sizes} value={sizePref} onChange={onSizePref} />
           </>
         ) : (
           <p className="text-14-r text-type-1">
@@ -318,13 +364,13 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, 
  * "Single photos": the size a tile or full-screen download uses without asking (Web size / High res), or
  * Ask every time. The same setting as "Remember my choice" in SizePrompt. Changing it downloads nothing.
  */
-function SingleSize({ sizes, value, onChange }) {
+function SingleSize({ sizes, all = sizes, value, onChange }) {
   const options = [...sizes, { id: 'ask', label: 'Ask every time' }]
   const current = value ?? 'ask'
   return (
     <div className="mt-5">
       <p className="mb-2 text-11-sb uppercase text-type-2">Single photos</p>
-      <div role="radiogroup" aria-label="Single photos" className="grid grid-cols-3 gap-1 rounded-full bg-surface-2 p-1">
+      <div role="radiogroup" aria-label="Single photos" className="grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
         {options.map((o) => (
           <button
             key={o.id}
@@ -342,7 +388,7 @@ function SingleSize({ sizes, value, onChange }) {
       </div>
       <p className="mt-1.5 text-12-r text-type-3">
         {value
-          ? `Downloading one photo from the gallery or full screen saves it in ${sizes.find((z) => z.id === value)?.label} without asking.`
+          ? `Downloading one photo from the gallery or full screen saves it in ${all.find((z) => z.id === value)?.label} without asking.`
           : 'Downloading one photo from the gallery or full screen asks which size first.'}
       </p>
     </div>
@@ -616,10 +662,10 @@ function AddedStep({ order, galleryCount, itemCount, onCheckout, onCart, onAgain
       </motion.span>
       <p className="mt-5 text-20-m text-type-0">In your cart</p>
       <p className="mt-1 text-14-m tabular-nums text-type-1">
-        {order.whole ? 'Whole Gallery Download' : `Digital Download · ${plural(order.count)}`} · {money(order.total)}
+        {order.whole ? `Whole Gallery Download · ${order.label}` : `Digital Download · ${order.label} · ${plural(order.count)}`} · {money(order.total)}
       </p>
       <p className="mt-1 max-w-[320px] text-13-r text-type-2">
-        {order.whole ? `All ${plural(galleryCount)} in high res, no watermark.` : 'Original resolution, no watermark.'} Pay at checkout and {order.whole || order.count > 1 ? 'they unlock' : 'it unlocks'} here straight away.
+        {order.whole ? `All ${plural(galleryCount)}, ${order.label.toLowerCase()}, ${order.note.toLowerCase()}.` : `${order.label}, ${order.note.toLowerCase()}.`} Pay at checkout and {order.whole || order.count > 1 ? 'they unlock' : 'it unlocks'} here straight away.
       </p>
       <div className="mt-6 grid w-full gap-2">
         <Button size="lg" onClick={onCheckout}>Checkout</Button>

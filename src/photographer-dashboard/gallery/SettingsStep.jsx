@@ -320,7 +320,7 @@ function Options({ id, d, editCur, sets }) {
   const photoProduct = catalogProduct(catalogId, 'digital-download')
   const wholeProduct = catalogProduct(catalogId, 'digital-gallery')
   const sellsDigital = photoProduct && !photoProduct.hidden
-    ? { price: photoProduct.options[0].values[0].price, gallery: wholeProduct && !wholeProduct.hidden ? wholeProduct.options[0].values[0].price : null }
+    ? { price: Math.min(...photoProduct.options[0].values.map((v) => v.price)), files: photoProduct.options[0].values.length, gallery: wholeProduct && !wholeProduct.hidden ? Math.min(...wholeProduct.options[0].values.map((v) => v.price)) : null }
     : null
   if (id === 'pin') {
     return (
@@ -623,8 +623,8 @@ function HighResPrice({ product, free, onChange }) {
       options={[
         {
           id: 'paid',
-          label: `Paid · ${money(product.price)} a photo`,
-          hint: `Sold as Digital Download in your store${product.gallery ? `, or ${money(product.gallery)} for the whole gallery` : ''}. Visitors download it free once bought. Change prices in Store.`,
+          label: `Paid · ${product.files > 1 ? 'from ' : ''}${money(product.price)} a photo`,
+          hint: `Sold as Digital Download in your store${product.files > 1 ? ` (${product.files} file sizes)` : ''}${product.gallery ? `, or from ${money(product.gallery)} for the whole gallery` : ''}. Visitors download it free once bought. Change prices in Store.`,
         },
         { id: 'free', label: 'Free', hint: 'Anyone with downloads can save the original file.' },
       ]}

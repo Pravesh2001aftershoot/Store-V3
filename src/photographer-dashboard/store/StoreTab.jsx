@@ -258,7 +258,7 @@ function ProductRow({ p, s, active, onOpen, handle }) {
       thumb={<span className="block h-[224px] w-[224px] origin-top-left scale-[0.25]"><ProductImage product={p} className="h-full" /></span>}
       title={p.name}
       tags={<>{p.hidden && <Tag>Hidden</Tag>}{own && !p.hidden && <Tag tone="dark">Yours</Tag>}{s.isEdited(p.id) && !p.hidden && <Tag tone="success">Edited</Tag>}{p.badge && !p.hidden && <Tag className="max-sm:hidden">{p.badge}</Tag>}</>}
-      meta={p.digital ? `${category} · ${p.mode === 'gallery' ? 'Every photo, one price' : 'Price per photo'} · Unlocks High res in the gallery` : `${category} · ${MODE[p.mode]} · ${plural(p.options.find((o) => o.id === 'size').values.length, 'size')}`}
+      meta={p.digital ? `${category} · ${p.mode === 'gallery' ? `Every photo · ${plural(p.options.find((o) => o.id === 'size').values.length, 'file')}` : plural(p.options.find((o) => o.id === 'size').values.length, 'file')} · Unlocks High res in the gallery` : `${category} · ${MODE[p.mode]} · ${plural(p.options.find((o) => o.id === 'size').values.length, 'size')}`}
       price={
         <>
           <span className="block text-11-r text-type-3">from</span>

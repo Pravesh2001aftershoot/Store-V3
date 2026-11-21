@@ -7,7 +7,7 @@ import { productById } from '../data/catalog'
 import { getPhoto } from '../data/gallery'
 import { getActiveGalleryId, galleryPath } from '../data/galleries'
 import { recordPurchase } from '../data/purchases'
-import { lineIsDigital, lineSubtotal } from '../lib/pricing'
+import { lineIsDigital, lineSubtotal, sizeOf } from '../lib/pricing'
 import { downloadPhotos } from '../gallery/lib/actions'
 import CheckoutShell from '../components/CheckoutShell'
 import { Section, checkoutErrors } from './Checkout'
@@ -62,7 +62,16 @@ export default function Payment() {
     if (!files.length) return setEnded(true)
     const all = files.some((l) => productById[l.productId]?.mode === 'gallery')
     const photos = [...new Map(files.flatMap((l) => l.photos).map((e) => [e.photoId, getPhoto(e.photoId)])).values()]
-    recordPurchase(getActiveGalleryId(), { all, ids: photos.map((p) => p.id) })
+    // A line at the original resolution unlocks the photo outright; a smaller version unlocks just that version.
+    // The whole gallery in a smaller version unlocks that version of every photo.
+    const ids = [], versions = [], galleries = []
+    let originals = false
+    files.forEach((l) => {
+      const v = sizeOf(productById[l.productId], l.variant)
+      if (productById[l.productId]?.mode === 'gallery') return v.edge ? galleries.push(v.id) : (originals = true)
+      l.photos.forEach((e) => (v.edge ? versions.push({ photoId: e.photoId, version: v.id }) : ids.push(e.photoId)))
+    })
+    recordPurchase(getActiveGalleryId(), { all: originals, ids, files: versions, galleries })
     files.forEach((l) => dispatch({ type: 'remove', id: l.id }))
     setPaid({ all, photos, total: files.reduce((sum, l) => sum + lineSubtotal(l), 0), prints: lines.length - files.length })
   }

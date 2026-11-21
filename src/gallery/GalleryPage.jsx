@@ -18,7 +18,7 @@ import SizePrompt from './components/SizePrompt'
 import { people, withFaces } from './data/faces'
 import { registerPhoto } from '../data/gallery'
 import { MAX_SETS, downloadPhoto, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
-import { DownloadContext, useDownloads, useSizePref } from './lib/downloads'
+import { DownloadContext, useDownloads, useSizePref, versionOf } from './lib/downloads'
 import { VisitorContext, approvedPerson, useVisitor, useVisitorState } from './lib/visitor'
 import SignIn from './components/SignIn'
 import ScreenshotGuard from './components/ScreenshotGuard'
@@ -123,7 +123,7 @@ function ClientGallery({ data }) {
   const [selected, setSelected] = useState(() => new Set()) // selected photo ids
   const anchor = useRef(null) // id of the last photo toggled — the start of a Shift-click range
   const [lightboxId, setLightboxId] = useState(null) // id of the photo open in the lightbox
-  const [buying, setBuying] = useState(null) // { photo, product? } open in the quick-buy panel (product: start on it)
+  const [buying, setBuying] = useState(null) // { photo, product?, variant? } open in the quick-buy panel (product: start on it)
   const dl = useDownloads(data.clientKey) // the photographer's download rules + what this visitor has downloaded
   const [downloading, setDownloading] = useState(null) // the download pane: { initial, pick?, size? } while open
   const [sizePrompt, setSizePrompt] = useState(null) // SizePrompt: { mode: 'download' | 'change', photo, size, remember? } while open
@@ -299,11 +299,12 @@ function ClientGallery({ data }) {
   }
 
   // Quick buy works on store photos, so register this gallery photo with the store first.
-  // `productId` starts the panel on that product (e.g. the Digital Download from "Buy for $15").
-  const buy = (photo, productId) => {
+  // `productId` starts the panel on that product, and `variant` on that choice (e.g. the Digital
+  // Download in 3,600px from "Buy for $12").
+  const buy = (photo, productId, variant) => {
     setLightboxId(null)
     setSizePrompt(null)
-    setBuying({ photo: registerPhoto(photo), product: productId ?? null })
+    setBuying({ photo: registerPhoto(photo), product: productId ?? null, variant: variant ?? null })
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
@@ -337,10 +338,10 @@ function ClientGallery({ data }) {
       return
     }
     const size = sizePref ?? (dl.rules.sizes.length === 1 ? dl.rules.sizes[0]?.id : null)
-    const mustBuy = dl.isPaid(size) && !dl.owns(photo)
+    const mustBuy = dl.isPaid(size) && !dl.ownsSize(photo, size)
     const freeOut = selling && !dl.isPaid(size) && dl.isNew(photo) && dl.left < 1
     if (!size || mustBuy || freeOut) {
-      setSizePrompt({ mode: 'download', photo, size: freeOut ? 'high' : size, remember: !!sizePref })
+      setSizePrompt({ mode: 'download', photo, size: freeOut ? dl.rules.paid.full : size, remember: !!sizePref })
       return
     }
     saveOne(photo, size, !!sizePref)
@@ -359,11 +360,11 @@ function ClientGallery({ data }) {
     setSizePref(flag ? sizeId : null)
     saveOne(photo, sizeId, flag)
   }
-  // "Whole gallery in high res" from the size prompt: the pane, on the whole gallery in High res.
-  const buyGallery = () => {
+  // "Whole gallery in …" from the size prompt: the pane, on the whole gallery in that file version.
+  const buyGallery = (sizeId) => {
     setSizePrompt(null)
     setLightboxId(null)
-    setDownloading({ initial: 'all', size: 'high' })
+    setDownloading({ initial: 'all', size: sizeId ?? dl.rules.paid?.full })
   }
   // `left`: downloads left with a limit (badge on the tile and lightbox buttons), else null.
   const downloadLeft = dl.rules.limit != null ? dl.left : null
@@ -588,7 +589,7 @@ function ClientGallery({ data }) {
         dl={dl}
         photographer={gallery.photographer}
         galleryPhotos={ordered}
-        onBuy={(photo) => buy(photo, 'digital-download')}
+        onBuy={(photo, sizeId) => buy(photo, 'digital-download', { size: versionOf(sizeId) })}
         onBuyGallery={buyGallery}
         onClose={() => setSizePrompt(null)}
         onDone={answerSize}
@@ -597,7 +598,8 @@ function ClientGallery({ data }) {
       <QuickBuy
         photo={buying?.photo ?? null}
         startProduct={buying?.product}
-        digital={dl.rules.paid ? { owns: dl.owns, ownsAll: dl.ownsAll } : null}
+        startVariant={buying?.variant}
+        digital={dl.rules.paid ? { owns: dl.owns, ownsAll: dl.ownsAll, ownsGallery: dl.ownsGallery } : null}
         onClose={() => setBuying(null)}
       />
       <SelectionBar

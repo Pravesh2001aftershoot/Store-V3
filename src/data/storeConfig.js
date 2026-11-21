@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useSyncExternalStore } from 'react'
 import { persisted, readJSON } from '../lib/persisted'
-import { categories, packageById, packages, productById, products } from './catalog'
+import { categories, fileValue, galleryValue, packageById, packages, productById, products } from './catalog'
 import { DEFAULT_CATALOG, getActiveGalleryId, getGallery, subscribeActiveGallery, subscribeGalleries } from './galleries'
 
 // Store settings: the photographer's catalogs, made in the dashboard's Store section.
@@ -10,7 +10,10 @@ import { DEFAULT_CATALOG, getActiveGalleryId, getGallery, subscribeActiveGallery
 // built themselves. Each gallery sells from one catalog (gallery.catalogId).
 //
 //   { catalogs: [{ id, name, created,
-//       products     — { [productId]: { hidden, name, tagline, badge, prices: { [optionId]: { [valueId]: number } }, off: { [optionId]: [valueId] } } }
+//       products     — { [productId]: { hidden, name, tagline, badge, prices: { [optionId]: { [valueId]: number } }, off: { [optionId]: [valueId] },
+//                          files? — Digital Download only: [{ id, edge: px | null (original), watermark, price,
+//                                   gallery: { on, price, discount } }], replacing its file versions. The Whole
+//                                   Gallery Download sells the versions whose `gallery.on` is set } }
 //       order        — product ids in shop order (null = catalog order)
 //       packages     — { [packageId]: { hidden, name, tagline, discount, popular } }
 //       packageOrder — package ids in order (null = catalog order)
@@ -42,7 +45,11 @@ export const LIMITS = {
   // Custom products
   description: 400, detail: 60, details: 6, images: 6, sizes: 10, options: 4, choices: 8, optionLabel: 20, choiceLabel: 24, note: 40,
   inches: 60, setSize: 10, bookPhotos: 200,
+  // Digital Download file versions
+  files: 8,
 }
+/** Long edges (px) a Digital Download file version can be, besides the original resolution. */
+export const FILE_EDGES = [6000, 5000, 4000, 3600, 3000, 2800, 2400, 2048, 1600, 1200]
 /** Preview looks a custom product can borrow for the "your photo in it" mockup (ProductMockup styles). */
 export const LOOKS = [
   { id: 'print', label: 'Loose print' },
@@ -191,7 +198,32 @@ const resolveProduct = (orig, edit = {}) => {
     values = on.length ? on : values.slice(0, 1) // an option always keeps at least one value
     return { ...opt, values }
   })
+  // Digital Download: the photographer's own list of file versions replaces the delivered one.
+  if (orig.digital && orig.mode === 'unit' && Array.isArray(edit.files)) {
+    const files = readFiles(edit.files)
+    if (files.length) next.options = next.options.map((o) => (o.id === 'size' ? { ...o, values: files.map(fileValue) } : o))
+  }
   return next
+}
+
+/** Sanitises stored file versions: known edges (or null), a price, unique ids, up to LIMITS.files. */
+export const readFiles = (list) => {
+  const seen = new Set()
+  return list
+    .filter((f) => f && typeof f.id === 'string' && !seen.has(f.id) && seen.add(f.id))
+    .slice(0, LIMITS.files)
+    .map((f) => ({ ...f, gallery: f.gallery ?? (f.edge == null ? { on: true, price: 199, discount: 0 } : undefined) })) // files saved before whole-gallery offers keep the old $199 one
+    .map((f) => ({
+      id: f.id,
+      edge: FILE_EDGES.includes(f.edge) ? f.edge : null,
+      watermark: f.watermark === true,
+      price: num(f.price, 0),
+      gallery: {
+        on: f.gallery?.on === true,
+        price: num(f.gallery?.price, 0),
+        discount: num(f.gallery?.discount, 0, DISCOUNT.min, DISCOUNT.max),
+      },
+    }))
 }
 
 /**
@@ -215,7 +247,19 @@ const resolveCustom = (def) => {
 
 /** Every product a catalog can offer: the delivered ones, then its own. */
 const productDefs = (cat) => [...original.products, ...cat.customProducts]
-const resolveDef = (cat, def) => (def.custom ? resolveCustom(def) : resolveProduct(def, cat.products[def.id]))
+const resolveDef = (cat, def) => {
+  if (def.custom) return resolveCustom(def)
+  const next = resolveProduct(def, cat.products[def.id])
+  // The Whole Gallery Download sells its source product's versions that have a whole-gallery offer;
+  // with none, it isn't offered.
+  if (def.galleryOf) {
+    const src = original.productById[def.galleryOf]
+    const values = src ? resolveProduct(src, cat.products[src.id]).options.find((o) => o.id === 'size').values.filter((v) => v.gallery?.on).map(galleryValue) : []
+    if (values.length) next.options = next.options.map((o) => (o.id === 'size' ? { ...o, values } : o))
+    else next.hidden = true
+  }
+  return next
+}
 
 const resolvePackage = (orig, edit = {}) => {
   const next = clone(orig)
