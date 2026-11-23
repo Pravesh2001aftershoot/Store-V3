@@ -172,6 +172,19 @@ Product mockups use tiny literal radii such as `rounded-[2px]` to imitate physic
 
 Portfolio cards and photos are square-cornered: work is shown edge to edge, like the gallery grid. The portrait (`rounded-lg`) and list-row thumbnails (`rounded-md`) are the only rounded images.
 
+### Website (`src/website/WebsitePage.jsx`)
+
+| Part | Spec |
+|---|---|
+| Page width | `max-w-[1400px]`, 16px gutters, 32px from `md`. Sections `py-20`, `md:py-28`; Portfolio and FAQ sit on `surface-1` with a `border-t` to alternate with `surface-0`. |
+| Section head | `12-SB` uppercase `type-3` eyebrow, `36-SB` heading (`48-SB` from `md`), `16-R-P type-2` intro. Pricing's head is centred (max 640px). |
+| Hero | Full-bleed: `min(86svh, 860px)` tall (at least 480px), photo with a `black/70 → transparent` bottom gradient, white `48-SB` / `72-SB` headline, `white/80` subline, `light` button. Split: 6 / 6 columns from `lg`, photo `rounded-lg` 4:3 (4:5 from `lg`), `48-SB` → `60-SB` → `72-SB` headline. |
+| About | Portrait `rounded-lg` 4:5 in 5 columns, text in 7 from `lg`; facts in 3 columns from `sm` above a `border-t`, availability with an 8px `success` dot. |
+| Portfolio cards | `ProjectCard`, 2 columns (3 from `lg`), `gap-x-3 gap-y-8` (`gap-x-4` from `md`). |
+| Pricing cards | `rounded-2xl`, 24px padding (32px from `md`): bordered `surface-1`, or `primary` with `white/15` "Most popular" pill for the featured one. Name `16-SB`, price `48-SB` with the unit `14-R`, inclusions `14-R` with 16px bold checks above a hairline. 1 card: 420px; 2: two columns up to 860px; 3: three from `lg`; 4: two from `md`, four from `xl`. Full-width `lg` button (`light` on the featured card, `outline` otherwise). |
+| FAQ | 4 / 8 columns from `lg`: heading left, the shared `Accordion` right. |
+| Contact | 5 / 7 columns from `lg`; detail rows with 18px `type-2` icons over hairlines; the form in a bordered `rounded-2xl surface-1` card (20px, 32px from `md`), `Field`s two-up from `sm`, a 5-row textarea, submit full width on phones. Thank-you: 40px filled `success` `CheckCircle`, `20-M` title. |
+
 ## Iconography
 
 - Icons come from **Phosphor** (`@phosphor-icons/react`).

@@ -2,12 +2,13 @@
 
 ## Summary
 
-The client-facing side of Store V3 (the gallery, portfolio and print store) is built. Until now every setting was edited on the client page itself: the cover, heading and footer editors open from pencil buttons in the gallery, and the portfolio and store couldn't be edited at all. The Photographer Dashboard (`/dashboard`) moves that work into one place built for the photographer. It's laid out like a working dashboard: a sidebar on the left and three sections.
+The client-facing side of Store V3 (the gallery, portfolio and print store) is built. Until now every setting was edited on the client page itself: the cover, heading and footer editors open from pencil buttons in the gallery, and the portfolio and store couldn't be edited at all. The Photographer Dashboard (`/dashboard`) moves that work into one place built for the photographer. It's laid out like a working dashboard: a sidebar on the left and four sections.
 
 | Section | The photographer can… |
 |---|---|
 | **Galleries** | Create a gallery per client. In each one: add photos, sort them into collections, set the order and the cover, design the cover, grid, collection headings and footer against a live preview, choose who can open it and what visitors can do in it, share the link, and see who visited and what they downloaded, shared, favourited, commented on and bought. Each gallery picks the store catalog its clients buy from. |
 | **Portfolio** | Edit their profile, portrait, intro, which galleries and categories appear, and the contact section. |
+| **Website** | Build a one-page website at `/site` from ready-made sections — Hero, About, Portfolio (a few galleries, then a link to the full portfolio), Pricing, FAQ and Contact — against a live preview, the same way a gallery is designed. Reorder or hide sections and edit their text, photos, packages and questions. |
 | **Store** | Create catalogs (for example Weddings, Newborns). In each one: show or hide products and packages, put them in order, rename them, set sizes, prices, option add-ons and package discounts, and build their own packages. |
 
 Every change saves as it's made and shows on the client pages straight away. There is no draft or publish step, except in a gallery's Settings step, which has an explicit Save.
@@ -26,6 +27,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - A server. Settings live in this browser (see [Architecture.md](Architecture.md)).
 - Actually delivering the Share step's email (**Send** is simulated in the prototype), a client list, order management and fulfilment.
 - Real event tracking. Gallery analytics show sample data (see Gallery: Analytics).
+- Delivering the website's enquiry form (it shows a thank-you but sends nothing), custom domains, more than one page, and free-form page building (the website is made of fixed section types).
 - New categories, and products that aren't made from the client's photos (every product takes at least one gallery photo). Photographers can create products and packages, but only in the delivered categories.
 
 ## Users
@@ -36,8 +38,8 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Shell
 
-- R1. A left sidebar with the logo, the three sections (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the step rail's **Back** button and the breadcrumb's "Galleries" link lead back. Phones keep the top bar.
-- R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio`, `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
+- R1. A left sidebar with the logo, the four sections — Galleries, Portfolio, Website, Store (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the step rail's **Back** button and the breadcrumb's "Galleries" link lead back. Phones keep the top bar.
+- R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio`, `/dashboard/website` (`?part=` names the open part), `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
 - R3. Each gallery has **View** (its client link), and each catalog has **Preview store** (the print store with that catalog), both in a new tab.
 
 ### Galleries
@@ -104,6 +106,19 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R22. The profile also fills in the gallery footer's contact details.
 - R23. Like Design, but the editor ("Customize portfolio") is docked to the **right** of a live `/portfolio` preview that follows the open tab, or a sheet on narrow screens.
 
+### Website
+
+- W1. The photographer's website is one static page at `/site`, made of six sections: **Hero**, **About**, **Portfolio**, **Pricing**, **FAQ** and **Contact**, under a sticky header (site title, links to the visible sections, **Enquire**) and above a footer (footer text, Portfolio link, Back to top).
+- W2. **Site settings:** site title (defaults to the photographer's name, 40 max), footer text (defaults to "© <year> <name>", 80 max), the header's Enquire button on or off, and the section list: every section can be switched off; About, Portfolio, Pricing and FAQ can be moved up or down. Hero stays first and Contact last.
+- W3. **Hero:** layout Full-bleed (photo fills ~86% of the screen, text over it) or Split (text beside the photo); headline (60), subline (160), a button on or off with its label (24) that goes to Contact; a landscape photo picked from the portfolio (defaults to the newest gallery's first landscape photo).
+- W4. **About:** heading (defaults to "Hi, I’m <first name>."), story (600; defaults to the portfolio bio), a portrait-orientation photo from the portfolio or the profile portrait, and a quick-facts row (location, year started, availability from the profile) on or off.
+- W5. **Portfolio:** heading, intro (200), button label (defaults to "View full portfolio"), 3 or 6 galleries, and up to that many featured galleries picked in order (none picked = the newest). Only galleries visible on the portfolio are offered. Cards open the gallery's portfolio page; the button opens `/portfolio`.
+- W6. **Pricing:** heading, intro, currency ($, €, £), up to 4 packages (name 30, price, "per" 20, description 120, up to 8 inclusions of 60, and one "Most popular" package highlighted), reorder and remove (with Undo), and a small-print note (160). A package without a name isn't shown; with no packages the section isn't shown. Each card's button goes to Contact.
+- W7. **FAQ:** heading and up to 12 questions (question 100, answer 400), reorder and remove (with Undo). A question without both parts isn't shown; with none the section isn't shown. The first answer starts open.
+- W8. **Contact:** heading, intro, button label; an enquiry form (name, email, optional event date, message, validated inline) or, with the form off, an email button; and Email, Location and Instagram rows on or off. Details come from the portfolio profile.
+- W9. Every text field shows its default as a placeholder; clearing it returns to the default. Each section has **Reset section**; Site settings has **Reset website**.
+- W10. Same workspace as Design (R10): live `/site` preview, the open part's editor docked on its right, and a parts rail on the far right (Site settings, a divider, then the sections in page order). Below 960px the parts are chips above the preview and editors open as a bottom sheet.
+
 ### Store: catalogs
 
 - C1. A list of catalogs as cards: name, product and package counts, the lowest price, four product thumbnails, which galleries use it, and a "Customised" tag once edited. The **Main catalog** always exists and can't be deleted; new galleries use it unless another is picked.
@@ -136,6 +151,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - A photographer can take the mock gallery from as delivered to customised (new photos, a new collection, a cover, a footer) without leaving `/dashboard`.
 - A photographer can create a second gallery from their own photos, give it a Weddings catalog with different prices, a product and a package of their own, and its client sees those prices while the first gallery's client doesn't.
 - Every edit shows in the preview in under a second, with no reload.
+- A photographer can turn on a website with their packages, three FAQs and a featured set of galleries, and send a visitor from it to the full portfolio, without leaving `/dashboard`.
 - Every tab is usable at 390px wide.
 
 ## Open questions
@@ -149,4 +165,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - **Settings vs Gallery info.** The gallery card's Settings opens a "Gallery settings" modal (title, client, date, catalog) and the rail's Settings step is also titled "Gallery settings" (access and permissions). Inside a gallery those fields are now Design's "Gallery info". Rename the modal to match, or rename the step (for example "Access")?
 - **Email templates: account or gallery?** Saved email templates are account-wide today. Open: should the photographer be able to set their own default template, rename one, or share templates across a studio team?
 - **Settings templates.** The source mockup also had saved templates of settings (Default, Wedding – Clients & Guests, Portrait – Public) and Free / Paid download sizes (paid downloads are now store products, see R14c and R26b). Templates aren't built yet: are they needed for v1? Should paid download revenue show in Analytics → Revenue and Orders?
+- **Website: where do enquiries go?** The form validates and thanks the visitor but sends nothing. Production needs delivery to the photographer (email, an inbox in the dashboard, or a CRM), spam protection and a record of enquiries.
+- **Website: one page or several?** Today it's one page with fixed section types. Do photographers need separate pages (a full About, a Pricing page per service), custom sections, their own domain, and should the website replace `/portfolio` as the public home?
+- **Website pricing vs store packages.** Website packages are services (wedding coverage), separate from store packages (prints). Should they link, e.g. a collection that includes an album from the catalog?
 - **Should clients still see edit pencils?** The gallery's own pencils remain for now, but are hidden in the dashboard preview. Once there's a photographer login they should only show to the photographer.

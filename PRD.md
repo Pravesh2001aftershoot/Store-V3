@@ -189,6 +189,21 @@ Full-screen, three steps: **Photos → Crop → Review**. A sticky top bar shows
 
 **Portfolio content in the prototype:** about 500 photos across 4 genres (Weddings, Couples, Families, Portraits), split into mock galleries with placeholder client names, places and dates. Profile copy and the contact email are placeholders.
 
+### 5.8 Photographer website (`/site`)
+
+A one-page website the photographer builds in the dashboard's Website tab (see [src/photographer-dashboard/PRD.md](src/photographer-dashboard/PRD.md), W1–W10).
+
+| # | Requirement | Status |
+|---|---|---|
+| S1 | Sticky header: site title (scrolls to top), links to the visible sections (About, Work, Pricing, FAQ), and **Enquire** (to Contact, or `mailto:` when Contact is hidden) | ✅ (links hidden below 768px) |
+| S2 | Hero: full-bleed photo with the headline over it, or split (text beside the photo); optional button to Contact | ✅ |
+| S3 | About: portrait, heading, story and a quick-facts row (location, since, availability) | ✅ |
+| S4 | Portfolio: heading, intro, 3 or 6 gallery cards (picked, or the newest), and a button to the full portfolio (`/portfolio`) | ✅ |
+| S5 | Pricing: up to 4 packages with price, unit, description and inclusions; one can be highlighted as "Most popular"; each enquires via Contact; a small-print note | ✅ |
+| S6 | FAQ: accordion of up to 12 questions, first one open | ✅ |
+| S7 | Contact: enquiry form (name, email, optional event date, message) with inline validation and a thank-you state, or an email button; email, location and Instagram rows | ✅ (the form sends nothing in the prototype) |
+| S8 | Sections can be reordered (About to FAQ) and hidden; every edit shows live in the dashboard preview | ✅ |
+
 ## 6. Business rules
 
 **Pricing**

@@ -209,6 +209,39 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - **Contact:** Heading (empty means the default), switches for Availability, Location and Instagram, and the header's Enquire button.
 - **Reset all** asks first, then restores every portfolio default.
 
+## Website
+
+The photographer's one-page website (`/site`), edited like a gallery's Design step.
+
+### Docked (960px and wider)
+1. The sidebar stays. The preview fills the middle, the open editor sits on its right, and the parts rail is on the far right: Site settings, a divider, then Hero, About and the movable sections in their current page order, then Contact.
+2. One editor is always open, Hero to start. Clicking a part swaps the editor and the preview scrolls to it (Site settings and Hero: the top; the others: their section). A hidden section's icon is dimmed with an amber dot; its tooltip says "Hidden from your website".
+3. The part is in the URL (`?part=pricing`), replacing the history entry. Docked editors have no ✕ or **Done**; the footer has **Reset section** (Site settings: **Reset website**).
+4. The toolbar's last button hides or shows the editor column; picking a part shows it again.
+
+### Not docked
+- Chips for the seven parts above a full-width preview (hidden sections dimmed). Tapping one opens its editor as a bottom sheet with Preview / Edit, ✕ and **Done**; Reset and Done share the row on phones.
+
+### Editors
+- Every section starts with **Show on website**. Off: the section leaves the page and the header links, the box turns amber ("Hidden — your edits are kept"), and the edits stay.
+- Text fields show their default as the placeholder with "Leave empty to use the default"; clearing one returns to the default. Limits are enforced as you type.
+- **Site settings:** Site title, Footer, Enquire button switch. In **Sections**, tapping a name opens that part; ↑ / ↓ move About, Portfolio, Pricing and FAQ (disabled at the ends); Hero shows "First" and Contact "Last". The switch shows or hides the section. A note links to Portfolio for name, email, location and Instagram.
+- **Hero:** Full-bleed or Split card; Headline, Subline; Button with its own switch (off dims the field). **Change photo** opens a grid of landscape portfolio photos (Show more adds 24); picking one closes it. **Use newest gallery** appears once a photo is picked.
+- **About:** Heading, Your story (empty uses the portfolio bio), portrait photo picker (**Use my portrait** to go back), Quick facts switch.
+- **Portfolio:** Heading, Intro, Button; **3 galleries / 6 galleries** (going down trims the picks). Featured: tick galleries in the order you want them (the order number shows as a dark tag); when the limit is reached the rest dim, and ticking one toasts "Up to N galleries — untick one first". **Clear picks** goes back to the newest. 12 at a time with Show more.
+- **Pricing:** Heading, Intro, Currency. Packages are collapsed cards (name, ★ if most popular, "$3,800 per wedding · 5 inclusions"); tap to open. Inside: Name, Price (a `$` field; empty on blur means 0), Per, Description, What’s included (edit in place, ✕ to remove, an emptied line is removed on blur, Add field + Enter or **Add**, 8 max), Most popular switch (turning it on turns it off on the others). **Add package** (up to 4) adds "Package N" and opens it. Trash removes at once and toasts "“Name” removed" with **Undo**.
+- **FAQ:** Heading; questions as collapsed cards. An incomplete one says "Not shown — add an answer" in amber. **Add question** (up to 12) adds a blank one and opens it; trash toasts "Question removed" with **Undo**.
+- **Contact:** Heading, Intro, Button (hint changes with the form); **Show the form** (off: an email button instead); **Ask for the event date** (dimmed while the form is off); Email, Location and Instagram switches with the profile values as hints.
+- **Reset section** / **Reset website** ask first, then toast "<Section> reset" / "Website reset".
+
+### The website (`/site`)
+- Header links scroll to their section; the site title scrolls to the top; **Enquire** goes to Contact (or emails the photographer when Contact is hidden). Links hide below 768px.
+- The Hero button and every package's **Enquire about <name>** go to Contact.
+- Portfolio cards open the gallery's portfolio page (hover scrubs through photos, as on the portfolio). The button opens `/portfolio`; below 768px it's full width under the cards.
+- FAQ is the shared `Accordion`, first answer open.
+- The contact form checks name, email format and message on **Send**, showing the error under each field; once valid it shows "Thanks, <first name>!" with **Send another**. Nothing is sent.
+- With every section off, the page says "This site has no sections switched on yet."
+
 ## Store: catalogs
 
 | Action | Result |

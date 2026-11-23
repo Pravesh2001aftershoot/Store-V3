@@ -186,7 +186,7 @@ function PartsRail({ step, ws, top }) {
 }
 
 /** Rail tooltip: name over a hint, beside the icon (`side` it opens towards) on hover or focus. Hidden on phones. */
-function Tip({ title, detail, side }) {
+export function Tip({ title, detail, side }) {
   return (
     <span
       className={cn(

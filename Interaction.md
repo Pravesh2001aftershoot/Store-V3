@@ -512,6 +512,23 @@ Shared by both portfolio pages.
 | "Browse galleries" | Click | On `/portfolio`: smooth-scrolls to `#work`. On a gallery page: navigates to `/portfolio#work` and lands there instantly | n/a | Browser native / router |
 | "Back to top" | Click / hover | Smooth-scrolls to the top. Text `type-3 → type-0` on hover | `scrollTo({ top: 0, behavior: 'smooth' })` | Browser native + Tailwind |
 
+## Website (`/site`): [src/website/WebsitePage.jsx](src/website/WebsitePage.jsx)
+
+| Element | Trigger | Animation | Values | Library |
+|---|---|---|---|---|
+| Page | Arrival | Jumps to the URL hash target, or to the top (once, on arrival) | `scrollIntoView({ behavior: 'instant' })` | Browser native |
+| Header links, Enquire, Hero button, "Enquire about <package>" | Click | Smooth-scroll to the section, stopping `64px` below the top (`scroll-mt-16`). Enquire / buttons go to `#contact`, or open `mailto:` when Contact is hidden | `html { scroll-behavior: smooth }` | Browser native |
+| Site title | Click | Smooth-scrolls to the top | `scrollTo({ top: 0, behavior: 'smooth' })` | Browser native |
+| Full-bleed hero photo | Mount | Scales from 1.06 to 1 | `1.6s`, app curve | framer-motion |
+| Split hero photo | Mount | Fades and scales from 0.97 | `1.1s`, app curve | framer-motion |
+| Hero headline | Mount / text change | [SplitText](#splittext-srccomponentsuiindexjsx) (re-runs when the headline changes) | n/a | framer-motion |
+| Section heads, cards, rows | In view | [Reveal](#reveal-srccomponentsuiindexjsx); cards stagger `0.06s` | n/a | framer-motion |
+| Portfolio card | Hover / click | [`ProjectCard`](#projectcard-and-projectrow-srcportfoliocomponentsprojectcardjsx) scrub; opens `/portfolio/<slug>` | n/a | framer-motion / router |
+| "View full portfolio" | Click | Navigates to `/portfolio` | n/a | router |
+| FAQ | Click a question | [Accordion](#accordion-srccomponentsuiindexjsx); the first starts open | n/a | framer-motion |
+| Contact form | Submit | Validates name, email format and message; errors show under each field (`Field` `error`, `destructive` border). Valid: the form is replaced by "Thanks, <first name>!" and **Send another** resets it. Nothing is sent | n/a | React state |
+| Dashboard preview | Message from the Website tab | Smooth-scrolls to `top` or the section id (64px offset) | `usePreviewTarget` + `scrollToEl` | Browser native |
+
 ## Portfolio gallery (`/portfolio/:slug`): [src/portfolio/ProjectPage.jsx](src/portfolio/ProjectPage.jsx)
 
 | Element | Trigger | Animation | Values | Library |

@@ -34,6 +34,9 @@ src/photographer-dashboard/
 ├── portfolio/
 │   ├── PortfolioTab.jsx       /portfolio preview with the editor docked on its right
 │   └── PortfolioEditor.jsx    Profile, Intro, Work, Contact tabs
+├── website/
+│   ├── WebsiteTab.jsx         /dashboard/website: /site preview + docked editor column + right-hand `PartsRail` (Site settings, divider, sections in page order); chips + sheet below 960px; `?part=` in the URL
+│   └── WebsiteEditor.jsx      One `EditorPane` per part (`PART_META`: title, tooltip detail, preview target): Site settings, Hero, About, Portfolio, Pricing, FAQ, Contact
 ├── store/
 │   ├── CatalogsPage.jsx       Catalog cards, New catalog (everything / nothing / copy), rename, duplicate, delete
 │   ├── StoreTab.jsx           One catalog (/store/:catalogId): summary, product and package lists, New product, New package
@@ -54,6 +57,7 @@ Settings modules (outside this folder, owned by their module):
 | Collection headings | `src/gallery/templates/set-header/config.js` | `galleryKey(id, 'sections')` |
 | Footer | `src/gallery/templates/footer/config.js` | `galleryKey(id, 'footer')` |
 | Portfolio | `src/portfolio/data/config.js` (`usePortfolio`) | `store-v3:portfolio` |
+| Website | `src/website/data/config.js` (`useWebsite`) | `store-v3:website` |
 | Store catalogs | `src/data/storeConfig.js` (`useCatalogs`, `useStoreConfig`) | `store-v3:store` |
 | Saved email templates | `photographer-dashboard/gallery/share.js` (`useEmailTemplates`) | `store-v3:email-templates` |
 
@@ -69,11 +73,12 @@ Settings modules (outside this folder, owned by their module):
 | `/dashboard/galleries` | `GalleriesPage` |
 | `/dashboard/galleries/:galleryId/:step?` | `GalleryTab`; `step` is `photos` (default), `design`, `settings`, `share` or `analytics`. An unknown gallery redirects to the list, an unknown step to Photos. |
 | `/dashboard/portfolio` | `PortfolioTab` |
+| `/dashboard/website` | `WebsiteTab`; `?part=site|hero|about|portfolio|pricing|faq|contact` picks the open editor (docked default: Hero) |
 | `/dashboard/store` | `CatalogsPage` |
 | `/dashboard/store/:catalogId` | `StoreTab`; an unknown catalog redirects to the list |
 | `/dashboard/gallery/:step?` | Old URL: redirects to the sample gallery |
 
-Client routes in `App.jsx`: `/` redirects to `/dashboard` (the app's entry point), and `/g/:galleryId` renders `GalleryPage` for that gallery. The store's "Back to gallery" and the portfolio's "Gallery" link go to the active gallery's `/g/<id>`.
+Client routes in `App.jsx`: `/` redirects to `/dashboard` (the app's entry point), `/g/:galleryId` renders `GalleryPage` for that gallery, and `/site` renders `WebsitePage` (the photographer's website). The store's "Back to gallery" and the portfolio's "Gallery" link go to the active gallery's `/g/<id>`.
 
 ## Galleries: `data/galleries.js`
 
@@ -107,7 +112,7 @@ PreviewFrame ── postMessage({type:'store-v3:preview', target}) ──▶ use
 ```
 
 - The iframe loads the real client page (`/g/<id>` for a gallery) with `?embed=1`. `isEmbedded()` hides the page's own edit buttons (the cover's "Edit cover", the footer's and headings' pencils).
-- **Targets.** The gallery accepts `cover`, `grid`, `footer` and `section:<collection>`. `footer` first loads the whole grid (the infinite list would otherwise keep pushing the footer away). The portfolio accepts `top` or an element id (`work`, `contact`). Messages from other origins are ignored.
+- **Targets.** The gallery accepts `cover`, `grid`, `footer` and `section:<collection>`. `footer` first loads the whole grid (the infinite list would otherwise keep pushing the footer away). The portfolio accepts `top` or an element id (`work`, `contact`). The website accepts `top` (Site settings, Hero) or a section id (`about`, `portfolio`, `pricing`, `faq`, `contact`). Messages from other origins are ignored.
 - **Device widths.** The iframe is rendered at 1280, 820 or 390px and scaled with a CSS transform to fit the stage, so the page's own breakpoints (`useBreakpoint`, media queries) are true. On phones (`fit`) it renders at the stage's own width.
 - The store has no preview frame. Its changes are visible in the list itself, and "View store" opens the live store.
 
@@ -202,6 +207,18 @@ and the emails sent, `useShareHistory()` = `forGallery('share-history', loadHist
 
 `usePortfolio()` (`portfolio/data/config.js`) returns the resolved profile (stored fields over the mock `profile`; empty text falls back), the visible `galleries` and `genres` (title and label overrides, hidden ones removed, genres in the photographer's order), `allGalleries` and `allGenres` for the editor, section settings and setters. `Hero`, `Contact`, `PortfolioHeader`, `WorkGrid`, `ProjectPage` and the gallery's `FooterSection` read from it instead of importing `profile` or `galleries` directly. The portrait is `{ id }` (a portfolio photo) or `{ src }` (an upload at 1200px, as a data URL in localStorage).
 
+## Website tab
+
+`useWebsite()` (`src/website/data/config.js`) stores `{ site, order, hidden, hero, about, portfolio, pricing, faq, contact }` under `store-v3:website`:
+
+- `order` — the movable sections (`about`, `portfolio`, `pricing`, `faq`); `load()` drops unknown ids and appends missing ones. `hidden` — switched-off section ids. `sections` (returned) is `['hero', ...order, 'contact']` minus hidden ones: the page order.
+- Text is stored as typed; empty falls back to `fallbacks(profile)` (some read the portfolio profile). Photos are `{ id }` of a portfolio photo (`landscapePhotos` for the hero, `portraitPhotos` for About) or `null` for the default.
+- `pricing.packages: [{ id, name, price, unit, description, features: [string], featured }]` (ids `pkg-<base36>` from `newId`), `faq.items: [{ id, q, a }]`. The resolved values drop unnamed packages and incomplete questions. `portfolio.featured` is a list of portfolio gallery slugs; resolved `portfolio.galleries` is those still visible (or the newest), cut to `count` (3 or 6).
+- It reads `usePortfolio()` for the profile and visible galleries (returned as `pf`), so profile edits flow into the website.
+- Setters: `setSite`, `setHero`, `setAbout`, `setPortfolio`, `setPricing`, `setFaq`, `setContact` (a patch or `(section) => patch`), `toggleSection`, `moveSection(id, ±1)`, `resetSection(id)`, `reset`. `LIMITS` holds every character and count limit.
+
+`src/website/WebsitePage.jsx` renders the sections in `sections` order, each with its id, and handles the preview target. It reuses `ProjectCard` from the portfolio, and `Accordion`, `Field`, `Reveal`, `SplitText` and `Button` from `components/ui`. The contact form is local state only.
+
 ## Store: catalogs
 
 `data/storeConfig.js` is imported for its side effect in `main.jsx`, before anything reads the catalog. It stores `{ catalogs: [{ id, name, created, products, order, packages, packageOrder, custom, customProducts }] }` under `store-v3:store`; the single set of edits saved before catalogs existed is migrated into the Main catalog (`id: 'default'`).
@@ -237,6 +254,7 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 | `buildAnalytics` sample data | Events recorded by the client gallery (visit, download, full download, share, favourite, comment) and orders from the store, keyed by the visitor's email, aggregated per gallery by the API |
 | **Send** only toasts (`EmailComposer` `send`) | Send from the platform (templates, tracking, per-recipient links or tokens) |
 | Gallery settings saved to `localStorage` and enforced in the browser by the client gallery (`src/gallery/lib/visitor.js`) | The gallery API applies access (sign-in, password, approved list, role links, expiry) and permissions server-side; the client gallery reads them to show or hide favorites, comments, downloads and sharing |
+| Website settings in localStorage, enquiry form sends nothing | A site resource per photographer, published to their domain; enquiries posted to the API and delivered to the photographer |
 | Everyone can open `/dashboard` | Photographer auth; client pages hide every edit affordance |
 
 ## Known gaps
@@ -246,6 +264,9 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
 - **Gallery settings are enforced only in the browser.** The client gallery reads the saved settings (`src/gallery/lib/visitor.js`, `downloads.js`): a sign-in screen (role, email or approved list, password, face scan, expiry) and every action (favorites + limit, hide + bulk hide on the Client role, filter by face, face scan → only their photos, sharing, set visibility, screenshot protection, downloads). Passwords and approved emails are in `localStorage`, so this is a prototype of the rules, not security. A gallery that was never saved, and the dashboard preview (`?embed=1`), stay open with no sign-in. Comments and video sharing / downloads have nothing to act on in the client gallery yet.
 - **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).
+- **Website enquiries aren't delivered.** The `/site` contact form validates and shows a thank-you, nothing more.
+- **Website photos come only from the portfolio.** There's no upload for the hero or About photo, and no focal point.
+- **Website pricing packages don't link to store packages or catalogs.**
 - **Per device.** All settings are local to the browser. Opening the gallery on another device shows the defaults.
 - **No drafts.** Every edit is live immediately (see the PRD's open questions).
 - **No touch reorder for photos.** HTML5 drag-and-drop doesn't fire on touch screens, so phones can move photos between collections but can't reorder them (keyboard reorder needs a hardware keyboard). Products, packages and portfolio categories do reorder on touch.

@@ -55,12 +55,15 @@ src/
 │       ├── actions.js    Toasts pub/sub, download / share (single and bulk), usePersistedIds, useFavorites, useHidden, useSets
 │       ├── downloads.js  Download rules for the visitor's audience, useDownloads (allowance + PIN), useSizePref (saved size for one photo), `quote` + `addOrderToCart` for paid high res, fitAllowance, DownloadContext
 │       └── visitor.js    Sign-in session, resolveVisitor (audience + sign-in steps), permissionsFor, VisitorContext / usePermissions
-├── photographer-dashboard/  /dashboard: sidebar app — galleries (many), Portfolio, Store catalogs (many).
+├── photographer-dashboard/  /dashboard: sidebar app — galleries (many), Portfolio, Website, Store catalogs (many).
 │                         Has its own Architecture.md, PRD.md, DesignSystem.md and Interactions.md.
 ├── lib/persisted.js      Shared localStorage value, synced across components and documents (all settings hooks)
 ├── lib/embed.js          ?embed=1 preview mode and dashboard → preview messages
 ├── data/galleries.js     Gallery registry, GalleryProvider / useGalleryId, galleryKey(), active gallery
 ├── data/storeConfig.js   Store catalogs; the active one is applied to the catalog in place
+├── website/              Photographer website (/site), built in the dashboard's Website tab
+│   ├── WebsitePage.jsx   Header, the sections in page order (Hero, About, Portfolio, Pricing, FAQ, Contact), footer; preview targets
+│   └── data/config.js    useWebsite(): settings under `store-v3:website`, defaults, LIMITS, formatPrice
 └── portfolio/            Photographer portfolio module, kept self-contained
     ├── PortfolioPage.jsx Page composition: header, Hero, WorkGrid, Contact; lands on a #hash on arrival
     ├── ProjectPage.jsx   One gallery: title, details, masonry photos, "More <genre>"
@@ -86,7 +89,8 @@ Defined in `src/App.jsx`.
 | `/portfolio` | `PortfolioPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
 | `/portfolio/:slug` | `ProjectPage` | Own layout (`PortfolioHeader` + `Contact` footer) |
 | `/g/:galleryId` | `GalleryPage` for that gallery | Own layout (cover + sticky nav). The client's link; the sample is `/g/lexie-taylor`. Unknown ids show "This gallery isn't available". With access settings saved, the sign-in screen shows first (see Sign-in and permissions). `?role=client|guest|vendor` picks the role on a per-role link |
-| `/dashboard/*` | `PhotographerDashboard` (galleries, galleries/:id/:step, portfolio, store, store/:catalogId) | Own layout; see `src/photographer-dashboard/Architecture.md` |
+| `/site` | `WebsitePage` | Own layout (sticky header + footer). The photographer's one-page website; sections and order come from `store-v3:website` |
+| `/dashboard/*` | `PhotographerDashboard` (galleries, galleries/:id/:step, portfolio, website, store, store/:catalogId) | Own layout; see `src/photographer-dashboard/Architecture.md` |
 | `/store` | `Home` | `Layout` (header, footer, cart drawer) |
 | `/shop`, `/shop/:categoryId` | `Shop` | `Layout` |
 | `/product/:productId` | `Product` | `Layout` |
@@ -300,6 +304,12 @@ CSS-only mockups keyed on `product.style`. They react to the variant (frame colo
 - **Actions** (`lib/actions.js`).
   - Download fetches the image as a blob and saves it, falling back to opening it in a new tab. `downloadPhoto(photo, size?)` adds the size label to the toast and can pass a toast button; the prototype saves the same file for every size. `notify(message, action?)` takes an optional `{ label, onClick }`, shown as a button in the toast, which then stays 5s instead of 2.6s.
   - Share uses the Web Share API, with a file where `canShare` supports it, and falls back to copying a link to the clipboard.
+
+### Photographer website (`src/website/`)
+
+- **Settings** (`data/config.js`, `useWebsite()`), persisted with `persisted()` under `store-v3:website`: `site` (title, enquire, footer), `order` (About, Portfolio, Pricing, FAQ), `hidden`, and one object per section (`hero`, `about`, `portfolio`, `pricing.packages[]`, `faq.items[]`, `contact`). Empty text falls back to `fallbacks(profile)`. Full shape in `src/photographer-dashboard/Architecture.md` → Website tab.
+- **Reads the portfolio.** Profile (name, bio, email, location, Instagram, portrait) and the visible galleries come from `usePortfolio()`, so portfolio edits show on the website. Photos are portfolio photos by id.
+- **Page** (`WebsitePage.jsx`). Renders `sections` (Hero first, Contact last, hidden ones removed) with ids `hero`, `about`, `portfolio`, `pricing`, `faq`, `contact` (`scroll-mt-16`). Pricing and FAQ render nothing without packages / complete questions. Reuses `ProjectCard`, `Accordion`, `Field`, `Reveal`, `SplitText`, `Button`. In the dashboard preview, `usePreviewTarget` scrolls to `top` or a section id. The contact form is local state (no request).
 
 ### Photographer portfolio (`src/portfolio/`)
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, matchPath, useLocation, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowSquareOut, Images, List, Storefront, UserCircle, X } from '@phosphor-icons/react'
+import { ArrowSquareOut, Globe, Images, List, Storefront, UserCircle, X } from '@phosphor-icons/react'
 import { gallery as brand } from '../data/gallery'
 import { DEFAULT_GALLERY, useGalleries } from '../data/galleries'
 import { useCatalogs } from '../data/storeConfig'
@@ -16,6 +16,7 @@ import GalleryTab from './gallery/GalleryTab'
 import PortfolioTab from './portfolio/PortfolioTab'
 import CatalogsPage from './store/CatalogsPage'
 import StoreTab from './store/StoreTab'
+import WebsiteTab from './website/WebsiteTab'
 
 const RECENT = 5
 
@@ -23,6 +24,7 @@ const RECENT = 5
  * Photographer dashboard — where the photographer sets up what clients see:
  *   Galleries — one per client: photos, then the cover, grid, collection headings and footer
  *   Portfolio — profile, intro, which work is shown, contact
+ *   Website   — a static site (/site): hero, about, portfolio teaser, pricing, FAQ, contact
  *   Store     — catalogs of products, packages and prices; each gallery sells from one
  * Every change saves as it's made and shows on the client pages straight away.
  *
@@ -55,6 +57,7 @@ export default function PhotographerDashboard() {
           <Route path="galleries" element={<GalleriesPage />} />
           <Route path="galleries/:galleryId/:step?" element={<GalleryTab />} />
           <Route path="portfolio" element={<PortfolioTab />} />
+          <Route path="website" element={<WebsiteTab />} />
           <Route path="store" element={<CatalogsPage />} />
           <Route path="store/:catalogId" element={<StoreTab />} />
           {/* Before galleries: the one gallery lived at /dashboard/gallery. */}
@@ -116,10 +119,11 @@ function PhoneBar({ onMenu }) {
 const SECTIONS = [
   { to: '/dashboard/galleries', label: 'Galleries', icon: Images },
   { to: '/dashboard/portfolio', label: 'Portfolio', icon: UserCircle },
+  { to: '/dashboard/website', label: 'Website', icon: Globe },
   { to: '/dashboard/store', label: 'Store', icon: Storefront },
 ]
 
-/** Logo, the three sections (with counts), recent galleries and the profile. */
+/** Logo, the four sections (with counts), recent galleries and the profile. */
 function Sidebar({ full }) {
   const { galleries } = useGalleries()
   const { catalogs } = useCatalogs()

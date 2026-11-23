@@ -12,6 +12,7 @@ import Payment from './pages/Payment'
 import GalleryPage from './gallery/GalleryPage'
 import PortfolioPage from './portfolio/PortfolioPage'
 import ProjectPage from './portfolio/ProjectPage'
+import WebsitePage from './website/WebsitePage'
 import PhotographerDashboard from './photographer-dashboard/PhotographerDashboard'
 
 export default function App() {
@@ -24,6 +25,8 @@ export default function App() {
       {/* Photographer portfolio, opened from the photographer's name in the gallery nav. */}
       <Route path="portfolio" element={<PortfolioPage />} />
       <Route path="portfolio/:slug" element={<ProjectPage />} />
+      {/* Photographer website: a static one-page site built in the dashboard's Website tab. */}
+      <Route path="site" element={<WebsitePage />} />
       {/* Photographer dashboard: set up the gallery, portfolio and store clients see. */}
       <Route path="dashboard/*" element={<PhotographerDashboard />} />
       <Route element={<Layout />}>
