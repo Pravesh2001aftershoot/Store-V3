@@ -10,7 +10,7 @@ import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented, TextField } from '../../gallery/templates/cover/controls'
-import { Checkbox, IconButton, PageHeader, Select, ease } from '../components/ui'
+import { Checkbox, IconButton, Select, ease } from '../components/ui'
 import Modal from '../components/Modal'
 import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
@@ -30,66 +30,73 @@ const copy = async (text, ok) => {
 }
 
 /**
- * Step 4 — Share. Everything the client needs to get in, built from the Settings step: each link with
- * its passwords, download PINs and expiry; then two ways to send it to everyone at once, one email
- * (wording, details and recipients editable) and one QR card; then the history of emails sent.
+ * Step 4 — Share. No page title; one "Share your gallery" card with three tabs: Links (each link with its passwords, download
+ * PINs and expiry, built from the Settings step), Email (one email for everyone; wording, details and
+ * recipients editable) and QR code (one QR card); then the history of emails sent.
  * (Send is simulated in the prototype: it checks there are recipients and toasts.)
  */
 export default function ShareStep({ ws }) {
-  const { cover, media } = ws
   const [access] = useGalleryAccess()
   const base = `${window.location.origin}${galleryPath(ws.gallery.id)}`
-  const [method, setMethod] = useState('email')
-  const roles = access.mode === 'roles'
-
-  const accessSummary = roles
-    ? `By role · ${access.roles.map(rolePlural).join(', ')} · ${access.singleLink ? 'one link' : 'a link each'}`
-    : `Anyone with the link${access.data.anyone.pin.on ? ' · password' : ''}`
+  const [method, setMethod] = useState('links')
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pb-40 pt-6 md:px-6 md:pt-10">
-      <PageHeader title="Share with your clients" />
-
-      {/* Desktop: left column = cover + links, then the email history; right column = "Send by" across both rows.
-          Stacked (under 1024px): links, Send by, then the email history. */}
-      <div className="mt-6 grid items-start gap-6 md:mt-8 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
-        <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface-1">
-            <div className="relative aspect-[3/2] max-h-[260px] w-full overflow-hidden bg-type-0 lg:max-h-none">
-              <img src={media.photo.src} alt="" className="h-full w-full object-cover opacity-90" style={{ objectPosition: `${media.photo.focus.x}% ${media.photo.focus.y}%` }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-                <p className="text-12-sb uppercase text-white/70">{ws.gallery.date}</p>
-                <p className="mt-1 truncate text-20-m">{cover.config.content.title || ws.gallery.client}</p>
+      {/* One card — "Share your gallery" with Links / Email / QR code in its header, the chosen method below. */}
+      <div className="space-y-6">
+        <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface-1">
+          <div className="flex flex-col gap-3 border-b border-border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-6 md:py-4">
+            <h1 className="whitespace-nowrap text-20-m text-type-0 max-sm:text-16-sb">Share your gallery</h1>
+            <div className="w-full sm:w-[320px]">
+              <Segmented value={method} onChange={setMethod} options={[{ id: 'links', label: 'Links' }, { id: 'email', label: 'Email' }, { id: 'qr', label: 'QR code' }]} />
+            </div>
+          </div>
+          {method === 'links'
+            ? <LinksPanel ws={ws} access={access} base={base} />
+            : (
+              <div className="p-4 md:p-6">
+                {method === 'email'
+                  ? <EmailComposer ws={ws} access={access} base={base} />
+                  : <QrPanel ws={ws} access={access} base={base} />}
               </div>
-            </div>
-            <AccessOverview access={access} base={base} />
-            <div className="flex items-center gap-3 border-t border-border px-4 py-3 md:px-5">
-              <LockSimple size={16} className="shrink-0 text-type-2" />
-              <p className="min-w-0 flex-1 truncate text-13-r text-type-2">{accessSummary}</p>
-              <Link to={`${ws.base}/settings`} className="flex shrink-0 items-center gap-1 text-13-m text-type-2 transition hover:text-type-0">
-                Settings <ArrowRight size={12} />
-              </Link>
-            </div>
-        </div>
-
-        {/* Right: one card — "Send by" with Email / QR in its header, the chosen method below. */}
-        <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface-1 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3.5 md:px-6 md:py-4">
-            <h2 className="whitespace-nowrap text-20-m text-type-0 max-sm:text-16-sb">Send by</h2>
-            <div className="w-[180px] sm:w-[240px]">
-              <Segmented value={method} onChange={setMethod} options={[{ id: 'email', label: 'Email' }, { id: 'qr', label: 'QR code' }]} />
-            </div>
-          </div>
-          <div className="p-4 md:p-6">
-            {method === 'email'
-              ? <EmailComposer ws={ws} access={access} base={base} />
-              : <QrPanel ws={ws} access={access} base={base} />}
-          </div>
+            )}
         </section>
 
-        <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-          <EmailHistory />
+        {/* Email history: hidden for now. Sends are still recorded, so it shows them when it comes back. */}
+        {/* <EmailHistory /> */}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The Links tab: the gallery's cover on the left (on top on phones), and beside it every link with its
+ * codes, then a line summing up who can get in, with a way to Settings.
+ */
+function LinksPanel({ ws, access, base }) {
+  const { cover, media } = ws
+  const summary = access.mode === 'roles'
+    ? `By role · ${access.roles.map(rolePlural).join(', ')} · ${access.singleLink ? 'one link' : 'a link each'}`
+    : `Anyone with the link${access.data.anyone.pin.on ? ' · password' : ''}`
+  return (
+    <div className="grid sm:grid-cols-[minmax(0,280px)_minmax(0,1fr)] lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+      <div className="relative aspect-[3/2] w-full overflow-hidden bg-type-0 max-sm:max-h-[220px] sm:aspect-auto sm:min-h-[200px]">
+        <img src={media.photo.src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" style={{ objectPosition: `${media.photo.focus.x}% ${media.photo.focus.y}%` }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+          <p className="text-12-sb uppercase text-white/70">{ws.gallery.date}</p>
+          <p className="mt-1 truncate text-20-m">{cover.config.content.title || ws.gallery.client}</p>
         </div>
+      </div>
+      <div className="flex min-w-0 flex-col">
+      <AccessOverview access={access} base={base} />
+      <div className="mt-auto flex items-center gap-3 border-t border-border px-4 py-3 md:px-6">
+        <LockSimple size={16} className="shrink-0 text-type-2" />
+        <p className="min-w-0 flex-1 truncate text-13-r text-type-2">{summary}</p>
+        <Link to={`${ws.base}/settings`} className="flex shrink-0 items-center gap-1 text-13-m text-type-2 transition hover:text-type-0">
+          Settings <ArrowRight size={12} />
+        </Link>
+      </div>
       </div>
     </div>
   )
@@ -106,7 +113,7 @@ function AccessOverview({ access, base }) {
   const shared = !roles || access.singleLink
   const anyCodes = (a) => codesFor(access, a).password || codesFor(access, a).pin
   return (
-    <div className="space-y-5 px-4 py-5 md:px-5">
+    <div className="space-y-5 px-4 py-5 md:px-6 md:py-6">
       {shared && (
         <div>
           <LinkHead title={roles ? 'Gallery link · all roles' : 'Gallery link'} expiry={access.expiry.all} />
@@ -141,7 +148,7 @@ function LinkHead({ title, expiry }) {
 /** The URL pill with Copy inside it, and a round Open button beside it. */
 function LinkField({ url, label }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex max-w-[560px] items-center gap-2">
       <div className="flex h-10 min-w-0 flex-1 items-center rounded-full bg-surface-2 pl-4 pr-1">
         <span className="min-w-0 flex-1 truncate text-13-r text-type-1">{url}</span>
         <IconButton small label={`Copy ${label.toLowerCase()}`} onClick={() => copy(url, 'Link copied')}><CopySimple size={16} /></IconButton>

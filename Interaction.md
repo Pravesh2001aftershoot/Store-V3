@@ -144,9 +144,9 @@ The drawer opens from the header cart button on every store screen. It also open
 | Panel | Open / close | Slides in from the right | `x 100% → 0`, `0.55s`, `ease`. Exit `x → 100%` | framer-motion + Radix |
 | Cart line | Added | Fades and rises | `opacity 0 → 1`, `y 12 → 0`, `0.4s`, `ease`. `initial={false}` on the list, so lines already there don't animate when the drawer opens | framer-motion |
 | Cart line | Removed | Slides right and fades | `opacity → 0`, `x → 40`, `0.4s`, `ease` | framer-motion |
-| Cart line | Another line is removed or duplicated | Moves to its new position | `layout` | framer-motion |
+| Cart line | Another line is removed | Moves to its new position | `layout` | framer-motion |
 | Cart line | Hover | Background | `→ surface-2`, Tailwind default | Tailwind |
-| Edit / Duplicate / Remove links | Hover | Text colour. Remove turns red. | Tailwind default | Tailwind |
+| Edit / Remove links (no Duplicate in the drawer; it's on the Cart page) | Hover | Text colour. Remove turns red. | Tailwind default | Tailwind |
 | Close button | Hover | Background | Tailwind default | Tailwind |
 
 ---

@@ -151,7 +151,7 @@ Full-screen, three steps: **Photos → Crop → Review**. A sticky top bar shows
 | # | Requirement | Status |
 |---|---|---|
 | C1 | Cart drawer and cart page with a thumbnail, variant summary, photo count and price for each line | ✅ |
-| C2 | Edit (reopens the Builder), duplicate and remove for each line | ✅ |
+| C2 | Edit (reopens the Builder), duplicate and remove for each line on the Cart page; the cart drawer has Edit and Remove only | ✅ |
 | C3 | Package lines show the compare-at price and the savings | ✅ |
 | C4 | Order summary shows the subtotal, savings, promo code, shipping, tax and total | ✅ |
 | C5 | The cart persists across reloads | ✅ (localStorage) |

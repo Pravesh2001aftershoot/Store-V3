@@ -148,13 +148,13 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 
 ## Gallery: Share
 
-- The page splits in two from 1024px: on the left, the cover and every link with its codes, then the email history; on the right, the **Send by** card. Narrower, it stacks: links, Send by, then the email history.
-- The access line at the bottom of the links card sums up Settings ("By role · Clients, Guests · one link") and **Settings →** opens that step.
+- The page is one column at every width: the **Share your gallery** card (no page title). (The email history is hidden for now.) The card opens on its **Links** tab: the gallery's cover on the left (on top on phones), every link with its codes beside it.
+- The access line at the bottom of the Links tab sums up Settings ("By role · Clients, Guests · one link") and **Settings →** opens that step.
 - Each link shows "Expires on 1 Mar 2027" or "Never expires" beside its name. The copy icon inside the link pill copies it (toasts "Link copied"); the round ↗ button next to it opens it in a new tab. Each password and download PIN has a copy button ("Password copied", "Download PIN copied"). A failed copy toasts "Couldn’t copy — select it and copy it yourself".
 - The link is `/g/<id>`, or `/g/<id>?role=<role>` when each role has its own.
 
-### Send by
-- The **Email / QR code** switch in the card's header changes what the card shows. There's one email and one QR card for everyone; no audience switch.
+### Share your gallery card
+- The **Links / Email / QR code** switch in the card's header changes what the card shows; it starts on Links. There's one email and one QR card for everyone; no audience switch.
 - **To:** with roles, each role on an approved list with people on it gets an **Add approved clients (2)** checkbox under the field, ticked to start. Ticked, the group shows in the field as one chip ("Approved clients · 2", hover lists the addresses); unticking it, or ✕ on the chip, takes those addresses out. Typing an address then Enter, comma or space (or leaving the field) adds it ("Press Enter or comma after each address."); Backspace in an empty field removes the last typed chip; ✕ removes one. An address in both a group and the typed list is sent once. Invalid addresses stay in the field and toast "“…” isn’t an email address".
 - **Template:** a picker above Subject (a bottom sheet on phones) lists the built-in templates, Gallery ready, Pick your favourites, Gallery expiring soon and Thank you, then **Your templates** (the photographer's saved ones, shared by every gallery). Picking one replaces Subject and Message with its wording; if the wording had been edited it toasts "“Thank you” applied" with **Undo**.
   - Once Subject or Message differs from the picked template, "Changed from “Gallery ready”" shows under the picker with **Reset** (back to the template's wording) and, for a saved template, **Save changes** (toasts "“Wedding delivery” updated"; other galleries that use it now show it as changed if their wording differs).
@@ -170,7 +170,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 - The preview updates as you type. **Send** (at the end of the form, under Include; full width on phones) toasts "Email sent to 3 people". With nobody in To it toasts "Add someone to send it to"; with an address still being typed, "Add or clear the address you’re typing first". Nothing is actually sent in the prototype.
 - **QR code:** the tip comes first; ✕ closes it until the page reloads. Then one tile per QR card, side by side: one for the gallery link, or with a link per role one per role. Each row shows the code, its label, "Scan to open the gallery" and what's printed under it, plus a download button that saves the PNG and toasts "QR card downloaded" (with a link per role, "Clients QR card downloaded"). Copy links from the links card on the left. Passwords are always printed under the code. **Print the download PIN (2468) under the code** (with roles, **Print download PINs under the code**) only shows when there's a download PIN. It's off by default and applies to every card. A role's own card prints only its codes ("Password 1357"); the one card for a shared role link prints a line per role ("Guests · Password 1357"), then "Choose Client or Guest when it opens".
 
-### Email history
+### Email history (hidden for now)
 - It's an accordion, **closed** when the page opens (and after a reload). Clicking the "Email History" header (or Enter / Space on it) opens or closes it; the caret turns from right to down and the body grows or shrinks in height (0.3s, app curve).
 - Every **Send** adds a row at the top: the first recipient ("lexie@example.com + 2 more") over the date and time ("19 / 11 / 2026 • 5:20 PM"). It's saved per gallery, so it's there after a reload. Rows don't open or do anything when clicked.
 - Four rows show; with more, the list scrolls inside the card. Only the latest 50 are kept.

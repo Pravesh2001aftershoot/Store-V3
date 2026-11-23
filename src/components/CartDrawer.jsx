@@ -1,12 +1,12 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { X, Handbag, Trash, Tag, PencilSimple, Copy } from '@phosphor-icons/react'
+import { X, Handbag, Trash, Tag, PencilSimple } from '@phosphor-icons/react'
 import { useStore } from '../state/store'
 import { lineSubtotal, lineCompareAt } from '../lib/pricing'
 import { money } from '../lib/utils'
 import { Button } from './ui'
-import { LineThumb, lineDuplicable, lineEditable, lineParts, lineTitle, PartSummary } from './CartBits'
+import { LineThumb, lineEditable, lineParts, lineTitle, PartSummary } from './CartBits'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -96,14 +96,6 @@ export default function CartDrawer() {
                                     className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
                                   >
                                     <PencilSimple size={12} /> Edit
-                                  </button>
-                                )}
-                                {lineDuplicable(line) && (
-                                  <button
-                                    onClick={() => dispatch({ type: 'duplicate', id: line.id })}
-                                    className="inline-flex items-center gap-1 text-12-r text-type-3 transition hover:text-type-1"
-                                  >
-                                    <Copy size={12} /> Duplicate
                                   </button>
                                 )}
                                 <button
