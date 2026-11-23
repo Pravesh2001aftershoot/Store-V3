@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { ArrowUpRight, Cursor, Crop, ImagesSquare, Sliders, Leaf, Truck, ShieldCheck, Medal } from '@phosphor-icons/react'
+import { ArrowUpRight, Cursor, Crop, ImagesSquare, Sliders } from '@phosphor-icons/react'
 import { categories, packages, products } from '../data/catalog'
 import { gallery, photos, getPhoto } from '../data/gallery'
 import { Accordion, Button, Eyebrow, Reveal, SplitText } from '../components/ui'
@@ -286,29 +286,9 @@ function PackagesTeaser() {
   )
 }
 
-function Quality() {
-  const items = [
-    { icon: Medal, t: 'Museum-grade', d: 'Archival papers and inks rated 100+ years.' },
-    { icon: ShieldCheck, t: 'Reviewed by your photographer', d: 'Every crop is checked before printing.' },
-    { icon: Leaf, t: 'Responsibly made', d: 'FSC wood and recyclable packaging.' },
-    { icon: Truck, t: 'Insured shipping', d: 'Tracked, insured and carefully packed.' },
-  ]
-  return (
-    <section className="mx-auto grid max-w-[1360px] gap-px overflow-hidden px-4 py-5 sm:grid-cols-2 md:py-24 md:px-8 lg:grid-cols-4">
-      {items.map((it, i) => (
-        <Reveal key={it.t} delay={i * 0.08} className="border-t border-border py-6 pr-6">
-          <it.icon size={24} weight="light" />
-          <p className="mt-6 text-16-sb">{it.t}</p>
-          <p className="mt-1.5 text-14-r text-type-2">{it.d}</p>
-        </Reveal>
-      ))}
-    </section>
-  )
-}
-
 function Faq() {
   return (
-    <section className="mx-auto grid max-w-[1360px] gap-10 px-4 md:px-8 lg:grid-cols-[1fr_1.4fr]">
+    <section className="mx-auto grid max-w-[1360px] gap-10 px-4 pt-12 md:px-8 md:pt-24 lg:grid-cols-[1fr_1.4fr]">
       <div>
         <Eyebrow>FAQ</Eyebrow>
         <h2 className="mt-4 text-36-sb md:text-48-sb">Good to know</h2>
@@ -336,7 +316,6 @@ export default function Home() {
       {/* <HowItWorks /> */}
       <Bestsellers />
       <PackagesTeaser />
-      <Quality />
       <Faq />
     </>
   )

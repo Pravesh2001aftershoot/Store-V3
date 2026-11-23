@@ -567,7 +567,6 @@ Applies to `/store`, `/shop`, `/product/:id`, `/packages`, `/packages/:id` and `
 | Bestsellers row (touch / below 768px) | Swipe | Native horizontal scroll that snaps to each card | `snap-x snap-mandatory`, `snap-start` | CSS scroll-snap |
 | Product cards | Hover | See [ProductCard](#productcard-srccomponentsproductcardjsx) | n/a | Tailwind |
 | Package cards (dark section) | In view / hover | [Reveal](#reveal-srccomponentsuiindexjsx) delay `i × 0.08s`, plus [PackageCard](#packagecard-srccomponentspackagecardjsx) hover | n/a | framer-motion + Tailwind |
-| Quality items | In view | [Reveal](#reveal-srccomponentsuiindexjsx), delay `i × 0.08s` | n/a | framer-motion |
 | FAQ | Click | [Accordion](#accordion-srccomponentsuiindexjsx). The first item is open by default | n/a | framer-motion |
 
 **Built but not rendered** (commented out in `Home()`):

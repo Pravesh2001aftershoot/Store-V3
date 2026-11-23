@@ -107,7 +107,7 @@ Why: composed covers place the text and logo themselves and sit on a solid backg
 
 | # | Requirement | Status |
 |---|---|---|
-| S1 | Store home has a hero, a category grid, "How it works", bestsellers, a packages teaser, a quality section and an FAQ | ✅ |
+| S1 | Store home has a hero, a category grid, "How it works", bestsellers, a packages teaser and an FAQ | ✅ |
 | S2 | Store header has the photographer's branding, a promo banner showing the gallery being ordered from and a discount code, navigation, and a cart button with an item count | ✅ |
 | S3 | Shop lists products, filters by category and sorts by price | ✅ |
 | S4 | Packages list and package detail pages show what's included, the bundle price, the compare-at price and the savings | ✅ |
