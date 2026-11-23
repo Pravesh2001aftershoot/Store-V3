@@ -56,7 +56,7 @@ function Header({ w }) {
   const links = w.sections.filter((id) => NAV[id] && id !== 'contact')
   const contact = w.sections.includes('contact')
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface-0/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-surface-1">
       <div className={cn(wrap, 'flex h-16 items-center gap-3')}>
         <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className="min-w-0 truncate text-16-sb text-type-0">
           {w.site.title}

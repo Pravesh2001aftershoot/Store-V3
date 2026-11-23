@@ -176,6 +176,7 @@ Portfolio cards and photos are square-cornered: work is shown edge to edge, like
 
 | Part | Spec |
 |---|---|
+| Header | Sticky, 64px, solid `surface-1` with a `border-b` (no transparency or blur). Site title `16-SB`, section links `14-R type-1` pills (hover `surface-2`) from `md`, Enquire `sm` button. |
 | Page width | `max-w-[1400px]`, 16px gutters, 32px from `md`. Sections `py-20`, `md:py-28`; Portfolio and FAQ sit on `surface-1` with a `border-t` to alternate with `surface-0`. |
 | Section head | `12-SB` uppercase `type-3` eyebrow, `36-SB` heading (`48-SB` from `md`), `16-R-P type-2` intro. Pricing's head is centred (max 640px). |
 | Hero | Full-bleed: `min(86svh, 860px)` tall (at least 480px), photo with a `black/70 → transparent` bottom gradient, white `48-SB` / `72-SB` headline, `white/80` subline, `light` button. Split: 6 / 6 columns from `lg`, photo `rounded-lg` 4:3 (4:5 from `lg`), `48-SB` → `60-SB` → `72-SB` headline. |
