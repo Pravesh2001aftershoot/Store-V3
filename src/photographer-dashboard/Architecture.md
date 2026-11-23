@@ -32,8 +32,8 @@ src/photographer-dashboard/
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
 │   └── analytics.js           Sample analytics for a gallery (buildAnalytics), toCSV, ago, shortDate
 ├── portfolio/
-│   ├── PortfolioTab.jsx       /portfolio preview with the editor docked on its right
-│   └── PortfolioEditor.jsx    Profile, Intro, Work, Contact tabs
+│   ├── PortfolioTab.jsx       /dashboard/portfolio: /portfolio preview + docked editor column + right-hand `PartsRail` (Profile, Intro, Work, Contact); chips + sheet below 960px; `?part=` in the URL
+│   └── PortfolioEditor.jsx    One `EditorPane` per part (`PART_META`: title, tooltip detail, preview target): Profile, Intro, Work, Contact
 ├── website/
 │   ├── WebsiteTab.jsx         /dashboard/website: /site preview + docked editor column + right-hand `PartsRail` (Site settings, divider, sections in page order); chips + sheet below 960px; `?part=` in the URL
 │   └── WebsiteEditor.jsx      One `EditorPane` per part (`PART_META`: title, tooltip detail, preview target): Site settings, Hero, About, Portfolio, Pricing, FAQ, Contact
@@ -72,7 +72,7 @@ Settings modules (outside this folder, owned by their module):
 | `/dashboard` | Redirects to `/dashboard/galleries` |
 | `/dashboard/galleries` | `GalleriesPage` |
 | `/dashboard/galleries/:galleryId/:step?` | `GalleryTab`; `step` is `photos` (default), `design`, `settings`, `share` or `analytics`. An unknown gallery redirects to the list, an unknown step to Photos. |
-| `/dashboard/portfolio` | `PortfolioTab` |
+| `/dashboard/portfolio` | `PortfolioTab`; `?part=profile|intro|work|contact` picks the open editor (docked default: Profile) |
 | `/dashboard/website` | `WebsiteTab`; `?part=site|hero|about|portfolio|pricing|faq|contact` picks the open editor (docked default: Hero) |
 | `/dashboard/store` | `CatalogsPage` |
 | `/dashboard/store/:catalogId` | `StoreTab`; an unknown catalog redirects to the list |

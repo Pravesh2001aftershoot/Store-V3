@@ -188,14 +188,17 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 
 ## Portfolio
 
+The editor has four parts (Profile, Intro, Work, Contact), picked like the gallery's Design parts rather than with tabs. The open part is `?part=` in the URL (Profile when docked and none is given). Picking a part moves the preview: Profile and Intro → the top of the page, Work → Selected work, Contact → the closing section. The editor is titled "Customize profile" / "Customize intro" / "Customize work" / "Customize contact".
+
 ### Docked
-- The editor is always open on the right of the preview. Its tabs move the preview: Profile and Intro → the top of the page, Work → Selected work, Contact → the closing section.
-- **Done** toasts "All changes are saved".
+- A parts rail on the far right: one 44px icon per part (Profile, Intro, Work, Contact). Hovering or focusing an icon shows its name and hint in a tooltip to the left; the active one gets a sliding `surface-2` highlight and a filled icon.
+- The editor for the picked part is always open between the preview and the rail; it has no ✕ or Done.
+- The preview toolbar's last button hides or shows the editor column; picking a part shows it again.
 
 ### Not docked
-- Full-width preview with a floating **Edit portfolio** button, which opens the editor as a bottom sheet (with Preview / Edit and ✕).
+- Part chips above a full-width preview. Picking one opens its editor as a bottom sheet (with Preview / Edit and ✕); ✕ or Done closes it and clears the active chip.
 
-### Tabs
+### Parts
 - **Profile:**
   - Portrait: **Upload** (resized to 1200px, then toasts), **From your work** (a grid of portrait-orientation photos, 24 at a time, with Show more; picking one closes the grid), and **Use default** (only shown once changed).
   - Text fields show their default as a placeholder. Clearing a field returns it to the default.

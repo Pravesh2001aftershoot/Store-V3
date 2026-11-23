@@ -9,38 +9,48 @@ import { FACTS, LIMITS, allWorkPhotos, usePortfolio } from '../../portfolio/data
 import { formatDate } from '../../portfolio/data/portfolio'
 import { Chip, Tag } from '../components/ui'
 
-const TABS = [
-  { id: 'profile', label: 'Profile' },
-  { id: 'intro', label: 'Intro' },
-  { id: 'work', label: 'Work' },
-  { id: 'contact', label: 'Contact' },
-]
+/**
+ * The portfolio's parts, as the parts rail and the chips list them. `detail` is the rail tooltip's
+ * hint; `target` is where the /portfolio preview scrolls (see PortfolioPage's preview target).
+ */
+export const PART_META = {
+  profile: { title: 'Profile', detail: 'Portrait, about you, contact details', target: 'top' },
+  intro: { title: 'Intro', detail: 'Greeting and facts strip', target: 'top' },
+  work: { title: 'Work', detail: 'Categories and galleries', target: 'work' },
+  contact: { title: 'Contact', detail: 'Closing section and header', target: 'contact' },
+}
 
-/** Which part of /portfolio the preview shows for each tab (see PortfolioPage's preview target). */
-export const TARGETS = { profile: 'top', intro: 'top', work: 'work', contact: 'contact' }
+const subtitles = {
+  profile: (p) => p.profile.name,
+  intro: () => 'Greeting and facts strip',
+  work: (p) => `${p.galleries.length} galleries shown · ${p.genres.length} categories`,
+  contact: () => 'Closing section and header',
+}
 
 /**
- * Portfolio editor, in the gallery's editor shell. Every field saves as you type; empty text falls
- * back to the default (shown as the placeholder).
+ * Portfolio editor, in the gallery's editor shell. `part` picks what it edits (Profile, Intro, Work
+ * or Contact); the parts rail or chips switch it, so there's no tab bar. Every field saves as you
+ * type; empty text falls back to the default (shown as the placeholder).
  */
-export default function PortfolioEditor({ tab, onTab, ...pane }) {
+export default function PortfolioEditor({ part, ...pane }) {
   const p = usePortfolio()
+  const meta = PART_META[part]
   return (
     <EditorPane
       {...pane}
       modal={false}
-      title="Customize portfolio"
-      subtitle={`${p.galleries.length} galleries shown · ${p.genres.length} categories`}
+      title={`Customize ${meta.title.toLowerCase()}`}
+      subtitle={subtitles[part](p)}
       previewLabel="Preview portfolio"
-      tabs={TABS}
-      tab={tab}
-      onTab={onTab}
+      tabs={[{ id: part, label: meta.title }]}
+      tab={part}
+      onTab={() => {}}
       onReset={() => window.confirm('Reset the whole portfolio to its defaults?') && (p.reset(), notify('Portfolio reset'))}
     >
-      {tab === 'profile' && <ProfileTab p={p} />}
-      {tab === 'intro' && <IntroTab p={p} />}
-      {tab === 'work' && <WorkTab p={p} />}
-      {tab === 'contact' && <ContactTab p={p} />}
+      {part === 'profile' && <ProfileTab p={p} />}
+      {part === 'intro' && <IntroTab p={p} />}
+      {part === 'work' && <WorkTab p={p} />}
+      {part === 'contact' && <ContactTab p={p} />}
     </EditorPane>
   )
 }

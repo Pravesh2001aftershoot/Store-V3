@@ -39,7 +39,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 ### Shell
 
 - R1. A left sidebar with the logo, the four sections — Galleries, Portfolio, Website, Store (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the step rail's **Back** button and the breadcrumb's "Galleries" link lead back. Phones keep the top bar.
-- R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio`, `/dashboard/website` (`?part=` names the open part), `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
+- R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio` and `/dashboard/website` (`?part=` names the open part in both), `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
 - R3. Each gallery has **View** (its client link), and each catalog has **Preview store** (the print store with that catalog), both in a new tab.
 
 ### Galleries
@@ -104,7 +104,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R20. Work: section title; categories (rename, reorder, hide, which also hides their galleries); galleries (search, filter by category, rename, hide). A hidden gallery's page shows "This gallery isn't available".
 - R21. Contact: heading, which detail rows show, and the header's Enquire button on or off.
 - R22. The profile also fills in the gallery footer's contact details.
-- R23. Like Design, but the editor ("Customize portfolio") is docked to the **right** of a live `/portfolio` preview that follows the open tab, or a sheet on narrow screens.
+- R23. Laid out like Design: a live `/portfolio` preview, the open part's editor docked to its right, and a parts rail on the far right (Profile, Intro, Work, Contact). The preview follows the open part. Below 960px the parts are chips above the preview and each opens its editor as a sheet.
 
 ### Website
 
