@@ -18,8 +18,9 @@ src/photographer-dashboard/
 │   ├── GalleryForm.jsx        New gallery / gallery settings modal (+ delete); exports `useDeleteGallery(gallery, onDone)`
 │   └── GalleryCover.jsx       WithGallery: reads one gallery's cover + count inside its provider
 ├── gallery/
-│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → left-hand `StepRail` (Back → /dashboard/galleries, then the five steps), the step (Design gets the breadcrumb + title `Heading` for its preview toolbar; other steps have no header), and on Design when docked the right-hand `PartsRail` (Gallery info, a divider, then Cover, Grid, Headings, Footer)
+│   ├── GalleryTab.jsx         Route /galleries/:id/:step → GalleryProvider → left-hand `StepRail` (Back → /dashboard/galleries, then the five steps), the step (Design gets the image panel `PanelToggle` at the left of its preview toolbar; no step has a breadcrumb or title header), and on Design when docked the right-hand `PartsRail` (Gallery info, a divider, then Cover, Grid, Headings, Footer)
 │   ├── useGalleryWorkspace.js Wires the library, cover, cover photo, headings, footer and grid
+│   ├── ImagePanel.jsx         Image panel, Design only: toggled by `PanelToggle` in `GalleryTab`, passed to `DesignStep` as `title` (state `panel` in `Workspace`, not persisted): album rename, Images / Videos, sets with add / rename / delete, per-photo move / remove / cover, New Set; Full view → `<base>/photos`
 │   ├── PhotosStep.jsx         Upload, collections, search by file name, selection, drag / ⌥+arrow reorder or move, selection bar
 │   ├── DesignStep.jsx         Preview + right column with the open editor (chips + sheets when narrow); `designParts(ws)` for the rail
 │   ├── GalleryInfoEditor.jsx  Design part "Gallery info": title, client, date, catalog, Delete in the EditorPane shell; saves live via `useGalleries().update`
@@ -259,6 +260,7 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 
 ## Known gaps
 
+- **Image panel Videos and Draft are placeholders.** There's no video library or gallery status yet.
 - **Email history is local.** Sends are simulated, so the history only records what was sent from this browser; there's no delivery, open or bounce status. Production would read it from the send log.
 - **Client email is the first recipient.** There's no client record with an email yet, so `{client_email}` fills from the To field and is blank until someone is added.
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.

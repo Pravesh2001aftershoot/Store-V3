@@ -38,7 +38,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ### Shell
 
-- R1. A left sidebar with the logo, the four sections — Galleries, Portfolio, Website, Store (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the step rail's **Back** button and the breadcrumb's "Galleries" link lead back. Phones keep the top bar.
+- R1. A left sidebar with the logo, the four sections — Galleries, Portfolio, Website, Store (Galleries and Store show counts), the five most recent galleries, and the photographer's profile, which opens their portfolio. From 1024px it's 248px wide; from 640px it collapses to a 72px icon rail; on phones it's a drawer opened from a 56px top bar that names the section. Inside a gallery (`/dashboard/galleries/<id>`) the sidebar is hidden from 640px up so the gallery editor gets the full width; the step rail's **Back** button leads back. Phones keep the top bar.
 - R2. Every page has its own URL: `/dashboard/galleries`, `/dashboard/galleries/<id>/<step>`, `/dashboard/portfolio` and `/dashboard/website` (`?part=` names the open part in both), `/dashboard/store` and `/dashboard/store/<catalog>`. The old `/dashboard/gallery/<step>` redirects to the sample gallery.
 - R3. Each gallery has **View** (its client link), and each catalog has **Preview store** (the print store with that catalog), both in a new tab.
 
@@ -46,7 +46,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 - G1. A grid of gallery cards, newest first: cover photo (or "No photos yet"), title, date, photo count and catalog. Search by title, client or date. A dashed **New gallery** card leads the grid.
 - G2. **New gallery** (page header or card) asks for a title (required, up to 60 characters), client name (defaults to the title), date (defaults to this month), the store catalog, and whether to start empty or with the sample photos. Creating it opens its Photos step. A new gallery has one collection, "Highlights".
-- G3. A card's menu: Edit gallery, Settings, View as client, Delete. Inside a gallery only the Design step has a header, in the preview's toolbar: a breadcrumb back to Galleries and the title on the left, Open (the client gallery) on the right. Other steps have no header bar. Title, client, date and catalog are edited in Design's Gallery info part (R10) or from the card's Settings.
+- G3. A card's menu: Edit gallery, Settings, View as client, Delete. Inside a gallery only the Design step has a header, in the preview's toolbar: the image panel toggle on the left, Open (the client gallery) on the right. Other steps have no header bar. Title, client, date and catalog are edited in Design's Gallery info part (R10) or from the card's Settings.
 - G4. **Settings** edits the title, client, date and catalog. Delete is there too, after a confirmation; it removes the gallery's photos (including uploads), design and link. The last gallery can't be deleted.
 - G5. Each gallery has its own photos, collections, cover, grid, headings and footer. Clients open it at `/g/<id>`. The app opens on the dashboard (`/` redirects to `/dashboard`). An unknown link shows "This gallery isn't available".
 - G6. The print store follows the gallery the client came from: its banner names that gallery, "Back to gallery" returns to it, and it sells from that gallery's catalog.
@@ -59,6 +59,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - R7. Removed photos go to a **Removed** view, where they can be restored. Uploaded photos can also be deleted for good from there, after a confirmation. Gallery photos can only be removed, never deleted.
 - R8. Reorder by dragging (desktop), in a collection or in All photos (dropping on a photo in another collection moves them there), or with ⌥/Alt + arrow keys on a focused photo. Arrow keys move focus between photos. Drag photos onto a collection tab to move them. No reordering in Removed or while searching.
 - R8a. Search photos by file name: case-insensitive, within the open view, with a no-matches state.
+- R9a. On Design, an image panel, toggled from the left of the preview toolbar, shows the photos beside the preview: rename the album, Images / Videos tabs (videos not supported yet), each set collapsible with add photos, rename and delete, per-photo Move to / Remove / Set as cover, and + New Set. Its Full view button opens the Photos step.
 - R9. The Photos header has two actions: **Create Set** (primary) and **Add Images** (secondary). There is no Reset for the photo arrangement and no "Next: Design" button; steps are switched in the step rail.
 
 ### Gallery: Design (step 2)
@@ -156,7 +157,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 
 ## Open questions
 
-- **Draft or live?** Today edits go live immediately. A real product probably needs drafts and a "Publish" step for galleries that clients are already viewing.
+- **Draft or live?** Today edits go live immediately; the image panel's Draft tag is a placeholder with no status behind it. A real product probably needs drafts and a "Publish" step for galleries that clients are already viewing.
 - **Per-gallery or account-wide?** Now explicit: the portfolio, footer contact details and catalogs are photographer-wide; cover, headings, grid, photos and the choice of catalog are per gallery. Open: should a gallery be able to override a single price without a whole catalog?
 - **Projects vs galleries.** A gallery is one client delivery. Some photographers will want a project (a wedding) holding several galleries (engagement, wedding day). Not modelled yet.
 - **Catalog per client in a gallery?** Today one catalog per gallery. Schools and events may need different catalogs for different viewers of one gallery.

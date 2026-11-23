@@ -21,7 +21,7 @@ const withEmbed = (src) => `${src}${src.includes('?') ? '&' : '?'}embed=1`
  * `src` — the client page (e.g. "/", "/portfolio"); `target` — the part to show, sent to the page
  * (see lib/embed.js) on load and whenever it changes. `fit` (phones) drops the device switch and
  * renders at the frame's own width. `heading` replaces the live dot + label on the left of the
- * toolbar (the gallery editor puts its breadcrumb and title there); `actions` sit after Open.
+ * toolbar (the gallery editor puts its image panel toggle there); `actions` sit after Open.
  */
 export default function PreviewFrame({ src, target, fit = false, label = 'Live preview', heading, actions, className }) {
   const [device, setDevice] = useState('desktop')

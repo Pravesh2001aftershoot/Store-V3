@@ -10,7 +10,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 |---|---|
 | Open `/dashboard` | Redirects to Galleries. |
 | Click a section in the sidebar | Goes to it. The highlight slides to it and its icon fills. Galleries and Store show their counts. |
-| Open a gallery (640px and up) | The sidebar is hidden while you're inside the gallery; the editor fills the width. The rail's Back (and "Galleries" in the Design breadcrumb) goes back to the list and brings the sidebar back. On phones the top bar and ☰ stay. |
+| Open a gallery (640px and up) | The sidebar is hidden while you're inside the gallery; the editor fills the width. The rail's Back goes back to the list and brings the sidebar back. On phones the top bar and ☰ stay. |
 | Hover the rail (640–1023px) | Each icon has a tooltip with its name. The rail shows no recent galleries. |
 | Phone: tap ☰ in the top bar | The sidebar slides in from the left as a drawer over a dimmed page. Tapping the page, ✕ or any link closes it. |
 | A recent gallery | Opens it (its Photos step). The open one is highlighted. "All N galleries" appears after five. |
@@ -37,6 +37,15 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 - A vertical, icon-only rail on the left edge: **Back**, a divider, then the tabs **Photos**, **Design**, **Settings**, **Share**, **Analytics**. **Back** (tooltip "Back · All galleries") goes to the Galleries grid (`/dashboard/galleries`). Every tab is a link, so steps can be visited in any order; there is no progress or ticks.
 - The rail stays in view while the page scrolls. Hovering or focusing a tab shows its name and hint ("Add and arrange", "Cover, grid, headings, footer", "Access, engagement, privacy", "Send to your client", "Visitors, downloads, revenue") to the right; on phones the icons carry `aria-label`s only.
 - Browser Back and Forward move between steps, since the step is in the URL.
+
+## Gallery: image panel
+
+- On Design, the toggle at the left of the preview toolbar (SidebarSimple, "Show images panel" / "Hide images panel") opens or closes the panel beside the step rail. Leaving Design closes it.
+- **Album name** at the top: click it (pencil on hover, always shown on phones) to rename the gallery; Enter or clicking away saves, Esc cancels, empty keeps the old name. A **Draft** tag sits beside it (static for now).
+- **Images / Videos** tabs. Videos shows "No videos in this gallery yet." **Full view** (CornersOut) closes the panel and opens the Photos step.
+- Each set is a row: caret collapses or expands it (collapsing is not saved), name and count, **+** picks files to add to that set (toast "Added N photos to <set>"), **⋯** opens Rename (inline field, Enter / blur saves, Esc cancels; a taken name toasts "There’s already a set called “…”") and Delete set (confirms if it has photos, which move to another set; disabled for the last set).
+- Hovering or focusing a photo darkens it and shows its file name, a **⋮** menu (Move to <each other set>, Remove from gallery) and **Set as cover** (toast "Cover photo updated"). The cover photo shows a Cover tag instead.
+- **+ New Set** (full width, pinned at the bottom) creates "New set" and opens its name field.
 - On Design, from 960px wide, a second rail appears on the right edge (the **parts rail**) with **Gallery info** (ⓘ) first, a divider, then the four looks: **Cover**, **Grid**, **Collection headings** and **Footer**. Clicking a part opens its editor in the docked column beside it; the open one is highlighted. Hovering a part shows its name and current setting (for example "Template: Full bleed" or "Vertical · Medium · Thin") to the left. The parts rail slides in when you enter Design and out when you leave (0.3s). Below 960px there's no parts rail; the parts are chips above the preview.
 
 ## Gallery: Photos

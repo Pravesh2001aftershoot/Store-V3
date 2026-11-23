@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, CaretRight, ChartBar, Images, PaintBrush, ShareNetwork, SlidersHorizontal } from '@phosphor-icons/react'
+import { ArrowLeft, ChartBar, Images, PaintBrush, ShareNetwork, SidebarSimple, SlidersHorizontal } from '@phosphor-icons/react'
 import { GalleryProvider } from '../../data/galleries'
 import { useGalleryData } from '../../gallery/lib/useGalleryData'
 import { cn } from '../../lib/utils'
-import { ease } from '../components/ui'
+import { IconButton, ease } from '../components/ui'
 import { useDocked, useTopOffset } from '../lib/hooks'
 import { useGalleryWorkspace } from './useGalleryWorkspace'
 import PhotosStep from './PhotosStep'
@@ -12,6 +13,7 @@ import DesignStep, { designParts } from './DesignStep'
 import SettingsStep from './SettingsStep'
 import ShareStep from './ShareStep'
 import AnalyticsStep from './AnalyticsStep'
+import ImagePanel from './ImagePanel'
 
 export const STEPS = [
   { id: 'photos', label: 'Photos', icon: Images, hint: 'Add and arrange' },
@@ -42,16 +44,18 @@ function Workspace({ data, step }) {
   const top = useTopOffset()
   const ws = { ...useGalleryWorkspace(data), base: `/dashboard/galleries/${data.meta.id}` }
   const design = step === 'design'
+  const [panel, setPanel] = useState(false) // image management panel beside the rail
 
   return (
     // Step rail on the left, then the content; on Design (docked) the parts rail on the right.
     // Design is a workspace: it fills the screen instead of scrolling.
     <div className="flex" style={design ? { height: `calc(100svh - ${top}px)` } : undefined}>
       <StepRail step={step} ws={ws} top={top} />
+      <ImagePanel open={panel && design} onClose={() => setPanel(false)} ws={ws} top={top} />
       <div className={cn('min-w-0 flex-1', design && 'flex flex-col')}>
-        {/* Only Design has a gallery header: breadcrumb and title in its preview toolbar. */}
+        {/* Design's preview toolbar starts with the image panel toggle. */}
         {step === 'photos' && <PhotosStep ws={ws} />}
-        {design && <DesignStep ws={ws} title={<Heading ws={ws} />} />}
+        {design && <DesignStep ws={ws} title={<PanelToggle open={panel} onToggle={() => setPanel((o) => !o)} />} />}
         {step === 'settings' && <SettingsStep ws={ws} />}
         {step === 'share' && <ShareStep ws={ws} />}
         {step === 'analytics' && <AnalyticsStep ws={ws} />}
@@ -61,19 +65,12 @@ function Workspace({ data, step }) {
   )
 }
 
-/** Breadcrumb (Galleries › client) over the gallery title and photo count. */
-function Heading({ ws }) {
+/** Opens or closes the image panel; sits at the left of Design's preview toolbar. */
+function PanelToggle({ open, onToggle }) {
   return (
-    <>
-      <p className="flex items-center gap-1 text-12-r text-type-3">
-        <Link to="/dashboard/galleries" className="transition hover:text-type-0">Galleries</Link>
-        <CaretRight size={10} />
-        <span className="truncate">{ws.gallery.client}</span>
-      </p>
-      <p className="truncate text-14-m text-type-0">
-        {ws.gallery.title} <span className="text-type-3">· {ws.photos.length} photos</span>
-      </p>
-    </>
+    <IconButton small label={open ? 'Hide images panel' : 'Show images panel'} aria-pressed={open} onClick={onToggle}>
+      <SidebarSimple size={16} weight={open ? 'fill' : 'regular'} />
+    </IconButton>
   )
 }
 
