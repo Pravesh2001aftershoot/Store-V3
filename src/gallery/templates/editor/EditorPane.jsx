@@ -46,16 +46,16 @@ export default function EditorPane({
         </AnimatePresence>
       </div>
       {!(phone && !inline && peek) && (closable || onReset) && (
-        <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
+        <div className="flex items-center gap-2 border-t border-border px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 max-sm:flex-col-reverse max-sm:items-stretch">
           {onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2 max-sm:ml-0 max-sm:h-10 max-sm:flex-1">
+            <Button variant="ghost" size="sm" onClick={onReset} className="-ml-2 max-sm:ml-0 max-sm:h-12 max-sm:w-full">
               <ArrowCounterClockwise size={14} /> {resetLabel}
             </Button>
           )}
           <span className="flex-1 max-sm:hidden" />
-          {/* Phones: Reset and Done share the row equally. */}
+          {/* Phones: Reset and Done stack full width, Done on top. */}
           {closable && (
-            <Button size="md" onClick={onClose} className="max-sm:flex-1">
+            <Button size="md" onClick={onClose} className="max-sm:h-12 max-sm:w-full">
               <Check size={15} weight="bold" /> Done
             </Button>
           )}

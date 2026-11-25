@@ -154,6 +154,7 @@ Every change saves as it's made and shows on the client pages straight away. The
 - Every edit shows in the preview in under a second, with no reload.
 - A photographer can turn on a website with their packages, three FAQs and a featured set of galleries, and send a visitor from it to the full portfolio, without leaving `/dashboard`.
 - Every tab is usable at 390px wide.
+- On phones a page's primary action is always within thumb reach: it sits in a bar fixed to the bottom of the screen (New gallery, New catalog, New product / New package, Create Set + Add Images, Send, Save + Dismiss for settings). Two actions stack, primary on top.
 
 ## Open questions
 

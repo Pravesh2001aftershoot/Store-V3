@@ -10,8 +10,8 @@ import { DEFAULT_CATALOG, LIMITS, original, useCatalogs, useStoreConfig } from '
 import { useGalleries } from '../../data/galleries'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented, Switch } from '../../gallery/templates/cover/controls'
-import { Chip, Empty, PageHeader, Stat, Tag } from '../components/ui'
-import { useMedia, useTopOffset } from '../lib/hooks'
+import { BottomCTA, Chip, Empty, PageHeader, Stat, Tag } from '../components/ui'
+import { useMedia, usePhone, useTopOffset } from '../lib/hooks'
 import { InlineName } from '../components/InlineName'
 import ProductEditor from './ProductEditor'
 import CustomProductEditor from './CustomProductEditor'
@@ -40,6 +40,7 @@ function CatalogEditor({ catalogId }) {
   const { galleries } = useGalleries()
   const usedBy = galleries.filter((g) => g.catalogId === catalogId)
   const docked = useMedia('(min-width: 1100px)')
+  const phone = usePhone()
   const top = useTopOffset()
   const [view, setView] = useState('products')
   const [cat, setCat] = useState('all')
@@ -63,6 +64,11 @@ function CatalogEditor({ catalogId }) {
     const p = s.createProduct(cat === 'all' || cat === 'digital' ? s.categories[0].id : cat)
     setOpenId(p.id)
     notify('Product added — it stays hidden until you switch it on')
+  }
+  const newPackage = () => {
+    const pkg = s.createPackage('New package')
+    setOpenId(pkg.id)
+    notify('Package added — choose what’s in it')
   }
 
   const list = (
@@ -114,15 +120,16 @@ function CatalogEditor({ catalogId }) {
           <div className="w-full sm:w-[260px]">
             <Segmented options={VIEWS} value={view} onChange={setView} />
           </div>
-          {view === 'packages' ? (
-            <Button size="sm" className="shrink-0 max-sm:h-10 max-sm:w-full" onClick={() => { const pkg = s.createPackage('New package'); setOpenId(pkg.id); notify('Package added — choose what’s in it') }}>
+          {/* Phones: New product / New package is the BottomCTA instead. */}
+          {!phone && (view === 'packages' ? (
+            <Button size="sm" className="shrink-0" onClick={newPackage}>
               <Plus size={14} /> New package
             </Button>
           ) : (
-            <Button size="sm" className="shrink-0 max-sm:h-10 max-sm:w-full" onClick={newProduct}>
+            <Button size="sm" className="shrink-0" onClick={newProduct}>
               <Plus size={14} /> New product
             </Button>
-          )}
+          ))}
         </div>
         {view === 'products' && (
           <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:px-0">
@@ -168,6 +175,13 @@ function CatalogEditor({ catalogId }) {
           ))}
         </Reorder.Group>
         )
+      )}
+      {!openId && (
+        <BottomCTA>
+          <Button size="lg" onClick={view === 'packages' ? newPackage : newProduct}>
+            <Plus size={18} /> {view === 'packages' ? 'New package' : 'New product'}
+          </Button>
+        </BottomCTA>
       )}
     </div>
   )

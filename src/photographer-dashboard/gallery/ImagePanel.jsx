@@ -314,7 +314,8 @@ function Panel({ ws, onClose }) {
                 <X size={16} />
               </IconButton>
             </div>
-            <div className="flex gap-2">
+            {/* Phones: Move to and Remove stack full width. */}
+            <div className="flex gap-2 max-sm:flex-col">
               <div className="flex-1 [&>div]:w-full">
                 <Menu
                   label="Move to set"

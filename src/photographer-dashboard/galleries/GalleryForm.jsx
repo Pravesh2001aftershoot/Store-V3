@@ -38,6 +38,9 @@ export default function GalleryForm({ open, onOpenChange, gallery }) {
     })
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Hooks before the early return, so the hook order is the same on every render.
+  const del = useDeleteGallery(gallery, () => onOpenChange(false))
+
   if (!f) return null
   const set = (patch) => setF((x) => ({ ...x, ...patch }))
   const valid = f.title.trim().length > 0
@@ -57,7 +60,6 @@ export default function GalleryForm({ open, onOpenChange, gallery }) {
     }
   }
 
-  const del = useDeleteGallery(gallery, () => onOpenChange(false))
 
   return (
     <Modal

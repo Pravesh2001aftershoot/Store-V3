@@ -20,9 +20,56 @@ export function PageHeader({ eyebrow, title, description, actions, className }) 
         <h1 className="mt-1 truncate text-30-m text-type-0 max-sm:text-24-m">{title}</h1>
         {description && <p className="mt-1.5 max-w-[620px] text-14-r-p text-type-2">{description}</p>}
       </div>
-      {/* Phones: actions fill the row and share it equally. */}
-      {actions && <div className="flex shrink-0 items-center gap-2 max-sm:w-full max-sm:[&>*]:h-10 max-sm:[&>*]:flex-1 sm:flex-wrap">{actions}</div>}
+      {/* Phones: actions stack full width (primary on top). A page's primary action belongs in `BottomCTA` instead. */}
+      {actions && <div className={cn('flex shrink-0 items-center gap-2 sm:flex-wrap', PHONE_STACK)}>{actions}</div>}
     </div>
+  )
+}
+
+/**
+ * Phones (< 640px): two or more actions stack vertically, each full width and 48px tall. Write them
+ * in desktop order (secondary first, primary last); the column is reversed so the primary sits on
+ * top. Used by `BottomCTA`, `PageHeader`, `Modal` and editor footers.
+ */
+export const PHONE_STACK = 'max-sm:w-full max-sm:flex-col-reverse max-sm:items-stretch max-sm:[&>*]:h-12 max-sm:[&>*]:w-full'
+
+/**
+ * Phones only (< 640px): the page's primary action(s) in a bar fixed to the bottom of the screen,
+ * within thumb reach. Renders nothing on tablet and desktop, where the actions stay in the
+ * `PageHeader` (pass them there only when `!phone`). One action fills the bar; two stack (primary on
+ * top, see `PHONE_STACK`). A spacer the bar's height stays in the flow so the last row of content
+ * can scroll clear of it.
+ */
+export function BottomCTA({ children, className }) {
+  const phone = usePhone()
+  const bar = useRef(null)
+  const [h, setH] = useState(72)
+  useEffect(() => {
+    if (!phone || !bar.current) return
+    const ro = new ResizeObserver(([e]) => setH(e.target.offsetHeight))
+    ro.observe(bar.current)
+    return () => ro.disconnect()
+  }, [phone])
+  if (!phone) return null
+  return (
+    <>
+      <div aria-hidden style={{ height: h }} />
+      <motion.div
+        ref={bar}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ duration: 0.45, ease }}
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-surface-1/95 px-4 pt-3 backdrop-blur-md',
+          'pb-[max(12px,env(safe-area-inset-bottom))]',
+          PHONE_STACK,
+          className
+        )}
+      >
+        {children}
+      </motion.div>
+    </>
   )
 }
 

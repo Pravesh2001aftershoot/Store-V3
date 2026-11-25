@@ -7,7 +7,8 @@ import { galleryKey, galleryPath, useGalleries } from '../../data/galleries'
 import { useCatalogs } from '../../data/storeConfig'
 import { purgeUploads } from '../../gallery/lib/library'
 import { notify } from '../../gallery/lib/actions'
-import { Empty, Menu, PageHeader, Tag } from '../components/ui'
+import { BottomCTA, Empty, Menu, PageHeader, Tag } from '../components/ui'
+import { usePhone } from '../lib/hooks'
 import WithGallery, { CoverImage } from './GalleryCover'
 import GalleryForm from './GalleryForm'
 
@@ -18,6 +19,7 @@ import GalleryForm from './GalleryForm'
 export default function GalleriesPage() {
   const { galleries, remove } = useGalleries()
   const { catalogs } = useCatalogs()
+  const phone = usePhone()
   const [q, setQ] = useState('')
   const [form, setForm] = useState(null) // null | 'new' | gallery
   const shown = useMemo(() => {
@@ -35,11 +37,11 @@ export default function GalleriesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-6 md:px-8 md:pt-10">
+    <div className="mx-auto max-w-[1400px] px-4 pb-6 pt-6 sm:pb-24 md:px-8 md:pt-10">
       <PageHeader
         title="Galleries"
         description="Each client gets their own gallery, with its own photos, design and print store."
-        actions={<Button size="md" onClick={() => setForm('new')}><Plus size={16} /> New gallery</Button>}
+        actions={!phone && <Button size="md" onClick={() => setForm('new')}><Plus size={16} /> New gallery</Button>}
       />
 
       <div className="mt-8 flex items-center gap-3">
@@ -59,7 +61,7 @@ export default function GalleriesPage() {
         </div>
       ) : (
         <ul className="mt-6 grid gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {!q && (
+          {!q && !phone && (
             <li>
               <button
                 onClick={() => setForm('new')}
@@ -77,6 +79,10 @@ export default function GalleriesPage() {
           ))}
         </ul>
       )}
+
+      <BottomCTA>
+        <Button size="lg" onClick={() => setForm('new')}><Plus size={18} /> New gallery</Button>
+      </BottomCTA>
 
       <GalleryForm open={!!form} onOpenChange={(o) => !o && setForm(null)} gallery={form === 'new' ? null : form} />
     </div>

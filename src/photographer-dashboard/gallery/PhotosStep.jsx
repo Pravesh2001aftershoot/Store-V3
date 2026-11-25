@@ -8,7 +8,7 @@ import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { NAME_LIMIT } from '../../gallery/lib/library'
-import { Empty, IconButton, Menu, PageHeader, Tag, ease } from '../components/ui'
+import { BottomCTA, Empty, IconButton, Menu, PageHeader, Tag, ease } from '../components/ui'
 import { usePhone, useTopOffset } from '../lib/hooks'
 
 const MIME = 'application/x-store-v3-photos' // photo ids being dragged inside the dashboard
@@ -272,22 +272,25 @@ export default function PhotosStep({ ws }) {
 
   const coverId = media.photo.id
 
+  // Header on tablet/desktop; on phones the same two actions are the BottomCTA (hidden while selecting).
+  const headerActions = (
+    <>
+      <Button variant="outline" size="md" onClick={() => input.current?.click()} disabled={!!progress}>
+        {progress ? <CircleNotch size={16} className="animate-spin" /> : <UploadSimple size={16} />}
+        {progress ? `Adding ${progress.done}/${progress.total}` : 'Add Images'}
+      </Button>
+      <Button size="md" onClick={() => setNaming({ mode: 'new', value: '' })}>
+        <Plus size={16} /> Create Set
+      </Button>
+    </>
+  )
+
   return (
     <div {...dropZone} className="relative mx-auto max-w-[1800px] px-4 pb-40 pt-6 md:px-6 md:pt-8">
       <PageHeader
         title="Photos"
         description="Add photos, sort them into collections and choose what your client sees. Everything saves as you go."
-        actions={
-          <>
-            <Button variant="outline" size="md" onClick={() => input.current?.click()} disabled={!!progress}>
-              {progress ? <CircleNotch size={16} className="animate-spin" /> : <UploadSimple size={16} />}
-              {progress ? `Adding ${progress.done}/${progress.total}` : 'Add Images'}
-            </Button>
-            <Button size="md" onClick={() => setNaming({ mode: 'new', value: '' })}>
-              <Plus size={16} /> Create Set
-            </Button>
-          </>
-        }
+        actions={!phone && headerActions}
       />
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
 
@@ -453,6 +456,8 @@ export default function PhotosStep({ ws }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {selectedList.length === 0 && <BottomCTA>{headerActions}</BottomCTA>}
 
       <SelectionBar
         phone={phone}

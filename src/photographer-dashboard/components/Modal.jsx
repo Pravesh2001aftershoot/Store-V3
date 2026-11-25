@@ -1,7 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from '@phosphor-icons/react'
-import { ease } from './ui'
+import { ease, PHONE_STACK } from './ui'
+import { cn } from '../../lib/utils'
 import { usePhone } from '../lib/hooks'
 
 /**
@@ -40,7 +41,8 @@ export default function Modal({ open, onOpenChange, title, description, children
                   </Dialog.Close>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-3">{children}</div>
-                {footer && <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3.5 max-sm:[&>*]:h-10 max-sm:[&>*]:flex-1">{footer}</div>}
+                {/* Phones: the footer actions stack full width, primary on top. */}
+                {footer && <div className={cn('flex items-center justify-end gap-2 border-t border-border px-5 py-3.5', PHONE_STACK)}>{footer}</div>}
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>

@@ -10,7 +10,8 @@ import { useGalleries } from '../../data/galleries'
 import { notify } from '../../gallery/lib/actions'
 import { TextField } from '../../gallery/templates/cover/controls'
 import Modal from '../components/Modal'
-import { Menu, PageHeader, Select, Tag } from '../components/ui'
+import { BottomCTA, Menu, PageHeader, Select, Tag } from '../components/ui'
+import { usePhone } from '../lib/hooks'
 
 /**
  * Store: the photographer's catalogs. Each gallery sells from one catalog, so a wedding and a
@@ -19,6 +20,7 @@ import { Menu, PageHeader, Select, Tag } from '../components/ui'
 export default function CatalogsPage() {
   const { catalogs, remove, summary } = useCatalogs()
   const { galleries, reassignCatalog } = useGalleries()
+  const phone = usePhone()
   const [form, setForm] = useState(null) // null | { from }
   const [renaming, setRenaming] = useState(null)
 
@@ -31,11 +33,11 @@ export default function CatalogsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-6 md:px-8 md:pt-10">
+    <div className="mx-auto max-w-[1400px] px-4 pb-6 pt-6 sm:pb-24 md:px-8 md:pt-10">
       <PageHeader
         title="Store"
         description="Catalogs are the products, packages and prices a gallery’s clients can order. Make one per kind of shoot, then pick it in each gallery’s settings."
-        actions={<Button size="md" onClick={() => setForm({ from: 'all' })}><Plus size={16} /> New catalog</Button>}
+        actions={!phone && <Button size="md" onClick={() => setForm({ from: 'all' })}><Plus size={16} /> New catalog</Button>}
       />
 
       <ul className="mt-8 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
@@ -55,7 +57,7 @@ export default function CatalogsPage() {
             </li>
           )
         })}
-        <li>
+        {!phone && <li>
           <button
             onClick={() => setForm({ from: 'all' })}
             className="group flex h-full min-h-[220px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border text-type-2 transition hover:border-type-2 hover:text-type-0"
@@ -63,8 +65,12 @@ export default function CatalogsPage() {
             <span className="grid h-12 w-12 place-items-center rounded-full bg-surface-2 transition group-hover:scale-105"><Plus size={20} /></span>
             <span className="text-14-m">New catalog</span>
           </button>
-        </li>
+        </li>}
       </ul>
+
+      <BottomCTA>
+        <Button size="lg" onClick={() => setForm({ from: 'all' })}><Plus size={18} /> New catalog</Button>
+      </BottomCTA>
 
       <NewCatalog open={!!form} preset={form} onOpenChange={(o) => !o && setForm(null)} />
       <RenameCatalog catalog={renaming} onClose={() => setRenaming(null)} />

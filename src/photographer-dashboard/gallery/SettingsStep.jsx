@@ -12,6 +12,7 @@ import { galleryPath, getGallery, useGalleryId } from '../../data/galleries'
 import { catalogProduct, useCatalogs } from '../../data/storeConfig'
 import { Checkbox, Chip, IconButton, PageHeader, PriceInput, Select, Tag, ease } from '../components/ui'
 import Modal from '../components/Modal'
+import { usePhone } from '../lib/hooks'
 import {
   WEB_EDGES, IMAGE_SIZES, LIMIT_MAX, MIN_ROLES, ROLES, filterIncluded, initials, normalize, pinRequired, randomPin, roleLabel,
   rolePlural, saveBlocker, useGalleryAccess,
@@ -114,7 +115,7 @@ export default function SettingsStep({ ws }) {
     : draft.roles.map((r) => ({ key: r, label: `${roleLabel(r)} link`, url: `${base}?role=${r}` }))
 
   return (
-    <div className="mx-auto max-w-[760px] px-4 pb-40 pt-6 md:px-6 md:pt-10">
+    <div className="mx-auto max-w-[760px] px-4 pb-40 pt-6 max-sm:pb-56 md:px-6 md:pt-10">
       <PageHeader title="Gallery settings" description="Who can open this gallery and what visitors can do in it." />
 
       {/* Who can open it */}
@@ -534,27 +535,49 @@ function PersonModal({ open, onOpenChange, title, onAdd }) {
   )
 }
 
-/** Sticky bar at the bottom while there are unsaved changes: Dismiss and Save. */
+/**
+ * While there are unsaved changes: Dismiss and Save. Tablet/desktop: a dark pill stuck to the bottom
+ * of the page. Phones: the bottom CTA bar fixed to the screen, status line then Save over Dismiss.
+ */
 function SaveBar({ show, blocker, onSave, onDismiss }) {
+  const phone = usePhone()
+  const status = (
+    <span className="flex items-center gap-2 text-13-m">
+      <span className={cn('h-1.5 w-1.5 rounded-full', phone ? 'bg-type-3' : 'bg-white/60')} />
+      {blocker ?? 'Unsaved changes'}
+    </span>
+  )
   return (
     <AnimatePresence>
-      {show && (
+      {show && (phone ? (
         <motion.div
+          key="phone"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ duration: 0.45, ease }}
+          className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 border-t border-border bg-surface-1/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 text-type-1 backdrop-blur-md"
+          role="status"
+        >
+          <div className="px-1 pb-1">{status}</div>
+          <Button size="lg" onClick={onSave} disabled={!!blocker} className="w-full">Save</Button>
+          <Button variant="ghost" size="lg" onClick={onDismiss} className="w-full">Dismiss</Button>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="desktop"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.3, ease }}
-          className="sticky bottom-4 z-20 mx-auto mt-6 flex w-fit max-w-full items-center gap-2 rounded-full bg-type-0 py-2 pl-5 pr-2 text-white shadow-[0_10px_30px_rgba(0,0,0,.22)] max-sm:w-full max-sm:flex-wrap max-sm:rounded-2xl max-sm:p-3"
+          className="sticky bottom-4 z-20 mx-auto mt-6 flex w-fit max-w-full items-center gap-2 rounded-full bg-type-0 py-2 pl-5 pr-2 text-white shadow-[0_10px_30px_rgba(0,0,0,.22)]"
           role="status"
         >
-          <span className="mr-2 flex items-center gap-2 text-13-m max-sm:w-full max-sm:px-1 max-sm:pb-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
-            {blocker ?? 'Unsaved changes'}
-          </span>
-          <Button variant="ghost" size="sm" onClick={onDismiss} className="text-white/80 hover:bg-white/10 hover:text-white max-sm:h-10 max-sm:flex-1">Dismiss</Button>
-          <Button variant="light" size="sm" onClick={onSave} disabled={!!blocker} className="max-sm:h-10 max-sm:flex-1">Save</Button>
+          <span className="mr-2">{status}</span>
+          <Button variant="ghost" size="sm" onClick={onDismiss} className="text-white/80 hover:bg-white/10 hover:text-white">Dismiss</Button>
+          <Button variant="light" size="sm" onClick={onSave} disabled={!!blocker}>Save</Button>
         </motion.div>
-      )}
+      ))}
     </AnimatePresence>
   )
 }

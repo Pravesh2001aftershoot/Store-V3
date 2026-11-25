@@ -11,7 +11,7 @@ src/photographer-dashboard/
 │   ├── PreviewFrame.jsx       Live preview: client page in an iframe, device widths, scaled to fit; optional toolbar `heading` + `actions`
 │   ├── Modal.jsx              Short-form dialog (centred card; bottom sheet on phones)
 │   ├── InlineName.jsx         Click-to-rename title
-│   └── ui.jsx                 PageHeader, Stat, Chip, Tag, Empty, IconButton, Menu, PriceInput, Select
+│   └── ui.jsx                 PageHeader, BottomCTA, PHONE_STACK, Stat, Chip, Tag, Empty, IconButton, Menu, PriceInput, Select
 ├── lib/hooks.js               useMedia, useDocked (≥960px), usePhone (<640px), useWideNav (≥1024px), useTopOffset
 ├── galleries/
 │   ├── GalleriesPage.jsx      Gallery cards, search, card menu

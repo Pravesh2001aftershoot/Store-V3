@@ -24,7 +24,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 | Type in the search | Filters cards by title, client or date as you type. The New gallery card hides while searching; ✕ clears. No match shows an empty state with Clear search. |
 | Click a card's photo or title | Opens the gallery editor at Photos. |
 | Card ⋯ | Edit gallery, Settings, View as client (new tab, `/g/<id>`), Delete. Delete asks first, then removes it and toasts. It's disabled for the last gallery. |
-| **New gallery** | Dialog: Gallery title (required; Create is disabled until it has text), Client name, Date, Print store catalog, and Start with **Empty** or **Sample photos**. Enter submits. Creating toasts "<title> created" and opens its Photos step. |
+| **New gallery** | Dialog: Gallery title (required; Create is disabled until it has text), Client name, Date, Print store catalog, and Start with **Empty** or **Sample photos**. Enter submits. Creating toasts "<title> created" and opens its Photos step. On phones the button is the full-width bar fixed to the bottom of the screen (`BottomCTA`); the header button and the dashed New gallery card are hidden. On phones every dialog's footer stacks its actions full width with the primary (Create gallery, Save, Add…) on top and Cancel below. |
 
 ### Inside a gallery
 - Photos, Settings, Share and Analytics have no gallery header bar; each step starts with its own content. Back and the steps are in the rail on the left edge.
@@ -54,7 +54,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 ## Gallery: Photos
 
 ### Adding photos
-1. **Add Images** (secondary button in the page header) opens the file picker (multiple files). Alternatively, drag files anywhere over the page: a full-screen overlay reads "Drop to add to <collection>".
+1. **Add Images** (secondary button in the page header; on phones the lower button in the bottom CTA bar) opens the file picker (multiple files). Alternatively, drag files anywhere over the page: a full-screen overlay reads "Drop to add to <collection>".
 2. Photos go to the open collection. From All or Removed, they go to the first collection.
 3. While it works, the button shows a spinner and "Adding 3/12".
 4. A toast reports the result: "Added 12 photos to Golden Hour", plus "· 2 skipped" for files that aren't readable images.
@@ -62,7 +62,7 @@ Breakpoints: **phone** under 640px, **rail** 640–1023px, **full sidebar** from
 
 ### Collections
 - The collection tab row sticks to the top of the page as you scroll (under the 56px bar on phones): **All photos**, each collection with its count, **New Set**, and **Removed** (only when something is removed). It scrolls sideways on phones.
-- **Create Set** (primary button in the page header) and **New Set** in the tab row both turn into an inline name field at the end of the tabs. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
+- **Create Set** (primary button in the page header; on phones the upper button in the bottom CTA bar, which hides while photos are selected so the selection bar can take its place) and **New Set** in the tab row both turn into an inline name field at the end of the tabs. Enter or clicking away saves, Esc cancels, and an empty name does nothing. A duplicate name gets a number ("Details 2"). The new collection opens.
 - Open a collection, then use **⋯** for **Rename** (inline field, same rules), **Add photos here**, **Move earlier** / **Move later**, or **Delete collection**.
 - **Delete** asks first if the collection has photos ("Its 89 photos move to Golden Hour"), then shows All. It's disabled when only one collection is left.
 
@@ -156,7 +156,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
 ### Saving
 - Any change brings up the bar at the bottom: "Unsaved changes", **Dismiss** (back to the saved settings) and **Save** (toasts "Settings saved"). When it can't save, the bar shows why instead ("Add at least 2 roles to save", "Enter a 4-digit password for Guests", "Pick at least one image size") and Save is disabled.
 - Closing or reloading the tab with unsaved changes asks first. Switching steps doesn't (see Architecture's known gaps).
-- On phones the bar spans the width and Dismiss and Save share the row.
+- On phones it's the bar fixed to the bottom of the screen: the status line, then **Save** over **Dismiss**, both full width.
 
 ## Gallery: Share
 
@@ -179,7 +179,7 @@ Hovering a photo shows its check outline and, in All or Removed, its collection 
   - Known variables get a green tint in the field; anything else in braces gets a wavy red underline and "{foo} isn’t a variable. Try {gallery_name}, …". A variable with nothing to fill it (no recipient, no expiry) shows in amber: "Client email is empty for this email, so it’ll be left blank."
   - The preview and the sent email use the filled-in text; unknown variables are left as typed.
 - **Include** lists only what exists: Gallery link, Password (1357), Download PIN (2468), Expiry date (1 March 2027). With roles they read Passwords, Download PINs and Expiry dates (or Expiry date with one link) and cover every role. Unticking a needed password shows "They’ll need the password to open the gallery. Send it another way." in amber. No codes at all: "No password or download PIN. Add them in Settings."
-- The preview updates as you type. **Send** (at the end of the form, under Include; full width on phones) toasts "Email sent to 3 people". With nobody in To it toasts "Add someone to send it to"; with an address still being typed, "Add or clear the address you’re typing first". Nothing is actually sent in the prototype.
+- The preview updates as you type. **Send** (at the end of the form, under Include; on phones the bar fixed to the bottom of the screen while the Email tab is open) toasts "Email sent to 3 people". With nobody in To it toasts "Add someone to send it to"; with an address still being typed, "Add or clear the address you’re typing first". Nothing is actually sent in the prototype.
 - **QR code:** the tip comes first; ✕ closes it until the page reloads. Then one tile per QR card, side by side: one for the gallery link, or with a link per role one per role. Each row shows the code, its label, "Scan to open the gallery" and what's printed under it, plus a download button that saves the PNG and toasts "QR card downloaded" (with a link per role, "Clients QR card downloaded"). Copy links from the links card on the left. Passwords are always printed under the code. **Print the download PIN (2468) under the code** (with roles, **Print download PINs under the code**) only shows when there's a download PIN. It's off by default and applies to every card. A role's own card prints only its codes ("Password 1357"); the one card for a shared role link prints a line per role ("Guests · Password 1357"), then "Choose Client or Guest when it opens".
 
 ### Email history (hidden for now)
@@ -235,7 +235,7 @@ The photographer's one-page website (`/site`), edited like a gallery's Design st
 4. The toolbar's last button hides or shows the editor column; picking a part shows it again.
 
 ### Not docked
-- Chips for the seven parts above a full-width preview (hidden sections dimmed). Tapping one opens its editor as a bottom sheet with Preview / Edit, ✕ and **Done**; Reset and Done share the row on phones.
+- Chips for the seven parts above a full-width preview (hidden sections dimmed). Tapping one opens its editor as a bottom sheet with Preview / Edit, ✕ and **Done**; on phones Done stacks over Reset, both full width.
 
 ### Editors
 - Every section starts with **Show on website**. Off: the section leaves the page and the header links, the box turns amber ("Hidden — your edits are kept"), and the edits stay.
@@ -264,7 +264,7 @@ The photographer's one-page website (`/site`), edited like a gallery's Design st
 | Click a catalog card | Opens it. |
 | Card ⋯ | Edit catalog, Rename (dialog), Duplicate (opens New catalog as "A copy" of it, named "<name> copy"), Preview store (new tab, `/store?catalog=<id>`), Delete. |
 | Delete | Asks first, saying how many galleries move to the Main catalog. Disabled for the Main catalog. |
-| **New catalog** | Dialog: Name (required) and Start with **Everything**, **Nothing** or **A copy** (then a catalog select). Create toasts and opens it. |
+| **New catalog** | On phones it's the bar fixed to the bottom of the screen and the dashed New catalog card is hidden. Dialog: Name (required) and Start with **Everything**, **Nothing** or **A copy** (then a catalog select). Create toasts and opens it. |
 
 ## Store: one catalog
 
@@ -275,7 +275,7 @@ The photographer's one-page website (`/site`), edited like a gallery's Design st
 - **Preview store** opens the print store using this catalog in a new tab. **Reset** (once edited) asks first and resets catalog products and delivered packages; products and packages you built are kept.
 
 ### Lists
-- The **Products / Packages** switch changes the list and closes the editor. A **New product** or **New package** button sits beside it (full width on phones).
+- The **Products / Packages** switch changes the list and closes the editor. A **New product** or **New package** button sits beside it. On phones it's the bar fixed to the bottom of the screen instead, and hides while an editor sheet is open.
 - **New product** adds a hidden product to the category being shown (Wall Art under All), opens its editor and toasts "Product added — it stays hidden until you switch it on". An empty category shows the same action.
 - Products you made are tagged **Yours**; their thumbnail is their cover image when they have one.
 - **Category chips** filter products. Reordering only works under **All**, and a hint says so.

@@ -10,7 +10,8 @@ import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented, TextField } from '../../gallery/templates/cover/controls'
-import { Checkbox, IconButton, Select, ease } from '../components/ui'
+import { BottomCTA, Checkbox, IconButton, Select, ease } from '../components/ui'
+import { usePhone } from '../lib/hooks'
 import Modal from '../components/Modal'
 import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
@@ -328,6 +329,7 @@ function Code({ label, value }) {
  * subject, message (greeting and sign-off included) and which details to include, beside a live preview, and Send.
  */
 function EmailComposer({ ws, access, base }) {
+  const phone = usePhone()
   const [share, setShare] = useShareSettings()
   const { record } = useShareHistory()
   // Roles on an approved list with people on it: each can be added to To as a group (all ticked to start).
@@ -475,9 +477,16 @@ function EmailComposer({ ws, access, base }) {
           {password && !share.include.password && <p className="mt-2 text-12-r text-amber-700">They’ll need the password to open the gallery. Send it another way.</p>}
         </div>
 
-        <Button size="md" onClick={send} className="max-sm:w-full">
-          <PaperPlaneTilt size={16} /> Send
-        </Button>
+        {/* Phones: Send is the BottomCTA instead. */}
+        {phone ? (
+          <BottomCTA>
+            <Button size="lg" onClick={send}><PaperPlaneTilt size={18} /> Send</Button>
+          </BottomCTA>
+        ) : (
+          <Button size="md" onClick={send} className="self-start">
+            <PaperPlaneTilt size={16} /> Send
+          </Button>
+        )}
         <SaveTemplate open={saving} onClose={() => setSaving(false)} onSave={saveAs} taken={[...templates.builtIn, ...templates.own].map((t) => t.name.toLowerCase())} />
       </div>
 
