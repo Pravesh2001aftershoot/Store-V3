@@ -13,6 +13,7 @@ import DesignStep, { designParts } from './DesignStep'
 import SettingsStep from './SettingsStep'
 import ShareStep from './ShareStep'
 import AnalyticsStep from './AnalyticsStep'
+import PublishControl from './Publish'
 import ImagePanel from './ImagePanel'
 
 export const STEPS = [
@@ -55,7 +56,7 @@ function Workspace({ data, step }) {
       <div className={cn('min-w-0 flex-1', design && 'flex flex-col')}>
         {/* Design's preview toolbar starts with the image panel toggle. */}
         {step === 'photos' && <PhotosStep ws={ws} />}
-        {design && <DesignStep ws={ws} title={<PanelToggle open={panel} onToggle={() => setPanel((o) => !o)} />} />}
+        {design && <DesignStep ws={ws} title={<PanelToggle open={panel} onToggle={() => setPanel((o) => !o)} />} actions={<PublishControl meta={ws.meta} />} />}
         {step === 'settings' && <SettingsStep ws={ws} />}
         {step === 'share' && <ShareStep ws={ws} />}
         {step === 'analytics' && <AnalyticsStep ws={ws} />}

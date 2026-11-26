@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight, ArrowUpRight, CopySimple, DownloadSimple, Lightbulb, LockSimple, PaperPlaneTilt,
-  CaretRight, EnvelopeSimple, UsersThree, X,
+  CaretRight, EnvelopeSimple, PencilSimpleLine, RocketLaunch, UsersThree, X,
 } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { notify } from '../../gallery/lib/actions'
 import { Segmented, TextField } from '../../gallery/templates/cover/controls'
-import { BottomCTA, Checkbox, IconButton, Select, ease } from '../components/ui'
+import { BottomCTA, Checkbox, Empty, IconButton, Select, ease } from '../components/ui'
 import { usePhone } from '../lib/hooks'
 import Modal from '../components/Modal'
 import { galleryPath } from '../../data/galleries'
@@ -20,6 +20,7 @@ import {
   qrCards, qrFor, TEMPLATE_LIMIT, TEMPLATE_NAME_LIMIT, useEmailTemplates, useShareHistory, useShareSettings, variableValues,
 } from './share'
 import VariableText from './VariableText'
+import { usePublishing } from './Publish'
 
 const copy = async (text, ok) => {
   try {
@@ -31,7 +32,9 @@ const copy = async (text, ok) => {
 }
 
 /**
- * Step 4 — Share. No page title; one "Share your gallery" card with three tabs: Links (each link with its passwords, download
+ * Step 4 — Share. Locked until the gallery has been published once: until then an empty state asks to
+ * publish (PublishFirst). After the first publish it stays unlocked with the same links, even back in
+ * draft, where a note above the card says so (DraftNote). No page title; one "Share your gallery" card with three tabs: Links (each link with its passwords, download
  * PINs and expiry, built from the Settings step), Email (one email for everyone; wording, details and
  * recipients editable) and QR code (one QR card); then the history of emails sent.
  * (Send is simulated in the prototype: it checks there are recipients and toasts.)
@@ -40,9 +43,13 @@ export default function ShareStep({ ws }) {
   const [access] = useGalleryAccess()
   const base = `${window.location.origin}${galleryPath(ws.gallery.id)}`
   const [method, setMethod] = useState('links')
+  const pub = usePublishing(ws.meta)
+
+  if (!pub.everPublished) return <PublishFirst onPublish={pub.publish} />
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pb-40 pt-6 md:px-6 md:pt-10">
+      {!pub.published && <DraftNote onPublish={pub.publish} />}
       {/* One card — "Share your gallery" with Links / Email / QR code in its header, the chosen method below. */}
       <div className="space-y-6">
         <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface-1">
@@ -71,6 +78,40 @@ export default function ShareStep({ ws }) {
 }
 
 /**
+ * Share before the first publish: a dashed empty state. "Publish gallery" sits in it on tablet and
+ * desktop, and in the bottom CTA bar on phones.
+ */
+function PublishFirst({ onPublish }) {
+  const phone = usePhone()
+  const action = (
+    <Button onClick={onPublish}>
+      <RocketLaunch size={16} /> Publish gallery
+    </Button>
+  )
+  return (
+    <div className="mx-auto max-w-[720px] px-4 pb-40 pt-6 md:px-6 md:pt-10">
+      <Empty icon={RocketLaunch} title="Publish your gallery to share it" action={phone ? null : action}>
+        Once it’s published, you can send it by link, email or QR code. Your links stay the same even if you move it back to draft later.
+      </Empty>
+      <BottomCTA>{action}</BottomCTA>
+    </div>
+  )
+}
+
+/** Above the Share card while a published gallery is back in draft: sharing still works, same links. */
+function DraftNote({ onPublish }) {
+  return (
+    <div className="mb-4 flex items-start gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 max-sm:flex-col sm:items-center">
+      <PencilSimpleLine size={16} className="shrink-0 text-type-1 max-sm:hidden" />
+      <p className="min-w-0 flex-1 text-13-r-p text-type-2">
+        <span className="text-13-m text-type-0">This gallery is in draft.</span> Your links, emails and QR codes stay the same, so anything you’ve already shared keeps its link.
+      </p>
+      <Button size="sm" variant="outline" onClick={onPublish} className="max-sm:w-full">Publish again</Button>
+    </div>
+  )
+}
+
+/**
  * The Links tab: the gallery's cover on the left (on top on phones), and beside it every link with its
  * codes, then a line summing up who can get in, with a way to Settings.
  */
@@ -79,9 +120,11 @@ function LinksPanel({ ws, access, base }) {
   const summary = access.mode === 'roles'
     ? `By role · ${access.roles.map(rolePlural).join(', ')} · ${access.singleLink ? 'one link' : 'a link each'}`
     : `Anyone with the link${access.data.anyone.pin.on ? ' · password' : ''}`
+  const { w, h } = media.photo
   return (
     <div className="grid sm:grid-cols-[minmax(0,280px)_minmax(0,1fr)] lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-      <div className="relative aspect-[3/2] w-full overflow-hidden bg-type-0 max-sm:max-h-[220px] sm:aspect-auto sm:min-h-[200px]">
+      {/* The cover keeps the photo's own aspect ratio (so its framing and focal point match the gallery cover); it sits at the top of its column. */}
+      <div className="relative w-full self-start overflow-hidden bg-type-0" style={{ aspectRatio: w && h ? w / h : 3 / 2 }}>
         <img src={media.photo.src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" style={{ objectPosition: `${media.photo.focus.x}% ${media.photo.focus.y}%` }} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5 text-white">

@@ -18,7 +18,7 @@ import SizePrompt from './components/SizePrompt'
 import { people, withFaces } from './data/faces'
 import { registerPhoto } from '../data/gallery'
 import { MAX_SETS, downloadPhoto, notify, sharePhotos, useFavorites, useHidden, useSets } from './lib/actions'
-import { DownloadContext, useDownloads, useSizePref, versionOf } from './lib/downloads'
+import { DownloadContext, useDownloads, useSizePref, useTermsAgreed, versionOf } from './lib/downloads'
 import { VisitorContext, approvedPerson, useVisitor, useVisitorState } from './lib/visitor'
 import SignIn from './components/SignIn'
 import ScreenshotGuard from './components/ScreenshotGuard'
@@ -315,6 +315,10 @@ function ClientGallery({ data }) {
   // always asks when High res is the remembered size (its "Buy for $15" opens Quick buy on the Digital
   // Download), and a visitor out of free downloads is asked too, since High res can still be bought.
   const [sizePref, setSizePref] = useSizePref(data.clientKey, dl.rules.sizes)
+  // With "Personal use only" on (Settings → Downloads), the first single download asks the visitor to
+  // agree to personal, non-commercial use; saved per gallery. Off: treated as agreed, never asked.
+  const [agreed, setTermsAgreed] = useTermsAgreed(data.clientKey)
+  const termsAgreed = !dl.rules.personalUse || agreed
   const saveOne = useCallback((photo, sizeId, remembered) => {
     const size = dl.rules.sizes.find((z) => z.id === sizeId) ?? dl.rules.sizes[0]
     const action = remembered && dl.rules.sizes.length > 1
@@ -340,12 +344,12 @@ function ClientGallery({ data }) {
     const size = sizePref ?? (dl.rules.sizes.length === 1 ? dl.rules.sizes[0]?.id : null)
     const mustBuy = dl.isPaid(size) && !dl.ownsSize(photo, size)
     const freeOut = selling && !dl.isPaid(size) && dl.isNew(photo) && dl.left < 1
-    if (!size || mustBuy || freeOut) {
+    if (!size || mustBuy || freeOut || !termsAgreed) {
       setSizePrompt({ mode: 'download', photo, size: freeOut ? dl.rules.paid.full : size, remember: !!sizePref })
       return
     }
     saveOne(photo, size, !!sizePref)
-  }, [dl, sizePref, saveOne])
+  }, [dl, sizePref, termsAgreed, saveOne])
   // "Download photo" answers with (size, remember) and downloads. "Download size" (the toast's Change)
   // only saves the size — null is Ask every time — and downloads the photo again only if asked to.
   const answerSize = (sizeId, flag) => {
@@ -357,6 +361,7 @@ function ClientGallery({ data }) {
       else notify(sizeId ? `Single photos will download in ${dl.rules.sizes.find((z) => z.id === sizeId)?.label}` : 'We’ll ask which size each time')
       return
     }
+    if (!termsAgreed) setTermsAgreed(true) // Download only enables once the personal-use box is ticked
     setSizePref(flag ? sizeId : null)
     saveOne(photo, sizeId, flag)
   }
@@ -588,6 +593,7 @@ function ClientGallery({ data }) {
         sizes={dl.rules.sizes}
         dl={dl}
         photographer={gallery.photographer}
+        termsAgreed={termsAgreed}
         galleryPhotos={ordered}
         onBuy={(photo, sizeId) => buy(photo, 'digital-download', { size: versionOf(sizeId) })}
         onBuyGallery={buyGallery}

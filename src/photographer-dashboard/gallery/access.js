@@ -33,7 +33,7 @@ const audience = (on) => ({
   favoriting: { on, limit: '' },
   hideImages: { on, bulk: false },
   screenshot: { on },
-  downloads: { on, pin: { on: false, code: '' }, image: { on, sizes: { web: on, high: on }, highFree: false, limit: '', web: { edge: 2048, watermark: false } }, video: { on } },
+  downloads: { on, pin: { on: false, code: '' }, personalUse: false, image: { on, sizes: { web: on, high: on }, highFree: false, limit: '', web: { edge: 2048, watermark: false } }, video: { on } },
   sharing: { on, image: on, video: on },
   sets: { on, hidden: [] }, // collection titles kept off the main gallery
 })

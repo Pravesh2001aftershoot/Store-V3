@@ -48,8 +48,9 @@ const offered = (id) => {
 }
 
 /**
- * `{ on, pin, sizes, limit, paid }` for this visitor. `pin` is the 4-digit code or null; `limit` a number
- * or null (it counts free downloads only). Web size uses the photographer's long edge and watermark.
+ * `{ on, pin, sizes, limit, paid, personalUse }` for this visitor. `pin` is the 4-digit code or null; `limit` a number
+ * or null (it counts free downloads only). `personalUse`: the photographer asks visitors to agree to personal,
+ * non-commercial use before their first download (Settings → Downloads, off by default). Web size uses the photographer's long edge and watermark.
  *
  * `paid`: High res is sold whenever it's offered, the photographer hasn't made it free (`image.highFree`)
  * and the gallery's store shows the Digital Download product. Each of that product's file versions
@@ -87,7 +88,7 @@ export function useDownloadRules() {
       offers.web && (paid ? { ...webSize, price: 0 } : webSize),
       ...(offers.high ? (paid ? fileSizes : [SIZES[1]]) : []),
     ].filter(Boolean)
-    if (!d) return { on: true, pin: null, sizes, limit: null, paid }
+    if (!d) return { on: true, pin: null, sizes, limit: null, paid, personalUse: false }
     const dl = d.downloads
     const limit = Number(image.limit)
     return {
@@ -96,6 +97,7 @@ export function useDownloadRules() {
       sizes,
       limit: limit > 0 ? limit : null,
       paid,
+      personalUse: !!dl.personalUse,
     }
   }, [d, catalog]) // eslint-disable-line react-hooks/exhaustive-deps
 }
@@ -214,6 +216,18 @@ export function useSizePref(clientKey, sizes) {
   const [saved, setSaved] = sizePref(clientKey).use()
   return [sizes.some((z) => z.id === saved) ? saved : null, setSaved]
 }
+
+/**
+ * Whether this visitor has agreed to use the gallery's photos for personal, non-commercial use only,
+ * saved per gallery under `gallery-download-terms:<clientKey>` (true once agreed). Only asked when the
+ * photographer turns it on (`rules.personalUse`); until agreed the "Download photo" prompt always opens
+ * and its Download button waits for the tick. `[agreed, setAgreed]`.
+ */
+const termsAgreed = persistedFamily(
+  (clientKey) => `gallery-download-terms:${clientKey}`,
+  (key) => readJSON(key) === true
+)
+export const useTermsAgreed = (clientKey) => termsAgreed(clientKey).use()
 
 /**
  * What can be downloaded from `photos` within the allowance: everything already downloaded, plus new

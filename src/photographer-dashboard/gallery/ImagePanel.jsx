@@ -198,7 +198,7 @@ function Panel({ ws, onClose }) {
         <div className="min-w-0 flex-1 text-18-m text-type-0">
           <InlineName value={ws.gallery.title} limit={LIMITS.title} label="Album name" onSave={(v) => update(ws.gallery.id, { title: v })} />
         </div>
-        <Tag className="shrink-0">Draft</Tag>
+        {ws.meta.status === 'published' ? <Tag tone="success" className="shrink-0">Published</Tag> : <Tag className="shrink-0">Draft</Tag>}
       </div>
 
       {/* Images / Videos, Full view */}

@@ -290,29 +290,7 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, 
                   transition={{ duration: 0.3, ease }}
                   className="overflow-hidden"
                 >
-                  <div role="radiogroup" aria-label="File" className="space-y-1.5 pt-2">
-                    {paidSizes.map((z) => (
-                      <button
-                        key={z.id}
-                        role="radio"
-                        aria-checked={size === z.id}
-                        onClick={() => onSize(z.id)}
-                        className={cn(
-                          'flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition',
-                          size === z.id ? 'border-type-0 bg-surface-2' : 'border-border hover:bg-surface-2'
-                        )}
-                      >
-                        <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded-full border', size === z.id ? 'border-type-0' : 'border-type-3')}>
-                          {size === z.id && <span className="h-2 w-2 rounded-full bg-type-0" />}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-13-m text-type-0">{z.label}</span>
-                          <span className="block truncate text-12-r text-type-3">{rules.paid.versions.find((v) => v.id === z.version)?.note}</span>
-                        </span>
-                        <span className="shrink-0 text-13-m tabular-nums text-type-0">{money(z.price)}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <FileChoices sizes={paidSizes} value={size} onPick={onSize} notes={rules.paid.versions} className="pt-2" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -364,6 +342,39 @@ function PickStep({ sources, chosen, onToggle, overlap, size, onSize, sizePref, 
  * "Single photos": the size a tile or full-screen download uses without asking (Web size / High res), or
  * Ask every time. The same setting as "Remember my choice" in SizePrompt. Changing it downloads nothing.
  */
+/**
+ * The paid file versions under "High res" (Digital Download): compact radio rows with the version's
+ * label, its note and the price. `notes`: the version
+ * values (`rules.paid.versions`); `price(z)` replaces the price text (e.g. "Yours" for a bought one).
+ */
+function FileChoices({ sizes, value, onPick, notes, price, className }) {
+  return (
+    <div role="radiogroup" aria-label="File" className={cn('space-y-1.5', className)}>
+      {sizes.map((z) => (
+        <button
+          key={z.id}
+          role="radio"
+          aria-checked={value === z.id}
+          onClick={() => onPick(z.id)}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-ring',
+            value === z.id ? 'border-type-0 bg-surface-2' : 'border-border hover:bg-surface-2'
+          )}
+        >
+          <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded-full border', value === z.id ? 'border-type-0' : 'border-type-3')}>
+            {value === z.id && <span className="h-2 w-2 rounded-full bg-type-0" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-13-m text-type-0">{z.label}</span>
+            <span className="block truncate text-12-r text-type-3">{notes.find((v) => v.id === z.version)?.note}</span>
+          </span>
+          <span className="shrink-0 text-13-m tabular-nums text-type-0">{price ? price(z) : money(z.price)}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function SingleSize({ sizes, all = sizes, value, onChange }) {
   const options = [...sizes, { id: 'ask', label: 'Ask every time' }]
   const current = value ?? 'ask'

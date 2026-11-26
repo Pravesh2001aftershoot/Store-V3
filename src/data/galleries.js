@@ -9,8 +9,12 @@ import { gallery as sample } from './gallery'
 // the original sample, and keeps the storage keys it had before galleries existed, so nothing
 // saved earlier is lost.
 //
-//   { id, title, client, date, collections, catalogId, sample, created }
+//   { id, title, client, date, collections, catalogId, sample, created, status, publishedAt }
 //   sample — starts with the bundled sample photos (otherwise it starts empty: uploads only)
+//   status — 'draft' | 'published'. Every gallery starts as a draft.
+//   publishedAt — when it was first published (ms), or null. Set once and never cleared: sharing
+//     (links, email, QR codes) unlocks on the first publish and stays unlocked, with the same links,
+//     even if the gallery is moved back to draft.
 
 export const DEFAULT_GALLERY = 'lexie-taylor'
 export const DEFAULT_CATALOG = 'default'
@@ -27,6 +31,8 @@ const SAMPLE = {
   catalogId: DEFAULT_CATALOG,
   sample: true,
   created: Date.UTC(2026, 8, 20),
+  status: 'draft',
+  publishedAt: null,
 }
 
 const load = (key) => {
@@ -36,6 +42,8 @@ const load = (key) => {
     ...g,
     collections: Array.isArray(g.collections) && g.collections.length ? g.collections : ['Highlights'],
     catalogId: g.catalogId || DEFAULT_CATALOG,
+    status: g.status === 'published' ? 'published' : 'draft',
+    publishedAt: typeof g.publishedAt === 'number' ? g.publishedAt : null,
   }))
   return list.length ? list : [SAMPLE]
 }
@@ -81,12 +89,19 @@ export function useGalleries() {
       catalogId: fields.catalogId || DEFAULT_CATALOG,
       sample: !!fields.sample,
       created: Date.now(),
+      status: 'draft',
+      publishedAt: null,
     }
     setList((l) => [g, ...l])
     return g
   }, [setList])
 
   const update = useCallback((id, patch) => setList((l) => l.map((g) => (g.id === id ? { ...g, ...patch } : g))), [setList])
+
+  /** Publishes a gallery. The first publish stamps `publishedAt`, which unlocks sharing for good. */
+  const publish = useCallback((id) => setList((l) => l.map((g) => (g.id === id ? { ...g, status: 'published', publishedAt: g.publishedAt ?? Date.now() } : g))), [setList])
+  /** Back to draft. `publishedAt` stays, so links, QR codes and email keep working the same. */
+  const unpublish = useCallback((id) => setList((l) => l.map((g) => (g.id === id ? { ...g, status: 'draft' } : g))), [setList])
 
   /** Removes a gallery and its saved settings. The last gallery can't be removed. */
   const remove = useCallback((id) => {
@@ -99,10 +114,13 @@ export function useGalleries() {
   /** Galleries using a catalog that's been deleted go back to the default catalog. */
   const reassignCatalog = useCallback((from, to = DEFAULT_CATALOG) => setList((l) => l.map((g) => (g.catalogId === from ? { ...g, catalogId: to } : g))), [setList])
 
-  return { galleries: list, create, update, remove, reassignCatalog }
+  return { galleries: list, create, update, publish, unpublish, remove, reassignCatalog }
 }
 
 export const subscribeGalleries = registry.subscribe
+
+/** Sharing unlocks on the first publish and stays unlocked (see `publishedAt`). */
+export const canShare = (g) => !!g?.publishedAt
 
 // ── Which gallery a page is showing ─────────────────────────────────────────
 

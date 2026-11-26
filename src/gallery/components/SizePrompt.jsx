@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X } from '@phosphor-icons/react'
+import { ArrowLeft, Check, X } from '@phosphor-icons/react'
 import { BottomSheet, Button } from '../../components/ui'
 import { cn, money } from '../../lib/utils'
+import { usePortfolio } from '../../portfolio/data/config'
 import { Allowance } from './DownloadPane'
 import { GalleryOffer, OrderSummary } from './BuyDownloads'
 
@@ -23,6 +24,8 @@ function useIsPhone() {
 
 /** The extra choice in "Download size": no saved size, so each single download asks. */
 const ASK = { id: 'ask', label: 'Ask every time', hint: 'Choose a size each time you download a photo.' }
+/** The card several paid file versions share; the actual size is the file picked under it. */
+const HIGH = 'high-res'
 
 /**
  * Two modes, a centred dialog on tablet and desktop and a bottom sheet on phones:
@@ -33,7 +36,16 @@ const ASK = { id: 'ask', label: 'Ask every time', hint: 'Choose a size each time
  *   downloading anything. Web size / High res / Ask every time, and an unticked "Also download this
  *   photo again" for the photo just saved.
  *
- * With High res sold in the store (dl.rules.paid) each size card shows its price (Free / $15 / Yours).
+ * When the photographer turns on "Personal use only" and the visitor hasn't agreed once in this gallery yet
+ * (`termsAgreed` false, saved by the page), "Download photo" also
+ * shows an unticked "I’ll use these photos for personal, non-commercial use only" box, with a line to email
+ * the photographer for commercial use. Download stays disabled until it's ticked; after that it's not shown again.
+ *
+ * With High res sold in the store (dl.rules.paid) each size card shows its price (Free / $15 / Yours). With
+ * several Digital Download files, they share one "High res · from $9" card, so the first step is always just
+ * Web size or High res. Picking High res opens a second step in the same dialog ("High res": ← Back, one card
+ * per file with its price, the whole-gallery offer, Back / Buy for $X) and the dialog doesn't grow. Back keeps
+ * the file: the High res card then reads "{file} · tap to change" with that file's price.
  * Choosing a paid size for a photo not bought in it yet turns the button into "Buy for $15": `onBuy(photo, sizeId)`
  * closes this and opens Quick buy on the Digital Download for that photo, so it goes through the store
  * cart and checkout. A card under the sizes offers the Whole Gallery Download (`onBuyGallery`).
@@ -43,7 +55,7 @@ const ASK = { id: 'ask', label: 'Ask every time', hint: 'Choose a size each time
  * mode → (size, or null for Ask every time; alsoDownload). `dl` (useDownloads) and `photographer` for the
  * allowance. `galleryPhotos`: every photo in the gallery, for the whole-gallery price.
  */
-export default function SizePrompt({ prompt, sizes, dl, photographer, galleryPhotos = [], onBuy, onBuyGallery, onClose, onDone }) {
+export default function SizePrompt({ prompt, sizes, dl, photographer, termsAgreed = true, galleryPhotos = [], onBuy, onBuyGallery, onClose, onDone }) {
   const isPhone = useIsPhone()
   const open = !!prompt
   const title = prompt?.mode === 'change' ? 'Download size' : 'Download photo'
@@ -54,6 +66,7 @@ export default function SizePrompt({ prompt, sizes, dl, photographer, galleryPho
       sizes={sizes}
       dl={dl}
       photographer={photographer}
+      termsAgreed={termsAgreed}
       galleryPhotos={galleryPhotos}
       onBuyGallery={onBuyGallery}
       onClose={onClose}
@@ -110,7 +123,7 @@ export default function SizePrompt({ prompt, sizes, dl, photographer, galleryPho
   )
 }
 
-function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, onClose, onDone, onBuy }) {
+function Body({ prompt, sizes, dl, photographer, termsAgreed, galleryPhotos, onBuyGallery, onClose, onDone, onBuy }) {
   const { photo, mode } = prompt
   const changing = mode === 'change'
   const options = changing ? [...sizes, ASK] : sizes
@@ -131,19 +144,95 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
   })
   const [remember, setRemember] = useState(!!prompt.remember)
   const [again, setAgain] = useState(false)
+  // Asked until agreed once; read when the prompt opens so it doesn't vanish the moment it's saved.
+  const [askTerms] = useState(() => !changing && !termsAgreed)
+  const [agree, setAgree] = useState(false)
+  const email = usePortfolio().profile?.email
   const sizeLabel = sizes.find((z) => z.id === size)?.label
   const mustBuy = paid && dl.isPaid(size) && !dl.ownsSize(photo, size)
   const quote = paid ? dl.quote([photo], galleryPhotos, size) : null
   // The allowance only matters for free downloads.
   const showAllowance = limited && !(paid && dl.isPaid(size))
+  // Several paid files share one "High res" card (in place of the first one). Picking it opens a second
+  // step, "High res", listing the files, so the first step stays two short cards.
+  const paidSizes = paid ? options.filter((z) => dl.isPaid(z.id)) : []
+  const grouped = paidSizes.length > 1
+  const [step, setStep] = useState('size') // 'size' | 'files'
+  const tier = grouped && dl.isPaid(size) ? HIGH : size
+  const current = sizes.find((z) => z.id === size)
+  const cards = grouped
+    ? options.flatMap((z) => (!dl.isPaid(z.id) ? [z] : z === paidSizes[0]
+      ? [{ id: HIGH, label: 'High res', hint: tier === HIGH ? `${current.label} · tap to change` : `Best for printing. Choose from ${paidSizes.length} file sizes.` }]
+      : []))
+    : options
+  // Back on High res, start on the file picked last, else one they own, else the original resolution.
+  const lastPaid = useRef(null)
+  if (dl?.isPaid(size)) lastPaid.current = size
+  const pick = (id) => {
+    if (id !== HIGH) return setSize(id)
+    const back = paidSizes.find((z) => z.id === lastPaid.current) ?? paidSizes.find(ownsSize)
+    setSize(back?.id ?? dl.rules.paid.full)
+    setStep('files')
+  }
   const priceOf = (z) => {
     if (!paid || z.id === ASK.id) return null
+    // The High res card shows the file picked (once there is one), else the lowest price.
+    if (z.id === HIGH) return tier === HIGH ? priceOf(current) : paidSizes.some(ownsSize) ? { text: 'Yours', tone: 'owned' } : { text: `from ${money(dl.rules.paid.from)}`, tone: 'paid' }
     if (z.price == null || z.price === 0) return { text: 'Free' }
     return ownsSize(z) ? { text: 'Yours', tone: 'owned' } : { text: money(z.price), tone: 'paid' }
   }
+  const needsAgree = askTerms && !mustBuy && !agree
+  const primary = !changing && mustBuy
+    ? { label: `Buy for ${money(quote.total)}`, run: () => onBuy(photo, size) }
+    : { label: 'Download', run: () => onDone(size, remember) }
+
+  if (step === 'files') {
+    return (
+      <Step key="files">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setStep('size')}
+            aria-label="Back"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-2 outline-none transition hover:bg-[#ececec] focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ArrowLeft size={14} />
+          </button>
+          <div className="min-w-0">
+            <p className="text-14-m text-type-0">High res</p>
+            <p className="text-12-r text-type-2">{changing ? 'Choose a file size.' : 'Choose a file size. Pay once, download any time.'}</p>
+          </div>
+        </div>
+        <div role="radiogroup" aria-label="File size" className="mt-4 space-y-2">
+          {paidSizes.map((z) => (
+            <SizeCard
+              key={z.id}
+              size={z}
+              on={size === z.id}
+              onPick={() => setSize(z.id)}
+              price={priceOf(z)}
+              hint={dl.rules.paid.versions.find((v) => v.id === z.version)?.note} // one short line ("No watermark") keeps the step compact
+            />
+          ))}
+        </div>
+        {!changing && !owned && !dl.ownsAll && onBuyGallery && (
+          <GalleryOffer quote={quote} galleryCount={galleryPhotos.length} onPick={() => onBuyGallery(`file:${quote.version}`)} />
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" size="md" onClick={() => setStep('size')} className="max-sm:flex-1">Back</Button>
+          {changing || needsAgree ? (
+            // Change mode, or the personal-use box still to tick: confirm the file and go back to the first step.
+            <Button size="md" onClick={() => setStep('size')} className="max-sm:flex-1">Done</Button>
+          ) : (
+            <Button size="md" onClick={primary.run} className="max-sm:flex-1 tabular-nums">{primary.label}</Button>
+          )}
+        </div>
+      </Step>
+    )
+  }
 
   return (
-    <div>
+    <Step key="size">
       {changing ? (
         <p className="text-13-r text-type-2">For photos you download one at a time, from the gallery or a full-screen photo. Nothing downloads until you choose to.</p>
       ) : (
@@ -176,24 +265,25 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
 
       <p className={cn('mb-2 text-11-sb uppercase text-type-2', changing ? 'mt-4' : 'mt-5')}>Size</p>
       <div role="radiogroup" aria-label="Size" className="space-y-2">
-        {options.map((z) => (
+        {cards.map((z) => (
           <SizeCard
             key={z.id}
             size={z}
-            on={size === z.id}
-            onPick={() => setSize(z.id)}
+            on={tier === z.id}
+            onPick={() => pick(z.id)}
             price={priceOf(z)}
             disabled={!usable(z)}
             hint={!usable(z) ? 'You’ve used all your free downloads.' : undefined}
           />
         ))}
       </div>
-      {!changing && mustBuy && (
+      {/* One paid file (no second step): its order and the whole-gallery offer stay here. */}
+      {!grouped && !changing && mustBuy && (
         <div className="mt-3">
           <OrderSummary quote={quote} galleryCount={galleryPhotos.length} />
         </div>
       )}
-      {!changing && paid && !owned && !dl.ownsAll && onBuyGallery && (
+      {!grouped && !changing && paid && !owned && !dl.ownsAll && onBuyGallery && (
         <GalleryOffer quote={quote} galleryCount={galleryPhotos.length} onPick={() => onBuyGallery(`file:${quote.version}`)} />
       )}
 
@@ -215,6 +305,24 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
           hint="Don’t ask again in this gallery. You can change it any time."
         />
       )}
+      {askTerms && !mustBuy && (
+        <>
+          <CheckRow
+            on={agree}
+            onToggle={() => setAgree((a) => !a)}
+            label="I’ll use these photos for personal, non-commercial use only"
+            hint="We’ll remember this for your next downloads."
+          />
+          <p className="mt-1 pl-8 text-12-r text-type-2">
+            Need them for commercial use?{' '}
+            {email ? (
+              <a href={`mailto:${email}`} className="text-type-0 underline underline-offset-2">Contact {photographer}</a>
+            ) : (
+              <>Contact {photographer}.</>
+            )}
+          </p>
+        </>
+      )}
 
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="ghost" size="md" onClick={onClose} className="max-sm:flex-1">Cancel</Button>
@@ -223,12 +331,19 @@ function Body({ prompt, sizes, dl, photographer, galleryPhotos, onBuyGallery, on
             {again && size !== ASK.id ? 'Save and download' : 'Save'}
           </Button>
         ) : (
-          <Button size="md" onClick={() => (mustBuy ? onBuy(photo, size) : onDone(size, remember))} className="max-sm:flex-1 tabular-nums">
-            {mustBuy ? `Buy for ${money(quote.total)}` : 'Download'}
-          </Button>
+          <Button size="md" disabled={needsAgree} onClick={primary.run} className="max-sm:flex-1 tabular-nums">{primary.label}</Button>
         )}
       </div>
-    </div>
+    </Step>
+  )
+}
+
+/** One step of the prompt: slides in sideways when the step changes. */
+function Step({ children }) {
+  return (
+    <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, ease }}>
+      {children}
+    </motion.div>
   )
 }
 

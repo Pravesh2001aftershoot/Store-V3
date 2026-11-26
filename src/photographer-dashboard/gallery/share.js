@@ -268,11 +268,11 @@ export function qrCardPNG({ title, tag, url, lines }) {
   g.textAlign = 'center'
   if (tag) {
     g.fillStyle = '#555555'
-    g.font = '600 32px "Geist", system-ui, sans-serif'
+    g.font = '600 32px "Geist Variable", system-ui, sans-serif'
     g.fillText(tag.toUpperCase(), W / 2, 100)
     g.fillStyle = '#111111'
   }
-  g.font = '600 52px "Geist", system-ui, sans-serif'
+  g.font = '600 52px "Geist Variable", system-ui, sans-serif'
   wrap(g, title, W / 2, 170, W - 160, 64)
 
   const { size, data } = qrFor(url)
@@ -284,11 +284,11 @@ export function qrCardPNG({ title, tag, url, lines }) {
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (data[y][x]) g.fillRect(x0 + x * cell, y0 + y * cell, cell, cell)
 
   let y = y0 + side + 110
-  g.font = '400 38px "Geist", system-ui, sans-serif'
+  g.font = '400 38px "Geist Variable", system-ui, sans-serif'
   g.fillStyle = '#555555'
   g.fillText('Scan to open the gallery', W / 2, y)
   g.fillStyle = '#111111'
-  g.font = '600 44px "Geist", system-ui, sans-serif'
+  g.font = '600 44px "Geist Variable", system-ui, sans-serif'
   for (const l of lines) { y += 74; g.fillText(l, W / 2, y) }
   return c.toDataURL('image/png')
 }

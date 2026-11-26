@@ -387,6 +387,12 @@ function Options({ id, d, editCur, sets }) {
             </div>
           )}
         </div>
+        <div>
+          <Checkbox checked={dl.personalUse} onChange={(v) => editCur((x) => { x.downloads.personalUse = v })}>
+            Personal use only <Tag className="ml-1">Optional</Tag>
+          </Checkbox>
+          <p className="ml-7 mt-1 text-12-r text-type-3">Before their first download, visitors agree to use photos for personal, non-commercial use only. They’re asked to contact you for commercial use.</p>
+        </div>
         <div className="border-t border-border pt-4">
           <Checkbox checked={dl.image.on} onChange={(v) => editCur((x) => { x.downloads.image.on = v })}>Photo downloads</Checkbox>
           {dl.image.on && (

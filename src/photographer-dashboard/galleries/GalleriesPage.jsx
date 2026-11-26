@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowSquareOut, DotsThree, GearSix, Images, MagnifyingGlass, PencilSimple, Plus, Storefront, Trash, X } from '@phosphor-icons/react'
+import { ArrowSquareOut, DotsThree, GearSix, Images, MagnifyingGlass, PencilSimple, Plus, Storefront, Trash, X, PencilSimpleLine, RocketLaunch } from '@phosphor-icons/react'
 import { Button } from '../../components/ui'
 import { cn, plural } from '../../lib/utils'
 import { galleryKey, galleryPath, useGalleries } from '../../data/galleries'
@@ -8,6 +8,7 @@ import { useCatalogs } from '../../data/storeConfig'
 import { purgeUploads } from '../../gallery/lib/library'
 import { notify } from '../../gallery/lib/actions'
 import { BottomCTA, Empty, Menu, PageHeader, Tag } from '../components/ui'
+import { usePublishing } from '../gallery/Publish'
 import { usePhone } from '../lib/hooks'
 import WithGallery, { CoverImage } from './GalleryCover'
 import GalleryForm from './GalleryForm'
@@ -91,6 +92,7 @@ export default function GalleriesPage() {
 
 function GalleryCard({ g, catalog, onSettings, onDelete, canDelete }) {
   const navigate = useNavigate()
+  const pub = usePublishing(g)
   const to = `/dashboard/galleries/${g.id}`
   return (
     <WithGallery id={g.id}>
@@ -110,6 +112,7 @@ function GalleryCard({ g, catalog, onSettings, onDelete, canDelete }) {
               )}
               <div className="absolute left-3 top-3 flex gap-1.5">
                 {g.sample && <Tag tone="dark">Sample</Tag>}
+                {pub.published ? <Tag tone="success">Published</Tag> : <Tag className="bg-surface-1 text-type-1">Draft</Tag>}
               </div>
             </div>
           </Link>
@@ -134,6 +137,9 @@ function GalleryCard({ g, catalog, onSettings, onDelete, canDelete }) {
                 { label: 'Edit gallery', icon: PencilSimple, onClick: () => navigate(to) },
                 { label: 'Settings', icon: GearSix, onClick: onSettings },
                 { label: 'View as client', icon: ArrowSquareOut, onClick: () => window.open(galleryPath(g.id), '_blank') },
+                pub.published
+                  ? { label: 'Move to draft', icon: PencilSimpleLine, onClick: pub.unpublish }
+                  : { label: 'Publish', icon: RocketLaunch, onClick: pub.publish },
                 null,
                 { label: 'Delete', icon: Trash, danger: true, disabled: !canDelete, onClick: onDelete },
               ]}

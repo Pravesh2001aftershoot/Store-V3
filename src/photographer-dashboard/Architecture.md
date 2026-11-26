@@ -27,7 +27,8 @@ src/photographer-dashboard/
 │   ├── GridEditor.jsx         Default grid layout (new; in the gallery's EditorPane shell)
 │   ├── SettingsStep.jsx       Access type, roles and links, then Access / Engagement / Privacy settings; draft + Save bar
 │   ├── access.js              Settings model: defaults, load/normalize, rules (pinRequired, filterIncluded, saveBlocker), useGalleryAccess
-│   ├── ShareStep.jsx          One-column share page (no PageHeader): "Share your gallery" card with Links (LinksPanel: cover + AccessOverview: links, passwords, PINs) / Email (EmailComposer) / QR code (QrPanel with QrCard tiles) tabs; EmailHistory is hidden for now
+│   ├── Publish.jsx            usePublishing(meta) → { status, published, everPublished, publish, unpublish } (with toasts); PublishControl (Design toolbar: Publish button, then a status pill + Menu); StatusDot
+│   ├── ShareStep.jsx          PublishFirst empty state until the first publish, DraftNote while back in draft, then the one-column share page (no PageHeader): "Share your gallery" card with Links (LinksPanel: cover + AccessOverview: links, passwords, PINs) / Email (EmailComposer) / QR code (QrPanel with QrCard tiles) tabs; EmailHistory is hidden for now
 │   ├── share.js               Share settings (email template, wording, includes, QR options), email templates (BUILT_IN_TEMPLATES + useEmailTemplates), VARIABLES + fillVariables, allCodes, galleryExpiry, composeEmail, qrCards, qrFor (uqr), qrCardPNG
 │   ├── VariableText.jsx       Subject / Message field with variable suggestions, + Variable menu and tinted tokens
 │   ├── AnalyticsStep.jsx      Totals, download split, people list, person dialog, CSV export
@@ -83,7 +84,7 @@ Client routes in `App.jsx`: `/` redirects to `/dashboard` (the app's entry point
 
 ## Galleries: `data/galleries.js`
 
-- **Registry.** A persisted list of `{ id, title, client, date, collections, catalogId, sample, created }`, newest first. `id` is a slug of the title, made unique. `sample: true` means the gallery starts from the bundled sample photos; otherwise its base photos are empty and everything is an upload. `useGalleries()` returns the list plus `create`, `update`, `remove` (not the last one; also clears its settings keys) and `reassignCatalog`.
+- **Registry.** A persisted list of `{ id, title, client, date, collections, catalogId, sample, created, status, publishedAt }`, newest first. `status` is `'draft' | 'published'` (every gallery, the sample included, starts and loads as `'draft'`); `publishedAt` is the first publish time in ms or `null`, set once and never cleared. `canShare(g)` (`!!publishedAt`) gates the Share step, so moving back to draft keeps sharing and the links. `id` is a slug of the title, made unique. `sample: true` means the gallery starts from the bundled sample photos; otherwise its base photos are empty and everything is an upload. `useGalleries()` returns the list plus `create`, `update`, `publish(id)` (status `published`, stamps `publishedAt` if unset), `unpublish(id)` (status `draft` only), `remove` (not the last one; also clears its settings keys) and `reassignCatalog`.
 - **Which gallery a component is editing.** `GalleryProvider id` puts a gallery id in context, and `useGalleryId()` reads it (default: the sample). Every per-gallery settings hook is a `persistedFamily` keyed by `galleryKey(useGalleryId(), name)` (`forGallery(name, load, save)`), so the hooks kept their signatures. `GalleryPage`, `GalleryTab` and `WithGallery` (list thumbnails) each render inside a provider.
 - **`useGalleryData(id)`** (`gallery/lib/useGalleryData.js`) is what a gallery page renders from: the gallery object with the studio's branding, its base photos and collections, its default cover, and the key for the client's own favourites, hidden photos and sets (the sample keeps its original key). `fallbackCover()` falls back to the first photo, then a placeholder.
 - **The active gallery.** `GalleryPage` calls `setActiveGallery(id)` (kept in `sessionStorage`). The store `Layout` reads `useActiveGallery()` for its banner and "Back to gallery" link, and `storeConfig` uses it to choose the catalog.
@@ -168,7 +169,7 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
   data: { anyone, client, guest, vendor } }  // one audience each:
 { collectEmail: { on }, approved: { on, people: [{ id, name, email, phone }] }, pin: { on, value },
   faceSearch: { on, scope: 'all' | 'own' }, comments, filterByFace, favoriting: { on, limit }, hideImages: { on, bulk },
-  screenshot, downloads: { on, pin: { on, code }, image: { on, sizes: { web, high }, highFree, limit,   // highFree: false = High res is paid when the store sells it
+  screenshot, downloads: { on, pin: { on, code }, personalUse, image: { on, sizes: { web, high }, highFree, limit,   // highFree: false = High res is paid when the store sells it
     web: { edge: 1200 | 2048, watermark } }, video: { on } },   // Web size's long edge (default 2048) and watermark (default off)
   sharing: { on, image, video }, sets: { on, hidden: [collection title] } }
 ```
