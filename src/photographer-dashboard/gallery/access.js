@@ -61,7 +61,7 @@ export function defaults() {
     roles: ['client', 'guest'],
     singleLink: true, // one link for every role, or one link per role
     slug: { custom: false, value: '' }, // the gallery name in the link; not custom = from the title
-    expiry: { all: '', client: '', guest: '', vendor: '' }, // yyyy-mm-dd, '' = never
+    expiry: { all: '' }, // the gallery's one expiry date for every link, yyyy-mm-dd, '' = never
     data: {
       anyone: audience({ signIn: 'none', face: false, comments: false, hide: false, screenshot: false }),
       client: audience({ signIn: 'approved', face: true, comments: true, hide: true, screenshot: false }),
@@ -207,11 +207,7 @@ export function changeSummary(before, after, title) {
     for (const r of before.roles) if (!after.roles.includes(r)) add(`${rolePlural(r)} removed`, `${rolePlural(r)} can’t open the gallery any more.`, true)
     for (const r of after.roles) if (!before.roles.includes(r)) add(`${rolePlural(r)} added`)
   }
-  for (const k of Object.keys(after.expiry)) {
-    if (before.expiry[k] !== after.expiry[k] && (k === 'all' ? !roles || after.singleLink : roles && !after.singleLink && after.roles.includes(k))) {
-      add(`${k === 'all' ? 'Expiry' : `${roleLabel(k)} link expiry`}: ${after.expiry[k] || 'never'}`)
-    }
-  }
+  if (before.expiry.all !== after.expiry.all) add(`Expiry: ${after.expiry.all || 'never'}`)
 
   for (const aud of audiences(after)) {
     // Compare with what visitors of this audience had before: the same audience, or "anyone" when roles were just turned on.

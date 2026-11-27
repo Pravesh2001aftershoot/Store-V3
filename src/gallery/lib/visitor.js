@@ -4,7 +4,6 @@ import { galleryKey, useGalleryId } from '../../data/galleries'
 import { readJSON } from '../../lib/persisted'
 import { isEmbedded } from '../../lib/embed'
 import { emailSignIn, filterOn, pinRequired, useGalleryAccess } from '../../photographer-dashboard/gallery/access'
-import { expiryFor } from '../../photographer-dashboard/gallery/share'
 import { people } from '../data/faces'
 
 // Who is looking at a client gallery, and what they're allowed to do in it.
@@ -78,8 +77,8 @@ export function resolveVisitor({ access, configured, embedded, roleParam, sessio
   const aud = roles ? role : 'anyone'
   const d = aud ? access.data[aud] : null
 
-  // The shared link's expiry applies before a role is picked; a role's own link uses its own date.
-  const expiry = !roles || access.singleLink ? access.expiry.all : role ? expiryFor(access, role) : ''
+  // One expiry date for the whole gallery, whichever link was opened.
+  const expiry = access.expiry.all
   const expired = !!expiry && expiry < today()
 
   // Every step this audience has (`all`), and the ones the session hasn't passed yet (`steps`).

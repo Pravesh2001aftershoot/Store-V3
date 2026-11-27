@@ -136,6 +136,7 @@ export default function SettingsStep({ ws }) {
 
   const slug = slugOf(draft, title)
   const setSlug = (v) => edit((n) => { n.slug = { custom: true, value: slugify(v) } })
+  const setExpiry = (v) => edit((n) => { n.expiry.all = v })
   const links = !roles || draft.singleLink
     ? [{ key: 'all', label: roles ? 'Gallery link · all roles' : 'Gallery link' }]
     : draft.roles.map((r) => ({ key: r, label: `${roleLabel(r)} link` }))
@@ -151,7 +152,7 @@ export default function SettingsStep({ ws }) {
           value={draft.mode}
           onChange={(mode) => edit((n) => { n.mode = mode })}
           options={[
-            { id: 'anyone', label: 'Anyone with the link', hint: 'One link and expiry date for everyone. Choose how visitors sign in below.' },
+            { id: 'anyone', label: 'Anyone with the link', hint: 'One link for everyone. Choose how visitors sign in below.' },
             { id: 'roles', label: 'By role', hint: 'Clients, guests and vendors each get their own access and permissions.' },
           ]}
         />
@@ -191,8 +192,8 @@ export default function SettingsStep({ ws }) {
               <Checkbox checked={draft.singleLink} onChange={(v) => edit((n) => { n.singleLink = v })}>One link for all roles</Checkbox>
               <p className="ml-7 mt-1 text-12-r text-type-3">
                 {draft.singleLink
-                  ? 'Everyone opens the same link and picks their role. One expiry date covers all roles. When more than one role signs in without an approved list, each needs its own password.'
-                  : 'Each role gets its own link and its own expiry date.'}
+                  ? 'Everyone opens the same link and picks their role. When more than one role signs in without an approved list, each needs its own password.'
+                  : 'Each role gets its own link to share.'}
               </p>
             </div>
           </div>
@@ -207,10 +208,17 @@ export default function SettingsStep({ ws }) {
               ending={linkEnding(draft, l.key)}
               onSlug={setSlug}
               error={showError('slug') || (draft.slug.custom && !draft.slug.value.replace(/-/g, ''))}
-              expiry={draft.expiry[l.key]}
-              onExpiry={(v) => edit((n) => { n.expiry[l.key] = v })}
+              expiry={links.length === 1 ? draft.expiry.all : undefined}
+              onExpiry={setExpiry}
             />
           ))}
+          {/* A link per role: still one expiry date, for every link. */}
+          {links.length > 1 && (
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+              {/* Left column: lines up with, and matches the width of, the link fields above. */}
+              <ExpiryField label="Gallery expires · all links" value={draft.expiry.all} onChange={setExpiry} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -293,8 +301,9 @@ export default function SettingsStep({ ws }) {
 }
 
 /**
- * A gallery link, `gallery.aftershoot.com/` + gallery name + ending, with Copy and an optional expiry date.
- * Only the gallery name (highlighted) can be edited; it's shared by every link of the gallery.
+ * A gallery link, `gallery.aftershoot.com/` + gallery name + ending, with Copy, and beside it the
+ * gallery's expiry date when `expiry` is given (one link). Only the gallery name (highlighted) can be
+ * edited; it's shared by every link of the gallery.
  */
 function LinkRow({ label, slug, ending, onSlug, error, expiry, onExpiry }) {
   const url = `https://${LINK_HOST}${slug}${ending}`
@@ -302,19 +311,21 @@ function LinkRow({ label, slug, ending, onSlug, error, expiry, onExpiry }) {
     try { await navigator.clipboard.writeText(url); notify('Link copied') } catch { notify('Couldn’t copy — select the link and copy it') }
   }
   return (
+    // Always the same two columns, so every link field is the same width with or without a date beside it.
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
       <div className="min-w-0">
         <p className="mb-1.5 text-12-m text-type-2">{label}</p>
         <div className={cn('flex h-10 items-center rounded-full border bg-surface-0 pl-4 pr-1 transition focus-within:border-type-0', error ? 'border-destructive' : 'border-input')}>
           <span className="flex min-w-0 flex-1 items-center text-13-r text-type-3">
             <span className="min-w-0 shrink truncate">{LINK_HOST}</span>
+            {/* Fills the space left in the field and keeps that width; a long name scrolls inside it. */}
             <input
               value={slug}
               onChange={(e) => onSlug(e.target.value)}
-              size={Math.max(slug.length, 6)}
+              size={1}
               aria-label="Gallery name in the link"
               spellCheck={false}
-              className="min-w-[6ch] max-w-full shrink-0 rounded-md bg-surface-2 px-1 py-0.5 text-13-m text-type-0 outline-none"
+              className="min-w-[6ch] flex-1 rounded-md bg-surface-2 px-1 py-0.5 text-13-m text-type-0 outline-none"
             />
             <span className="shrink-0">{ending}</span>
           </span>
@@ -322,17 +333,24 @@ function LinkRow({ label, slug, ending, onSlug, error, expiry, onExpiry }) {
         </div>
         {error && <p className="mt-1.5 text-12-r text-destructive">Enter a gallery name: lowercase letters, numbers and hyphens.</p>}
       </div>
-      <label className="block">
-        <span className="mb-1.5 block text-12-m text-type-2">Expires {expiry ? '' : <span className="text-type-3">· never</span>}</span>
-        <input
-          type="date"
-          value={expiry}
-          min={new Date().toISOString().slice(0, 10)}
-          onChange={(e) => onExpiry(e.target.value)}
-          className="h-10 w-full rounded-full border border-input bg-surface-0 px-4 text-13-r text-type-0 outline-none transition focus:border-type-0"
-        />
-      </label>
+      {expiry !== undefined && <ExpiryField label="Expires" value={expiry} onChange={onExpiry} />}
     </div>
+  )
+}
+
+/** The gallery's one expiry date (today or later); empty reads "never". */
+function ExpiryField({ label, value, onChange }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-12-m text-type-2">{label} {value ? '' : <span className="text-type-3">· never</span>}</span>
+      <input
+        type="date"
+        value={value}
+        min={new Date().toISOString().slice(0, 10)}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 w-full rounded-full border border-input bg-surface-0 px-4 text-13-r text-type-0 outline-none transition focus:border-type-0"
+      />
+    </label>
   )
 }
 

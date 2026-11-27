@@ -16,7 +16,7 @@ import Modal from '../components/Modal'
 import { galleryPath } from '../../data/galleries'
 import { audiences, rolePlural, roleLabel, useGalleryAccess } from './access'
 import {
-  LIMITS, allCodes, codesFor, composeEmail, defaultText, expiryFor, formatDate, formatSent, galleryExpiry, linkFor, qrCardPNG,
+  LIMITS, allCodes, codesFor, composeEmail, credentialGroups, credentialParts, defaultText, expiryFor, formatDate, formatSent, galleryExpiry, linkFor, qrCardPNG,
   qrCards, qrFor, TEMPLATE_LIMIT, TEMPLATE_NAME_LIMIT, useEmailTemplates, useShareHistory, useShareSettings, variableValues,
 } from './share'
 import VariableText from './VariableText'
@@ -169,7 +169,7 @@ function AccessOverview({ access, base }) {
         <div key={a}>
           <LinkHead
             title={rolePlural(a)}
-            expiry={shared ? undefined : expiryFor(access, a)}
+            expiry={shared ? undefined : expiryFor(access)}
           />
           {!shared && <LinkField url={linkFor(access, a, base)} label={`${roleLabel(a)} link`} />}
           <Codes access={access} aud={a} />
@@ -389,9 +389,6 @@ function EmailComposer({ ws, access, base }) {
   const def = defaultText(ws.gallery)
   const email = useMemo(() => composeEmail({ gallery: ws.gallery, access, base, share, to }), [ws.gallery, access, base, share, to])
   const codes = allCodes(access)
-  const single = access.mode !== 'roles'
-  const password = codes.some((c) => c.password)
-  const pin = codes.some((c) => c.pin)
   const expiry = galleryExpiry(access)
   const values = variableValues({ gallery: ws.gallery, expiry, to })
   const hint = 'Empty uses the text shown. Type { to add a variable.'
@@ -405,7 +402,7 @@ function EmailComposer({ ws, access, base }) {
   }
 
   const set = (patch) => setShare((s) => ({ ...s, ...patch }))
-  const include = (k, v) => setShare((s) => ({ ...s, include: { ...s.include, [k]: v } }))
+  const tick = (k, v) => setShare((s) => ({ ...s, credentials: { ...s.credentials, [k]: v } }))
   // Templates: the wording starts from one; "edited" means it no longer matches the one picked.
   const templates = useEmailTemplates()
   const tpl = templates.find(share.template)
@@ -450,12 +447,26 @@ function EmailComposer({ ws, access, base }) {
     if (bad.length) notify(`“${bad[0]}” isn’t an email address`)
   }
 
-  const options = [
-    { k: 'link', label: 'Gallery link', show: true },
-    { k: 'password', label: single ? `Password (${codes[0]?.password})` : 'Passwords', show: password },
-    { k: 'pin', label: single ? `Download PIN (${codes[0]?.pin})` : 'Download PINs', show: pin },
-    { k: 'expiry', label: single || access.singleLink ? `Expiry date (${formatDate(expiry)})` : 'Expiry dates', show: !!expiry },
-  ].filter((o) => o.show)
+  // Credential checkboxes (credentialGroups): one for the gallery, one for every role on a shared link,
+  // or one per role when roles have their own links or different codes. Each lists what it adds.
+  const credGroups = credentialGroups(access)
+  const roles = access.mode === 'roles'
+  const shared = !roles || access.singleLink
+  const detail = (g) => {
+    const per = (aud) => {
+      const c = credentialParts(access, aud, base)
+      return [c.approved && 'email sign-in', c.password && `password ${c.password}`, c.pin && `download PIN ${c.pin}`].filter(Boolean)
+    }
+    const head = shared ? ['Gallery link'] : [`${roleLabel(g.roles[0])} link`]
+    const codesLine = g.roles.length > 1
+      ? g.roles.map((r) => { const p = per(r); return p.length ? `${rolePlural(r)}: ${p.join(', ')}` : null }).filter(Boolean)
+      : per(g.roles[0]).map((x) => x[0].toUpperCase() + x.slice(1))
+    const exp = access.expiry.all
+    return [...head, ...codesLine, exp && `Expires ${formatDate(exp)}`].filter(Boolean).join(' · ')
+  }
+  // Ticked off but holding a password visitors need to get in.
+  const missingPassword = credGroups.filter((g) => !share.credentials[g.key] && g.roles.some((a) => codesFor(access, a).password))
+  const noLink = shared ? !credGroups.some((g) => share.credentials[g.key]) : false
 
   return (
     <div className="grid gap-6 xl:grid-cols-2 xl:gap-8">
@@ -513,11 +524,21 @@ function EmailComposer({ ws, access, base }) {
 
         <div>
           <p className="mb-2.5 text-12-sb uppercase text-type-2">Include</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
-            {options.map((o) => <Checkbox key={o.k} checked={share.include[o.k]} onChange={(v) => include(o.k, v)}>{o.label}</Checkbox>)}
+          <div className="space-y-3">
+            {credGroups.map((g) => (
+              <div key={g.key}>
+                <Checkbox checked={share.credentials[g.key]} onChange={(v) => tick(g.key, v)}>{g.label}</Checkbox>
+                <p className="ml-7 mt-1 text-12-r text-type-3">{detail(g)}</p>
+              </div>
+            ))}
           </div>
-          {!password && !pin && <p className="mt-2 text-12-r text-type-3">No password or download PIN. Add them in Settings.</p>}
-          {password && !share.include.password && <p className="mt-2 text-12-r text-amber-700">They’ll need the password to open the gallery. Send it another way.</p>}
+          {!codes.length && <p className="mt-2 text-12-r text-type-3">No password or download PIN. Add them in Settings.</p>}
+          {noLink && <p className="mt-2 text-12-r text-amber-700">The email won’t include the gallery link.</p>}
+          {missingPassword.length > 0 && (
+            <p className="mt-2 text-12-r text-amber-700">
+              {roles ? `${missingPassword.flatMap((g) => g.roles.filter((a) => codesFor(access, a).password)).map(rolePlural).join(' and ')} will need their password` : 'They’ll need the password'} to open the gallery. Send it another way.
+            </p>
+          )}
         </div>
 
         {/* Phones: Send is the BottomCTA instead. */}

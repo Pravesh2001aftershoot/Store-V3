@@ -4,7 +4,7 @@ import { forGallery, useGalleryId } from '../../data/galleries'
 import { audiences, roleLabel, rolePlural } from './access'
 
 // Share step: the email the photographer sends and the QR card they print, built from the gallery's
-// access settings (access.js). Only the wording and the include choices are saved, per gallery under
+// access settings (access.js). Only the wording and the credential choices are saved, per gallery under
 // galleryKey(id, 'share'); empty wording falls back to text made from the gallery.
 
 export const LIMITS = { subject: 120, message: 1000 }
@@ -13,7 +13,7 @@ const DEFAULTS = {
   template: 'ready', // the email template the wording started from (see BUILT_IN_TEMPLATES)
   subject: '',
   message: '',
-  include: { link: true, password: true, pin: true, expiry: true }, // email
+  credentials: { all: true, client: true, guest: true, vendor: true }, // email: which credential groups go in (see credentialGroups)
   qr: { pin: false }, // printed under the QR code (passwords always are)
 }
 
@@ -25,7 +25,7 @@ const load = (key) => {
     template: typeof s.template === 'string' && s.template ? s.template : DEFAULTS.template,
     subject: text(s.subject, LIMITS.subject),
     message: text(s.message, LIMITS.message),
-    include: Object.fromEntries(Object.entries(DEFAULTS.include).map(([k, d]) => [k, bool(s.include?.[k], d)])),
+    credentials: Object.fromEntries(Object.entries(DEFAULTS.credentials).map(([k, d]) => [k, bool(s.credentials?.[k], d)])),
     qr: Object.fromEntries(Object.entries(DEFAULTS.qr).map(([k, d]) => [k, bool(s.qr?.[k], d)])),
   }
 }
@@ -161,7 +161,8 @@ export const defaultText = (gallery) => ({
 
 /** The link an audience opens: the shared one, or its role's own. */
 export const linkFor = (access, aud, base) => (aud === 'anyone' || access.singleLink ? base : `${base}?role=${aud}`)
-export const expiryFor = (access, aud) => access.expiry[aud === 'anyone' || access.singleLink ? 'all' : aud]
+/** A gallery has one expiry date for every link, whatever the access setup. */
+export const expiryFor = (access) => access.expiry.all
 
 export const formatDate = (iso) =>
   iso ? new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
@@ -178,55 +179,85 @@ export function codesFor(access, aud) {
 /** Everyone's codes, one entry per audience that has a password or download PIN: [{ aud, password, pin }]. */
 export const allCodes = (access) => audiences(access).map((aud) => ({ aud, ...codesFor(access, aud) })).filter((c) => c.password || c.pin)
 
-/**
- * The expiry that fills {expiry_date}: the shared link's, or with a link per role the soonest role
- * date ('' when nothing expires).
- */
-export const galleryExpiry = (access) => {
-  if (access.mode !== 'roles' || access.singleLink) return access.expiry.all
-  return access.roles.map((r) => access.expiry[r]).filter(Boolean).sort()[0] ?? ''
-}
+/** The expiry that fills {expiry_date}: the gallery's one date ('' when nothing expires). */
+export const galleryExpiry = (access) => access.expiry.all
 
 /** "Client, Guest or Vendor". */
 const orList = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`)
 
 /**
- * The one email for the whole gallery: { subject, body }. It always links to the gallery itself; with
- * roles the visitor picks theirs when it opens, and each role gets a line with what it needs (sign in
- * with the email this was sent to, password, download PIN, its own expiry). `include` picks which
- * details go in; `to` fills {client_email}.
+ * The credential checkboxes the email offers: [{ key, roles, label }]. `key` is saved in
+ * share.credentials; `roles` are the audiences it covers.
+ * - Anyone with the link: one, "Add gallery credentials".
+ * - One link for all roles: one, "Add user credentials", while every role needs the same codes;
+ *   once roles have different passwords or download PINs, one per role ("Add client credentials").
+ * - A link per role: one per role, each with its own link.
+ */
+export function credentialGroups(access) {
+  if (access.mode !== 'roles') return [{ key: 'all', roles: ['anyone'], label: 'Add gallery credentials' }]
+  const perRole = access.roles.map((r) => ({ key: r, roles: [r], label: `Add ${roleLabel(r).toLowerCase()} credentials` }))
+  if (!access.singleLink) return perRole
+  const codes = new Set(access.roles.map((r) => { const c = codesFor(access, r); return `${c.password}|${c.pin}` }))
+  return codes.size > 1 ? perRole : [{ key: 'all', roles: access.roles, label: 'Add user credentials' }]
+}
+
+/** What one audience's credentials hold, for the checkbox's detail line and the email. */
+export function credentialParts(access, aud, base) {
+  const { password, pin } = codesFor(access, aud)
+  return {
+    link: linkFor(access, aud, base),
+    approved: aud !== 'anyone' && access.data[aud].signIn === 'approved',
+    password,
+    pin,
+    expiry: access.expiry.all,
+  }
+}
+
+/**
+ * The one email for the whole gallery: { subject, body }. The access details follow the message, for
+ * each ticked credential group (credentialGroups): with one link, the link (and with roles which to
+ * pick), then a line per ticked role (sign in with the email this was sent to, password, download PIN)
+ * and the expiry; with a link per role, a block per ticked role with its own link and codes, then the expiry.
+ * `to` fills {client_email}.
  */
 export function composeEmail({ gallery, access, base, share, to = [] }) {
   const def = defaultText(gallery)
-  const { include } = share
   const roles = access.mode === 'roles'
-  const shared = !roles || access.singleLink
-  const lines = []
-  if (include.link) {
-    lines.push(`View the gallery: ${base}`)
-    if (roles) lines.push(`When it opens, choose ${orList(access.roles.map(roleLabel))}.`)
-  }
-  if (!roles) {
-    const { password, pin } = codesFor(access, 'anyone')
-    if (include.password && password) lines.push(`Password: ${password}`)
-    if (include.pin && pin) lines.push(`Download PIN: ${pin}`)
-  } else {
-    for (const r of access.roles) {
-      const { password, pin } = codesFor(access, r)
-      const own = !shared && access.expiry[r]
-      const parts = [
-        include.link && access.data[r].approved.on && 'sign in with the email address this was sent to',
-        include.password && password && `password ${password}`,
-        include.pin && pin && `download PIN ${pin}`,
-        include.expiry && own && `link works until ${formatDate(own)}`,
-      ].filter(Boolean)
-      if (parts.length) lines.push(`${rolePlural(r)}: ${parts.join(' · ')}`)
+  const ticked = credentialGroups(access).filter((g) => share.credentials[g.key]).flatMap((g) => g.roles)
+  const blocks = []
+  if (!roles || access.singleLink) {
+    if (ticked.length) {
+      const lines = [`View the gallery: ${base}`]
+      if (roles) lines.push(`When it opens, choose ${orList(access.roles.map(roleLabel))}.`)
+      for (const aud of ticked) {
+        const c = credentialParts(access, aud, base)
+        if (!roles) {
+          if (c.password) lines.push(`Password: ${c.password}`)
+          if (c.pin) lines.push(`Download PIN: ${c.pin}`)
+          continue
+        }
+        const parts = [c.approved && 'sign in with the email address this was sent to', c.password && `password ${c.password}`, c.pin && `download PIN ${c.pin}`].filter(Boolean)
+        if (parts.length) lines.push(`${rolePlural(aud)}: ${parts.join(' · ')}`)
+      }
+      if (access.expiry.all) lines.push(`The link works until ${formatDate(access.expiry.all)}.`)
+      blocks.push(lines.join('\n'))
     }
+  } else {
+    for (const r of ticked) {
+      const c = credentialParts(access, r, base)
+      blocks.push([
+        rolePlural(r),
+        `Link: ${c.link}`,
+        c.approved && 'Sign in with the email address this was sent to.',
+        c.password && `Password: ${c.password}`,
+        c.pin && `Download PIN: ${c.pin}`,
+      ].filter(Boolean).join('\n'))
+    }
+    if (ticked.length && access.expiry.all) blocks.push(`The ${ticked.length > 1 ? 'links work' : 'link works'} until ${formatDate(access.expiry.all)}.`)
   }
-  if (include.expiry && shared && access.expiry.all) lines.push(`The link works until ${formatDate(access.expiry.all)}.`)
   const fill = (t) => fillVariables(t, variableValues({ gallery, expiry: galleryExpiry(access), to }))
   // The message carries the greeting and sign-off; the access details follow it.
-  const body = [fill(share.message.trim()) || def.message, lines.join('\n')].filter(Boolean).join('\n\n')
+  const body = [fill(share.message.trim()) || def.message, ...blocks].filter(Boolean).join('\n\n')
   return { subject: fill(share.subject.trim()) || def.subject, body }
 }
 
