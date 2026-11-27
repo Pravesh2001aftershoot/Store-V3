@@ -2,32 +2,31 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowsClockwise, CaretDown, ChatCircleDots, Check, CopySimple, DownloadSimple, EnvelopeSimple, EyeSlash, FolderSimple,
-  Heart, ImageBroken, LockSimple, MagnifyingGlass, Plus, ScanSmiley, ShareFat, Storefront, UserFocus, X,
+  Heart, ImageBroken, Info, LockSimple, MagnifyingGlass, Plus, ScanSmiley, ShareFat, Storefront, UserFocus, Warning, X,
 } from '@phosphor-icons/react'
 import { Button, Field } from '../../components/ui'
 import { Segmented, Switch } from '../../gallery/templates/cover/controls'
 import { notify } from '../../gallery/lib/actions'
 import { cn, money } from '../../lib/utils'
-import { galleryPath, getGallery, useGalleryId } from '../../data/galleries'
+import { getGallery, useGalleryId } from '../../data/galleries'
 import { catalogProduct, useCatalogs } from '../../data/storeConfig'
 import { Checkbox, Chip, IconButton, PageHeader, PriceInput, Select, Tag, ease } from '../components/ui'
 import Modal from '../components/Modal'
 import { usePhone } from '../lib/hooks'
 import {
-  WEB_EDGES, IMAGE_SIZES, LIMIT_MAX, MIN_ROLES, ROLES, filterIncluded, initials, normalize, pinRequired, randomPin, roleLabel,
-  rolePlural, saveBlocker, useGalleryAccess,
+  WEB_EDGES, IMAGE_SIZES, LIMIT_MAX, LINK_HOST, MIN_ROLES, ROLES, changeSummary, emailSignIn, filterForced, initials, linkEnding,
+  normalize, pinReason, randomPin, roleLabel, rolePlural, saveBlocker, slugify, slugOf, useGalleryAccess,
 } from './access'
 
-// The settings, in the order they're listed. `rolesOnly`: only with role-based access.
-// `clientOnly`: only on the Client role. `expands`: has options under it while on.
+// The settings, in the order they're listed (the sign-in method card comes first in Access).
+// `rolesOnly`: only with role-based access. `clientOnly`: only on the Client role. `expands`: has options under it while on.
 const SETTINGS = [
-  { id: 'collectEmail', group: 'access', icon: EnvelopeSimple, title: 'Collect email on sign-up', desc: 'Visitors enter their email before they can view the gallery.' },
-  { id: 'pin', group: 'access', icon: LockSimple, title: 'Password protection', desc: 'Visitors enter a 4-digit password to open the gallery.', expands: true },
+  { id: 'pin', group: 'access', icon: LockSimple, title: 'Password protection', desc: 'Visitors enter a password to open the gallery.', expands: true },
   { id: 'faceSearch', group: 'access', icon: ScanSmiley, title: 'Face scan sign-in', desc: 'Visitors scan their face to sign in.', expands: true },
-  { id: 'comments', group: 'engagement', icon: ChatCircleDots, title: 'Comments', desc: 'Visitors can comment on photos.', rolesOnly: true },
   { id: 'filterByFace', group: 'engagement', icon: UserFocus, title: 'Filter by face', desc: 'Visitors can show only the photos they’re in.' },
-  { id: 'favoriting', group: 'engagement', icon: Heart, title: 'Favorites', desc: 'Visitors can mark their favorite photos.', expands: true },
-  { id: 'hideImages', group: 'engagement', icon: EyeSlash, title: 'Hide photos', desc: 'Visitors can hide photos they don’t want to see.', expands: true, clientOnly: true },
+  { id: 'favoriting', group: 'engagement', icon: Heart, title: 'Favorites', desc: 'Visitors can mark their favorite photos.' },
+  { id: 'comments', group: 'engagement', icon: ChatCircleDots, title: 'Comments', desc: 'Visitors can comment on photos.', rolesOnly: true },
+  { id: 'hideImages', group: 'engagement', icon: EyeSlash, title: 'Hide photos', desc: 'Clients can hide photos. Photos they hide don’t show to guests or vendors.', expands: true, clientOnly: true },
   { id: 'screenshot', group: 'privacy', icon: ImageBroken, title: 'Screenshot protection', desc: 'Photos blur if a visitor takes a screenshot.' },
   { id: 'downloads', group: 'privacy', icon: DownloadSimple, title: 'Downloads', desc: 'Visitors can download photos and videos.', expands: true },
   { id: 'sharing', group: 'privacy', icon: ShareFat, title: 'Sharing', desc: 'Visitors can share photos and videos.', expands: true },
@@ -39,6 +38,7 @@ const GROUPS = [
   { id: 'privacy', title: 'Privacy' },
 ]
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+const SIGN_IN_TERMS = 'sign-in method no sign-in needed collect email on sign-up approved only password only'
 
 /**
  * Step 3 — Settings. Who can open the gallery (anyone with the link, or by role) and what visitors
@@ -52,8 +52,11 @@ export default function SettingsStep({ ws }) {
   const [query, setQuery] = useState('')
   const [closed, setClosed] = useState({}) // group id → collapsed
   const [adding, setAdding] = useState(false)
+  const [tried, setTried] = useState(false) // Save was pressed while blocked: show the problem in red
+  const [summary, setSummary] = useState(null) // the Save summary's changes while it's open
   const dirty = !same(draft, saved)
   const blocker = saveBlocker(draft)
+  const title = ws.gallery.title
 
   // Saved somewhere else (another tab) while there's nothing unsaved here: follow it.
   const last = useRef(saved)
@@ -77,18 +80,28 @@ export default function SettingsStep({ ws }) {
   const edit = (fn) => setDraft((d) => { const n = structuredClone(d); fn(n); return normalize(n) })
   const editCur = (fn) => edit((n) => fn(n.data[aud], n))
 
-  const locked = (id) => (id === 'pin' && roles && pinRequired(draft, aud)) || (id === 'filterByFace' && filterIncluded(cur))
-  const lockNote = (id) =>
-    id === 'pin'
-      ? `Required with one link for all roles. Switch to Approved ${rolePlural(aud).toLowerCase()} only to make it optional.`
-      : 'Included with Face scan sign-in → Whole gallery.'
-  const isOn = (id) => locked(id) || cur[id].on
+  const forced = filterForced(cur)
+  const locked = (id) => (id === 'pin' && !!pinReason(draft, aud)) || (id === 'filterByFace' && forced !== null)
+  const toFace = () => document.getElementById('setting-faceSearch')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const lockNote = (id) => {
+    if (id === 'pin') {
+      return pinReason(draft, aud) === 'password'
+        ? 'Required with Password only sign-in.'
+        : 'Required: more than one role on the shared link signs in without an approved list, so each needs its own password.'
+    }
+    return (
+      <>
+        {forced ? 'On' : 'Off'} because of{' '}
+        <button type="button" onClick={toFace} className="text-type-0 underline underline-offset-2">Face scan sign-in</button>
+        {' '}→ {forced ? 'Whole gallery' : 'Only photos they’re in'}.
+      </>
+    )
+  }
+  const isOn = (id) => (id === 'filterByFace' && forced !== null ? forced : locked(id) || cur[id].on)
 
   const toggle = (id, on) => editCur((d) => {
     d[id].on = on
     if (!on) return
-    if (id === 'collectEmail' && roles) d.approved.on = false
-    if (id === 'pin' && !/^\d{4}$/.test(d.pin.value)) d.pin.value = ''
     if (id === 'sharing') { d.sharing.image = true; d.sharing.video = true }
     if (id === 'downloads') {
       d.downloads.image.on = true
@@ -100,19 +113,32 @@ export default function SettingsStep({ ws }) {
   const q = query.trim().toLowerCase()
   const visible = (s) =>
     (!s.rolesOnly || roles) && (!s.clientOnly || (roles && aud === 'client')) && (!q || s.title.toLowerCase().includes(q))
-  const emailChoiceVisible = roles && (!q || 'collect email on sign-up approved people'.includes(q))
+  const signInVisible = !q || SIGN_IN_TERMS.includes(q)
 
+  // Save: blocked → open the audience with the problem and mark it red; otherwise the Save summary.
   const save = () => {
-    if (blocker) return
+    if (blocker) {
+      setTried(true)
+      if (blocker.aud && blocker.aud !== 'anyone') setRole(blocker.aud)
+      if (blocker.field === 'pin' || blocker.field === 'sizes') setQuery('')
+      return
+    }
+    setSummary(changeSummary(saved, draft, title))
+  }
+  const confirmSave = () => {
     setSaved(draft)
+    setSummary(null)
+    setTried(false)
     notify('Settings saved')
   }
-  const dismiss = () => setDraft(saved)
+  const dismiss = () => { setDraft(saved); setTried(false) }
+  const showError = (field) => tried && blocker?.field === field && (blocker.aud === null || blocker.aud === aud)
 
-  const base = `${window.location.origin}${galleryPath(ws.gallery.id)}`
+  const slug = slugOf(draft, title)
+  const setSlug = (v) => edit((n) => { n.slug = { custom: true, value: slugify(v) } })
   const links = !roles || draft.singleLink
-    ? [{ key: 'all', label: roles ? 'Gallery link · all roles' : 'Gallery link', url: base }]
-    : draft.roles.map((r) => ({ key: r, label: `${roleLabel(r)} link`, url: `${base}?role=${r}` }))
+    ? [{ key: 'all', label: roles ? 'Gallery link · all roles' : 'Gallery link' }]
+    : draft.roles.map((r) => ({ key: r, label: `${roleLabel(r)} link` }))
 
   return (
     <div className="mx-auto max-w-[760px] px-4 pb-40 pt-6 max-sm:pb-56 md:px-6 md:pt-10">
@@ -125,7 +151,7 @@ export default function SettingsStep({ ws }) {
           value={draft.mode}
           onChange={(mode) => edit((n) => { n.mode = mode })}
           options={[
-            { id: 'anyone', label: 'Anyone with the link', hint: 'No sign-in needed. Anyone with the link can view the gallery.' },
+            { id: 'anyone', label: 'Anyone with the link', hint: 'One link and expiry date for everyone. Choose how visitors sign in below.' },
             { id: 'roles', label: 'By role', hint: 'Clients, guests and vendors each get their own access and permissions.' },
           ]}
         />
@@ -165,8 +191,8 @@ export default function SettingsStep({ ws }) {
               <Checkbox checked={draft.singleLink} onChange={(v) => edit((n) => { n.singleLink = v })}>One link for all roles</Checkbox>
               <p className="ml-7 mt-1 text-12-r text-type-3">
                 {draft.singleLink
-                  ? 'Everyone opens the same link and picks their role. Roles that sign up with any email need a password.'
-                  : 'Each role gets its own link to share.'}
+                  ? 'Everyone opens the same link and picks their role. One expiry date covers all roles. When more than one role signs in without an approved list, each needs its own password.'
+                  : 'Each role gets its own link and its own expiry date.'}
               </p>
             </div>
           </div>
@@ -177,7 +203,10 @@ export default function SettingsStep({ ws }) {
             <LinkRow
               key={l.key}
               label={l.label}
-              url={l.url}
+              slug={slug}
+              ending={linkEnding(draft, l.key)}
+              onSlug={setSlug}
+              error={showError('slug') || (draft.slug.custom && !draft.slug.value.replace(/-/g, ''))}
               expiry={draft.expiry[l.key]}
               onExpiry={(v) => edit((n) => { n.expiry[l.key] = v })}
             />
@@ -204,16 +233,14 @@ export default function SettingsStep({ ws }) {
           />
         </label>
       </div>
-      {roles && <p className="mt-2 text-12-r text-type-3">Showing what {rolePlural(aud).toLowerCase()} can do.</p>}
+      {roles && <p className="mt-2 text-12-r text-type-3">Showing what {rolePlural(aud).toLowerCase()} can do. Each role keeps its own settings.</p>}
 
       <div className="mt-4">
         {GROUPS.map((g) => {
-          const items = SETTINGS.filter((s) => s.group === g.id && visible(s))
-          const pair = g.id === 'access' && emailChoiceVisible
-          // In role mode the email pair replaces the Collect email switch.
-          const cards = roles ? items.filter((s) => s.id !== 'collectEmail') : items
+          const cards = SETTINGS.filter((s) => s.group === g.id && visible(s))
+          const pair = g.id === 'access' && signInVisible
           if (!cards.length && !pair) return null
-          const onCount = cards.filter((s) => isOn(s.id)).length + (pair ? 1 : 0)
+          const onCount = cards.filter((s) => isOn(s.id)).length + (pair && cur.signIn !== 'none' ? 1 : 0)
           const open = !!q || !closed[g.id]
           return (
             <section key={g.id} className="border-t border-border first:border-t-0">
@@ -229,17 +256,18 @@ export default function SettingsStep({ ws }) {
               </button>
               <Collapse open={open}>
                 <div className="space-y-3 pb-6">
-                  {pair && <EmailChoice d={cur} role={aud} onMode={(approved) => editCur((d) => { d.approved.on = approved; d.collectEmail.on = !approved })} onAdd={() => setAdding(true)} onRemove={(id) => editCur((d) => { d.approved.people = d.approved.people.filter((p) => p.id !== id) })} />}
+                  {pair && <SignInChoice d={cur} role={aud} onMode={(m) => editCur((d) => { d.signIn = m })} onAdd={() => setAdding(true)} onRemove={(id) => editCur((d) => { d.approved.people = d.approved.people.filter((p) => p.id !== id) })} />}
                   {cards.map((s) => (
                     <SettingCard
                       key={s.id}
+                      id={`setting-${s.id}`}
                       setting={s}
                       on={isOn(s.id)}
                       locked={locked(s.id)}
                       note={locked(s.id) ? lockNote(s.id) : null}
                       onChange={(on) => toggle(s.id, on)}
                     >
-                      {s.expands && <Options id={s.id} d={cur} editCur={editCur} sets={ws.sections.map((x) => x.title)} />}
+                      {s.expands && <Options id={s.id} d={cur} aud={aud} editCur={editCur} pinError={showError('pin')} sizesError={showError('sizes')} sets={ws.sections.map((x) => x.title)} />}
                     </SettingCard>
                   ))}
                 </div>
@@ -247,24 +275,29 @@ export default function SettingsStep({ ws }) {
             </section>
           )
         })}
-        {GROUPS.every((g) => !SETTINGS.some((s) => s.group === g.id && visible(s))) && !emailChoiceVisible && (
+        {GROUPS.every((g) => !SETTINGS.some((s) => s.group === g.id && visible(s))) && !signInVisible && (
           <p className="py-10 text-center text-14-r text-type-3">No settings match “{query.trim()}”.</p>
         )}
       </div>
 
-      <SaveBar show={dirty} blocker={blocker} onSave={save} onDismiss={dismiss} />
+      <SaveBar show={dirty} blocker={tried ? blocker?.message : null} onSave={save} onDismiss={dismiss} />
+      <SaveSummary changes={summary} onCancel={() => setSummary(null)} onSave={confirmSave} />
       <PersonModal
         open={adding}
         onOpenChange={setAdding}
-        title={roles ? `Add ${roleLabel(aud).toLowerCase()}` : 'Add person'}
+        title={`Add ${roleLabel(aud).toLowerCase()}`}
         onAdd={(p) => { editCur((d) => { d.approved.people.push(p) }); notify(`${p.name} added`) }}
       />
     </div>
   )
 }
 
-/** Read-only link with Copy, and an optional expiry date. */
-function LinkRow({ label, url, expiry, onExpiry }) {
+/**
+ * A gallery link, `gallery.aftershoot.com/` + gallery name + ending, with Copy and an optional expiry date.
+ * Only the gallery name (highlighted) can be edited; it's shared by every link of the gallery.
+ */
+function LinkRow({ label, slug, ending, onSlug, error, expiry, onExpiry }) {
+  const url = `https://${LINK_HOST}${slug}${ending}`
   const copy = async () => {
     try { await navigator.clipboard.writeText(url); notify('Link copied') } catch { notify('Couldn’t copy — select the link and copy it') }
   }
@@ -272,10 +305,22 @@ function LinkRow({ label, url, expiry, onExpiry }) {
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
       <div className="min-w-0">
         <p className="mb-1.5 text-12-m text-type-2">{label}</p>
-        <div className="flex h-10 items-center rounded-full border border-input bg-surface-0 pl-4 pr-1">
-          <span className="min-w-0 flex-1 truncate text-13-r text-type-1">{url}</span>
+        <div className={cn('flex h-10 items-center rounded-full border bg-surface-0 pl-4 pr-1 transition focus-within:border-type-0', error ? 'border-destructive' : 'border-input')}>
+          <span className="flex min-w-0 flex-1 items-center text-13-r text-type-3">
+            <span className="min-w-0 shrink truncate">{LINK_HOST}</span>
+            <input
+              value={slug}
+              onChange={(e) => onSlug(e.target.value)}
+              size={Math.max(slug.length, 6)}
+              aria-label="Gallery name in the link"
+              spellCheck={false}
+              className="min-w-[6ch] max-w-full shrink-0 rounded-md bg-surface-2 px-1 py-0.5 text-13-m text-type-0 outline-none"
+            />
+            <span className="shrink-0">{ending}</span>
+          </span>
           <IconButton small label={`Copy ${label.toLowerCase()}`} onClick={copy}><CopySimple size={16} /></IconButton>
         </div>
+        {error && <p className="mt-1.5 text-12-r text-destructive">Enter a gallery name: lowercase letters, numbers and hyphens.</p>}
       </div>
       <label className="block">
         <span className="mb-1.5 block text-12-m text-type-2">Expires {expiry ? '' : <span className="text-type-3">· never</span>}</span>
@@ -292,10 +337,10 @@ function LinkRow({ label, url, expiry, onExpiry }) {
 }
 
 /** A setting: icon, title and description, a switch, and its options underneath while on. */
-function SettingCard({ setting: s, on, locked, note, onChange, children }) {
+function SettingCard({ id, setting: s, on, locked, note, onChange, children }) {
   const Icon = s.icon
   return (
-    <div className="rounded-2xl border border-border bg-surface-1 p-4">
+    <div id={id} className="scroll-mt-24 rounded-2xl border border-border bg-surface-1 p-4">
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-type-1"><Icon size={18} /></span>
         <div className="min-w-0 flex-1 pt-0.5">
@@ -313,7 +358,7 @@ function SettingCard({ setting: s, on, locked, note, onChange, children }) {
 }
 
 /** The options under a setting that's on. */
-function Options({ id, d, editCur, sets }) {
+function Options({ id, d, aud, editCur, pinError, sizesError, sets }) {
   // High res is sold through the store: the Digital Download product in this gallery's catalog.
   useCatalogs() // re-reads when a catalog changes
   const galleryId = useGalleryId()
@@ -324,37 +369,44 @@ function Options({ id, d, editCur, sets }) {
     ? { price: Math.min(...photoProduct.options[0].values.map((v) => v.price)), files: photoProduct.options[0].values.length, gallery: wholeProduct && !wholeProduct.hidden ? Math.min(...wholeProduct.options[0].values.map((v) => v.price)) : null }
     : null
   if (id === 'pin') {
+    const short = d.pin.value.length < 4
     return (
       <label className="block">
         <span className="mb-1.5 block text-12-m text-type-2">Password</span>
         <input
-          inputMode="numeric"
           autoComplete="off"
+          spellCheck={false}
           value={d.pin.value}
-          onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); editCur((x) => { x.pin.value = v }) }}
-          placeholder="4 digits"
-          aria-label="4-digit password"
-          className="h-10 w-[160px] rounded-full border border-input bg-surface-0 px-4 text-16-m tabular-nums tracking-widest text-type-0 outline-none transition placeholder:text-14-r placeholder:tracking-normal placeholder:text-type-3 focus:border-type-0"
+          onChange={(e) => { const v = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20); editCur((x) => { x.pin.value = v }) }}
+          placeholder="4–20 letters or numbers"
+          aria-label="Password"
+          aria-invalid={pinError}
+          className={cn(
+            'h-10 w-[240px] rounded-full border bg-surface-0 px-4 text-14-m text-type-0 outline-none transition placeholder:text-14-r placeholder:text-type-3 focus:border-type-0 max-sm:w-full',
+            pinError ? 'border-destructive' : 'border-input'
+          )}
         />
-        {d.pin.value.length < 4 && <span className="mt-1.5 block text-12-r text-amber-700">Enter 4 digits to save.</span>}
+        {(short || pinError) && (
+          <span className={cn('mt-1.5 block text-12-r', pinError ? 'text-destructive' : 'text-amber-700')}>
+            {pinError && !short ? 'Use a different password from the other roles on this link.' : 'Enter 4–20 letters or numbers to save.'}
+          </span>
+        )}
       </label>
     )
   }
   if (id === 'faceSearch') {
     return (
       <Radios
-        label="After scanning, visitors see"
+        label="Face scan options"
+        hideLabel
         value={d.faceSearch.scope}
         onChange={(v) => editCur((x) => { x.faceSearch.scope = v })}
         options={[
-          { id: 'all', label: 'The whole gallery', hint: 'Filter by face is included so they can jump to photos they’re in.' },
-          { id: 'own', label: 'Only photos they’re in', hint: 'Good for events where guests shouldn’t browse everyone’s photos.' },
+          { id: 'all', label: 'Whole gallery', tag: 'Filter Face On', info: 'Visitors browse every photo and can filter to the ones they’re in.' },
+          { id: 'own', label: 'Only photos they’re in', tag: 'Filter Face Off', info: 'Visitors only see the sets and photos they appear in, so there’s nothing to filter.' },
         ]}
       />
     )
-  }
-  if (id === 'favoriting') {
-    return <LimitField label="Favorites limit" hint="Most photos each visitor can favorite." value={d.favoriting.limit} onChange={(v) => editCur((x) => { x.favoriting.limit = v })} />
   }
   if (id === 'hideImages') {
     return (
@@ -406,13 +458,16 @@ function Options({ id, d, editCur, sets }) {
                     </Chip>
                   ))}
                 </div>
-                {!IMAGE_SIZES.some((z) => dl.image.sizes[z.id]) && <p className="mt-1.5 text-12-r text-amber-700">Pick at least one size.</p>}
+                {!IMAGE_SIZES.some((z) => dl.image.sizes[z.id]) && <p className={cn('mt-1.5 text-12-r', sizesError ? 'text-destructive' : 'text-amber-700')}>Pick at least one size.</p>}
               </div>
               {dl.image.sizes.web && <WebSizeOptions web={dl.image.web} edit={(fn) => editCur((x) => fn(x.downloads.image.web))} />}
               {dl.image.sizes.high && <HighResPrice product={sellsDigital} free={dl.image.highFree} onChange={(v) => editCur((x) => { x.downloads.image.highFree = v })} />}
               <LimitField
                 label="Download limit"
-                hint={selling ? 'Most free photos each visitor can download. Bought photos don’t count.' : 'Most photos each visitor can download.'}
+                disabled={!emailSignIn(d)}
+                hint={!emailSignIn(d)
+                  ? `Limits count per visitor email. To set one, choose ${aud === 'anyone' ? 'Collect email on sign-up or Approved clients only' : `Collect email on sign-up or Approved ${rolePlural(aud).toLowerCase()} only`} under sign-in.`
+                  : selling ? 'Most free photos each visitor can download (per email). Bought photos don’t count.' : 'Most photos each visitor can download (per email).'}
                 value={dl.image.limit}
                 onChange={(v) => editCur((x) => { x.downloads.image.limit = v })}
               />
@@ -451,21 +506,31 @@ function Options({ id, d, editCur, sets }) {
   return null
 }
 
-/** Role mode: visitors either sign up with any email or must be on the approved list. */
-function EmailChoice({ d, role, onMode, onAdd, onRemove }) {
+/**
+ * Sign-in method, one at a time. Anyone with the link: No sign-in needed, Collect email on sign-up or
+ * Approved clients only. A role: Password only, Collect email on sign-up or Approved [role]s only.
+ */
+function SignInChoice({ d, role, onMode, onAdd, onRemove }) {
+  const anyone = role === 'anyone'
   const who = rolePlural(role)
   const people = d.approved.people
+  const first = anyone
+    ? { id: 'none', label: 'No sign-in needed', hint: 'Anyone with the link can view the gallery.' }
+    : { id: 'password', label: 'Password only', hint: `No email. ${who} enter the password you set below.` }
   return (
     <div className="rounded-2xl border border-border bg-surface-1 p-4">
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-type-1"><EnvelopeSimple size={18} /></span>
         <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-14-m text-type-0">How {who.toLowerCase()} sign in</p>
+          <p className="text-14-m text-type-0">{anyone ? 'How visitors sign in' : `How ${who.toLowerCase()} sign in`}</p>
           <div className="mt-3">
             <Radios
-              value={d.approved.on ? 'approved' : 'collect'}
-              onChange={(v) => onMode(v === 'approved')}
+              label="Sign-in method"
+              hideLabel
+              value={d.signIn}
+              onChange={onMode}
               options={[
+                first,
                 { id: 'collect', label: 'Collect email on sign-up', hint: 'Anyone with the link enters their email to get in.' },
                 { id: 'approved', label: `Approved ${who.toLowerCase()} only`, hint: 'Only the emails you add can open the link.' },
               ]}
@@ -473,7 +538,7 @@ function EmailChoice({ d, role, onMode, onAdd, onRemove }) {
           </div>
         </div>
       </div>
-      <Collapse open={d.approved.on}>
+      <Collapse open={d.signIn === 'approved'}>
         <div className="mt-4 border-t border-border pt-4 sm:ml-12">
           <p className="mb-2.5 text-12-m text-type-2">Approved {who.toLowerCase()} · {people.length}</p>
           {people.length > 0 && (
@@ -549,7 +614,7 @@ function SaveBar({ show, blocker, onSave, onDismiss }) {
   const phone = usePhone()
   const status = (
     <span className="flex items-center gap-2 text-13-m">
-      <span className={cn('h-1.5 w-1.5 rounded-full', phone ? 'bg-type-3' : 'bg-white/60')} />
+      <span className={cn('h-1.5 w-1.5 rounded-full', blocker ? 'bg-destructive' : phone ? 'bg-type-3' : 'bg-white/60')} />
       {blocker ?? 'Unsaved changes'}
     </span>
   )
@@ -566,7 +631,7 @@ function SaveBar({ show, blocker, onSave, onDismiss }) {
           role="status"
         >
           <div className="px-1 pb-1">{status}</div>
-          <Button size="lg" onClick={onSave} disabled={!!blocker} className="w-full">Save</Button>
+          <Button size="lg" onClick={onSave} className="w-full">Save</Button>
           <Button variant="ghost" size="lg" onClick={onDismiss} className="w-full">Dismiss</Button>
         </motion.div>
       ) : (
@@ -581,17 +646,67 @@ function SaveBar({ show, blocker, onSave, onDismiss }) {
         >
           <span className="mr-2">{status}</span>
           <Button variant="ghost" size="sm" onClick={onDismiss} className="text-white/80 hover:bg-white/10 hover:text-white">Dismiss</Button>
-          <Button variant="light" size="sm" onClick={onSave} disabled={!!blocker}>Save</Button>
+          <Button variant="light" size="sm" onClick={onSave}>Save</Button>
         </motion.div>
       ))}
     </AnimatePresence>
   )
 }
 
-function Radios({ label, value, onChange, options }) {
+/**
+ * The Save summary: every change Save will make. Changes that cut off people who already have the link
+ * are listed first in a red box with their effect, and the button reads "Save anyway".
+ */
+function SaveSummary({ changes, onCancel, onSave }) {
+  const list = changes ?? []
+  const breaking = list.filter((c) => c.breaking)
+  const other = list.filter((c) => !c.breaking)
+  return (
+    <Modal
+      open={!!changes}
+      onOpenChange={(o) => { if (!o) onCancel() }}
+      title="Save changes?"
+      description={breaking.length ? 'Some changes affect people who already have the link.' : 'Here’s what will change.'}
+      footer={(
+        <>
+          <Button variant="outline" size="md" onClick={onCancel}>Keep editing</Button>
+          <Button size="md" onClick={onSave} className={breaking.length ? 'bg-destructive text-white hover:bg-destructive/90' : undefined}>{breaking.length ? 'Save anyway' : 'Save'}</Button>
+        </>
+      )}
+    >
+      <div className="space-y-4 pb-1">
+        {breaking.length > 0 && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3.5">
+            <p className="flex items-center gap-2 text-13-m text-destructive"><Warning size={16} weight="fill" /> Affects people with the link</p>
+            <ul className="mt-2.5 space-y-2.5">
+              {breaking.map((c, i) => (
+                <li key={i}>
+                  <p className="text-13-m text-type-0">{c.label}</p>
+                  <p className="text-12-r text-destructive">{c.effect}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {other.length > 0 && (
+          <ul className="space-y-2">
+            {other.map((c, i) => (
+              <li key={i} className="flex items-start gap-2 text-13-r text-type-1">
+                <Check size={14} className="mt-0.5 shrink-0 text-type-3" /> {c.label}
+              </li>
+            ))}
+          </ul>
+        )}
+        {!list.length && <p className="text-13-r text-type-2">Option details changed (sizes, watermark, wording). Nobody loses access.</p>}
+      </div>
+    </Modal>
+  )
+}
+
+function Radios({ label, hideLabel, value, onChange, options }) {
   return (
     <div role="radiogroup" aria-label={label}>
-      {label && <p className="mb-2.5 text-12-m text-type-2">{label}</p>}
+      {label && !hideLabel && <p className="mb-2.5 text-12-m text-type-2">{label}</p>}
       <div className="space-y-3">
         {options.map((o) => {
           const on = o.id === value
@@ -601,7 +716,15 @@ function Radios({ label, value, onChange, options }) {
                 {on && <span className="h-2.5 w-2.5 rounded-full bg-type-0" />}
               </span>
               <span className="min-w-0">
-                <span className={cn('block text-14-r', on ? 'text-type-0' : 'text-type-1')}>{o.label}</span>
+                <span className={cn('flex flex-wrap items-center gap-1.5 text-14-r', on ? 'text-type-0' : 'text-type-1')}>
+                  {o.label}
+                  {o.tag && <Tag tone={on ? 'dark' : 'muted'}>{o.tag}</Tag>}
+                  {o.info && (
+                    <span title={o.info} aria-label={o.info} className="grid h-5 w-5 place-items-center text-type-3 hover:text-type-0">
+                      <Info size={14} />
+                    </span>
+                  )}
+                </span>
                 {o.hint && <span className="mt-0.5 block text-12-r text-type-3">{o.hint}</span>}
               </span>
             </button>
@@ -662,17 +785,18 @@ function HighResPrice({ product, free, onChange }) {
 }
 
 /** Whole number up to LIMIT_MAX; empty means no limit. */
-function LimitField({ label, hint, value, onChange }) {
+function LimitField({ label, hint, value, onChange, disabled }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-12-m text-type-2">{label}</span>
+      <span className={cn('mb-1.5 block text-12-m', disabled ? 'text-type-3' : 'text-type-2')}>{label}</span>
       <input
         inputMode="numeric"
+        disabled={disabled}
         value={value}
         onChange={(e) => { const v = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 5); onChange(v && String(Math.min(Number(v), LIMIT_MAX))) }}
         placeholder="No limit"
         aria-label={label}
-        className="h-10 w-[160px] rounded-full border border-input bg-surface-0 px-4 text-14-r tabular-nums text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0"
+        className="h-10 w-[160px] rounded-full border border-input bg-surface-0 px-4 text-14-r tabular-nums text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0 disabled:cursor-not-allowed disabled:bg-surface-2"
       />
       {hint && <span className="mt-1.5 block text-12-r text-type-3">{hint}</span>}
     </label>

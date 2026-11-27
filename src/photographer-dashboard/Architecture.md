@@ -166,18 +166,23 @@ Shape: `{ anonymous, people: [person], totals }`. A person is `{ id, email, name
 
 ```
 { mode: 'anyone' | 'roles', roles: ['client' | 'guest' | 'vendor'], singleLink, expiry: { all, client, guest, vendor },  // yyyy-mm-dd or ''
+  slug: { custom, value },   // gallery name in the link; custom false = slugify(gallery title)
   data: { anyone, client, guest, vendor } }  // one audience each:
-{ collectEmail: { on }, approved: { on, people: [{ id, name, email, phone }] }, pin: { on, value },
-  faceSearch: { on, scope: 'all' | 'own' }, comments, filterByFace, favoriting: { on, limit }, hideImages: { on, bulk },
+{ signIn: 'none' | 'collect' | 'approved' | 'password',   // anyone: none/collect/approved; a role: password/collect/approved
+  collectEmail: { on }, approved: { on, people: [{ id, name, email, phone }] },  // on flags mirror signIn (older readers)
+  pin: { on, value },   // value: letters and numbers, 4–20 (PASSWORD_RE)
+  faceSearch: { on, scope: 'all' | 'own' }, comments, filterByFace, favoriting, hideImages: { on, bulk },
   screenshot, downloads: { on, pin: { on, code }, personalUse, image: { on, sizes: { web, high }, highFree, limit,   // highFree: false = High res is paid when the store sells it
     web: { edge: 1200 | 2048, watermark } }, video: { on } },   // Web size's long edge (default 2048) and watermark (default off)
   sharing: { on, image, video }, sets: { on, hidden: [collection title] } }
 ```
 
-- `load` merges the stored value over `defaults()` keeping only values of the right type, then `normalize()`s it. Defaults: Anyone, everything off; Client everything on except email collection, password and face scan, on the approved list; Guest the same but collecting email; Vendor like Client.
-- `normalize()` keeps roles in Client, Guest, Vendor order, makes exactly one of `collectEmail` / `approved` true per role, and sets `pin.on` when `pinRequired(s, role)` (roles + `singleLink` + not approved). `filterIncluded(d)` is face scan on with scope `all`.
-- `saveBlocker(s)` returns the first reason Save is disabled, or null. Limits are whole numbers up to `LIMIT_MAX` (99999), `''` meaning no limit.
-- `SettingsStep` keeps a local draft (`structuredClone` + `normalize` on every edit) and only calls the setter on Save. While it has no unsaved changes it follows the saved value (another tab). A `beforeunload` listener warns while it's dirty.
+- `load` runs `upgrade()` (settings saved before `signIn` existed get it from the old switches: anyone `collect` or `none`, a role `approved` or `collect`), merges over `defaults()` keeping only values of the right type, then `normalize()`s. `defaults()` are the Revamp PRD's section 5 (see the PRD, R14i); Vendor copies Guest.
+- `normalize()` keeps roles in Client, Guest, Vendor order, keeps `signIn` to the audience's allowed methods (`SIGN_IN`), mirrors it into `collectEmail.on` / `approved.on`, clears `downloads.image.limit` when `!emailSignIn(d)`, and sets `pin.on` when `pinRequired(s, role)`.
+- Rules: `pinReason(s, role)` is `'password'` (Password only), `'shared'` (one link for all roles, not approved, and two or more roles without an approved list) or null; `pinRequired` is its boolean. `filterForced(d)` is `true` (face scan + `all`), `false` (face scan + `own`) or `null`; `filterOn(d)` is that or the saved switch. `emailSignIn(d)` is `collect` or `approved`.
+- Links: `LINK_HOST` (`gallery.aftershoot.com/`), `slugOf(s, title)`, `slugify(v)` and `linkEnding(s, aud)` (`/view`, or `/<role>` with a link per role).
+- `saveBlocker(s)` returns the first problem as `{ message, aud, field }` (`field`: `roles`, `slug`, `pin`, `sizes`), or null; it also rejects two single-link roles with the same password (case-insensitive). `changeSummary(before, after, title)` lists `[{ label, effect, breaking }]` for the Save summary, comparing each audience with the same audience before (or with `anyone` when roles were just turned on). Limits are whole numbers up to `LIMIT_MAX` (99999), `''` meaning no limit.
+- `SettingsStep` keeps a local draft (`structuredClone` + `normalize` on every edit) and only calls the setter when the Save summary is confirmed. A blocked Save sets `tried`, switches to `blocker.aud` and marks the field red. While it has no unsaved changes it follows the saved value (another tab). A `beforeunload` listener warns while it's dirty.
 - Set visibility stores hidden collection titles, so new collections show by default.
 - The client gallery reads this through `useGalleryAccess()` in `src/gallery/lib/visitor.js` (`resolveVisitor`, `permissionsFor`; see the root `Architecture.md`, Client gallery → Sign-in and permissions). The preview frame loads the gallery with `?embed=1`, which skips sign-in and shows every action.
 
@@ -265,7 +270,9 @@ So `lib/pricing.js`, the store pages, the builder and the cart work unchanged:
 - **Email history is local.** Sends are simulated, so the history only records what was sent from this browser; there's no delivery, open or bounce status. Production would read it from the send log.
 - **Client email is the first recipient.** There's no client record with an email yet, so `{client_email}` fills from the To field and is blank until someone is added.
 - **Analytics are sample data.** The client gallery doesn't record events yet, so the numbers don't react to what a client actually does. There's no date range filter.
-- **Gallery settings are enforced only in the browser.** The client gallery reads the saved settings (`src/gallery/lib/visitor.js`, `downloads.js`): a sign-in screen (role, email or approved list, password, face scan, expiry) and every action (favorites + limit, hide + bulk hide on the Client role, filter by face, face scan → only their photos, sharing, set visibility, screenshot protection, downloads). Passwords and approved emails are in `localStorage`, so this is a prototype of the rules, not security. A gallery that was never saved, and the dashboard preview (`?embed=1`), stay open with no sign-in. Comments and video sharing / downloads have nothing to act on in the client gallery yet.
+- **Gallery links in Settings aren't the working links yet.** Settings shows and copies `gallery.aftershoot.com/<gallery name>/view` (or `/<role>`), while Share, the email, QR codes and the client gallery still use the prototype's `/g/<id>` (`?role=<role>`) links. The gallery name is saved (`slug`) but nothing routes on it.
+- **Role picker isn't skipped yet.** The Revamp PRD skips "pick a role" on a single link when every role is approved (the email decides) or every role is Password only (the password decides). The client gallery still asks for the role first.
+- **Gallery settings are enforced only in the browser.** The client gallery reads the saved settings (`src/gallery/lib/visitor.js`, `downloads.js`): a sign-in screen (role, email or approved list, password, face scan, expiry) and every action (favorites, hide + bulk hide on the Client role, filter by face, face scan → only their photos, sharing, set visibility, screenshot protection, downloads). Passwords and approved emails are in `localStorage`, so this is a prototype of the rules, not security. A gallery that was never saved, and the dashboard preview (`?embed=1`), stay open with no sign-in. Comments and video sharing / downloads have nothing to act on in the client gallery yet.
 - **Leaving Settings with unsaved changes** through the rail or sidebar drops the draft without asking (only closing or reloading the tab warns).
 - **Website enquiries aren't delivered.** The `/site` contact form validates and shows a thank-you, nothing more.
 - **Website photos come only from the portfolio.** There's no upload for the hero or About photo, and no focal point.

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { galleryKey, useGalleryId } from '../../data/galleries'
 import { readJSON } from '../../lib/persisted'
 import { isEmbedded } from '../../lib/embed'
-import { filterIncluded, pinRequired, useGalleryAccess } from '../../photographer-dashboard/gallery/access'
+import { emailSignIn, filterOn, pinRequired, useGalleryAccess } from '../../photographer-dashboard/gallery/access'
 import { expiryFor } from '../../photographer-dashboard/gallery/share'
 import { people } from '../data/faces'
 
@@ -88,12 +88,12 @@ export function resolveVisitor({ access, configured, embedded, roleParam, sessio
   const step = (name, passed) => { all.push(name); if (!passed) steps.push(name) }
   if (roles && !roleFixed) step('role', !!role)
   if (d) {
-    const approved = roles && d.approved.on
-    if (approved || d.collectEmail.on) {
+    const approved = d.signIn === 'approved'
+    if (emailSignIn(d)) {
       const email = session?.email?.toLowerCase()
       step('email', !!email && emailOk(email) && (!approved || isApproved(d, email)))
     }
-    if (d.pin.on || (roles && pinRequired(access, aud))) step('password', session?.password === d.pin.value)
+    if (d.pin.on || pinRequired(access, aud)) step('password', session?.password === d.pin.value)
     if (d.faceSearch.on && faceScanAvailable()) step('face', !!session?.face)
   }
   return {
@@ -131,12 +131,12 @@ const OPEN_PERMS = {
 export function permissionsFor(v, session) {
   if (v.open || !v.d) return OPEN_PERMS
   const d = v.d
-  const favLimit = Number(d.favoriting.limit)
   return {
-    favorites: { on: d.favoriting.on, limit: d.favoriting.on && favLimit > 0 ? favLimit : null },
+    favorites: { on: d.favoriting.on, limit: null }, // no favorites limit
     // Hide photos is a Client-only setting in the dashboard; other roles and "anyone" can't hide.
     hide: { on: v.aud === 'client' && d.hideImages.on, bulk: v.aud === 'client' && d.hideImages.on && d.hideImages.bulk },
-    faces: d.filterByFace.on || filterIncluded(d),
+    // Face scan decides it while on: Whole gallery → on, Only photos they're in → off.
+    faces: filterOn(d),
     // Face scan → "Only photos they're in": the gallery shows just the scanned person's photos.
     faceOnly: d.faceSearch.on && d.faceSearch.scope === 'own' && session?.face ? session.face : null,
     share: d.sharing.on && d.sharing.image,

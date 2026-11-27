@@ -87,7 +87,7 @@ export default function SignIn({ gallery, cover, photos, state }) {
                   gallery={gallery}
                   aud={visitor.aud}
                   d={visitor.d}
-                  approved={visitor.mode === 'roles' && visitor.d.approved.on}
+                  approved={visitor.d.signIn === 'approved'}
                   initial={session?.email ?? ''}
                   onPass={(email) => pass({ email })}
                 />
@@ -217,7 +217,7 @@ function EmailStep({ gallery, aud, d, approved, initial, onPass }) {
   )
 }
 
-/** Four digits. Tries as soon as the fourth is typed; a wrong one shakes, clears and says so. */
+/** Letters and numbers, 4–20. Checked on Open gallery; a wrong one shakes, clears and says so. */
 function PasswordStep({ gallery, code: expected, onPass }) {
   const [code, setCode] = useState('')
   const [wrong, setWrong] = useState(0) // bumped per wrong try: remounts the field to replay the shake
@@ -231,25 +231,23 @@ function PasswordStep({ gallery, code: expected, onPass }) {
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); tryCode(code) }}>
-      <Heading icon={LockSimple} title="Enter the password" body={`${gallery.photographer} shared a 4-digit password for this gallery with you.`} />
+      <Heading icon={LockSimple} title="Enter the password" body={`${gallery.photographer} shared a password for this gallery with you.`} />
       <motion.input
         key={wrong}
         autoFocus
         value={code}
         onChange={(e) => {
-          const v = e.target.value.replace(/\D/g, '').slice(0, 4)
-          setCode(v)
-          if (v.length === 4) tryCode(v)
+          setCode(e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20))
         }}
         animate={wrong ? { x: [0, -10, 10, -6, 6, 0] } : undefined}
         transition={{ duration: 0.4, ease }}
-        inputMode="numeric"
-        autoComplete="one-time-code"
+        type="password"
+        autoComplete="off"
         aria-label="Gallery password"
         aria-invalid={wrong > 0 && !code}
-        placeholder="••••"
+        placeholder="Password"
         className={cn(
-          'mt-6 h-14 w-full rounded-xl border bg-surface-1 text-center text-24-m tabular-nums tracking-[0.5em] text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0',
+          'mt-6 h-14 w-full rounded-xl border bg-surface-1 text-center text-20-m tracking-wider text-type-0 outline-none transition placeholder:text-type-3 focus:border-type-0',
           wrong > 0 && !code ? 'border-destructive' : 'border-input'
         )}
       />

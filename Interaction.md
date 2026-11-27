@@ -252,7 +252,7 @@ Shown in front of the gallery when its Settings were saved and a step is left (s
 | Role card | Tap | Saves the role and moves to the next step. Hover: border `→ type-3`, background `→ surface-0`, caret nudges 2px right; press `scale 0.99` | Tailwind default | Tailwind |
 | "Not the client? Change" | Tap | Clears the role, email, password and face scan and goes back to the role cards. Only after a role was picked from the cards | n/a | n/a |
 | Email → Continue | Submit (Enter or button) | Disabled while empty. Invalid: "Enter a valid email address". Approved only and not on the list: "This email isn't on the list for {roles}…". Errors turn the field `border-destructive` and clear on typing | n/a | n/a |
-| Password field | Fourth digit typed / Open gallery | Tries at once. Wrong: the field shakes, clears and shows "That password isn't right…" | `x [0, -10, 10, -6, 6, 0]`, `0.4s`, `ease` | framer-motion |
+| Password field | Open gallery (Enter or button) | Letters and numbers, masked, 20 max; Open gallery is disabled under 4. Wrong: the field shakes, clears and shows "That password isn't right…" | `x [0, -10, 10, -6, 6, 0]`, `0.4s`, `ease` | framer-motion |
 | Face scan | Selfie taken / uploaded | The [Find people](#find-people-srcgallerycomponentsfacepanejsx-facesjs) scan, then "Is this you?": "Yes, that's me" signs in, "That's not me, scan again" restarts the camera | Same as Find people | framer-motion |
 | Last step passed | — | The gallery replaces the screen at the top of the page, then a toast: "Welcome, {first name}" for approved people, else "Signed in as {email}" | toast after `300ms` | n/a |
 | Expired link | Screen opens | "This link has expired" with the date. No actions | n/a | n/a |
