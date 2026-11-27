@@ -4,7 +4,7 @@ import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, CircleNotch, Cross
 import { Button } from '../../../components/ui'
 import { cn } from '../../../lib/utils'
 import {
-  ALL_TEMPLATES, COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO_ALIGN, LOGO_PLACEMENT, MARGIN_X, MARGIN_Y, OVERLAY, PHOTO_SIZE,
+  COMPOSED_TEMPLATES, COMPOSITIONS, CTA_LAYOUT, CTA_SIZE, LIMITS, LOGO_ALIGN, LOGO_PLACEMENT, MARGIN_X, MARGIN_Y, OVERLAY, PHOTO_SIZE,
   SHAPES, SURFACES, TEMPLATES, TITLE_SIZE, WIDTH, isComposed, photoCount, supports,
 } from './config'
 import { FocalPoint, Label, PositionGrid, Section, Segmented, Swatches, Switch, TextField } from './controls'
@@ -29,7 +29,6 @@ export { PANE_W, SHEET_H, PEEK_H }
  */
 export default function CoverEditor({ open, onClose, phone, peek, onPeek, gallery, photo, cover, media, photos = [], collections = [], inline = false }) {
   const [tab, setTab] = useState('templates')
-  const name = ALL_TEMPLATES.find((t) => t.id === cover.template)?.name ?? 'Custom'
 
   return (
     <EditorPane
@@ -39,7 +38,6 @@ export default function CoverEditor({ open, onClose, phone, peek, onPeek, galler
       peek={peek}
       onPeek={onPeek}
       title="Customize cover"
-      subtitle={`Template: ${name}`}
       previewLabel="Preview cover"
       tabs={TABS}
       tab={tab}

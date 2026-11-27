@@ -161,7 +161,7 @@ export function designParts(ws) {
       thumb: <img src={media.photo.thumb ?? media.photo.src} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${media.photo.focus.x}% ${media.photo.focus.y}%` }} />,
     },
     { id: 'grid', title: 'Grid', detail: `${label(ORIENTATION, grid.orientation)} · ${label(SIZE, grid.size)} · ${label(SPACING, grid.spacing)}`, icon: SquaresFour },
-    { id: 'headings', title: 'Collection headings', detail: `Template: ${name(HEADING_TEMPLATES, headings.state.layout.template)}${headings.edited ? ' · edited' : ''}`, icon: TextAa },
+    { id: 'headings', title: 'Collection headings', detail: headings.state.perSet ? 'Different layout for each set' : `Template: ${name(HEADING_TEMPLATES, headings.state.layout.template)}${headings.edited ? ' · edited' : ''}`, icon: TextAa },
     { id: 'footer', title: 'Footer', detail: `Template: ${name(FOOTER_TEMPLATES, footer.config.layout.template)}${footer.edited ? ' · edited' : ''}`, icon: Rows },
   ]
 }

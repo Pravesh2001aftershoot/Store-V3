@@ -9,7 +9,6 @@ import { cn } from '../../lib/utils'
  * Same shell as the gallery's other editors.
  */
 export default function GridEditor({ open, onClose, phone, peek, onPeek, inline, grid, setGrid, resetGrid }) {
-  const label = (list, id) => list.find((o) => o.id === id)?.label
   return (
     <EditorPane
       open={open}
@@ -20,7 +19,6 @@ export default function GridEditor({ open, onClose, phone, peek, onPeek, inline,
       inline={inline}
       modal={false}
       title="Customize grid"
-      subtitle={`${label(ORIENTATION, grid.orientation)} · ${label(SIZE, grid.size)} · ${label(SPACING, grid.spacing)} spacing`}
       previewLabel="Preview grid"
       tabs={[{ id: 'layout', label: 'Layout' }]}
       tab="layout"

@@ -55,7 +55,7 @@ export default function GalleryGrid({ photos, sections, settings, favorites, onF
           {b.title && (
             <SectionHeader
               id={sectionId(b.title)}
-              style={headings.style}
+              style={headings.styleFor(b.title)}
               words={headings.words(b.title, b.end - b.start)}
               index={b.index}
               onEdit={onEditHeading && (() => onEditHeading(b.title))}

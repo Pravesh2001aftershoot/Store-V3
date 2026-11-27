@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react'
 import { PencilSimple } from '@phosphor-icons/react'
 import { cn } from '../../../lib/utils'
 import { font } from './config'
@@ -20,6 +21,9 @@ const PAD_Y = {
 }
 // Side margin, so the text (and any rule) sits in from the photo edges rather than flush with them.
 const PAD_X = 'clamp(12px, 3cqw, 48px)'
+// The label's and the note's own sizes (Small · Medium · Large in the editor).
+const EYEBROW_SIZE = { s: '12px', m: '14px', l: '16px' }
+const NOTE_SIZE = { s: '14px', m: '16px', l: '20px' }
 const ITEMS = { left: 'items-start text-left', center: 'items-center text-center', right: 'items-end text-right' }
 
 /** Inline style for the title: typeface, weight, case, and tracking that suits them. */
@@ -38,9 +42,18 @@ function titleStyle(type, size) {
   }
 }
 
-const Eyebrow = ({ children, className }) => <p className={cn('text-12-sb uppercase text-type-2', className)}>{children}</p>
-const Description = ({ children, className }) =>
-  children ? <p className={cn('max-w-[60ch] whitespace-pre-line text-16-r-p text-type-1', className)}>{children}</p> : null
+/** The label's and the note's type ({ font, weight, size }), so the templates don't have to pass it down. */
+const PieceType = createContext({})
+const pieceStyle = (t, sizes, fallback) => t ? { fontFamily: font(t.font).family, fontWeight: t.weight, fontSize: sizes[t.size] ?? fallback } : undefined
+
+function Eyebrow({ children, className }) {
+  const t = useContext(PieceType).eyebrow
+  return <p className={cn('text-12-sb uppercase text-type-2', className)} style={pieceStyle(t, EYEBROW_SIZE, EYEBROW_SIZE.s)}>{children}</p>
+}
+function Description({ children, className }) {
+  const t = useContext(PieceType).note
+  return children ? <p className={cn('max-w-[60ch] whitespace-pre-line text-16-r-p text-type-1', className)} style={pieceStyle(t, NOTE_SIZE, NOTE_SIZE.m)}>{children}</p> : null
+}
 const Rule = ({ className }) => <span aria-hidden className={cn('h-px bg-border', className)} />
 
 export default function SectionHeader({ id, style, words, index = 0, onEdit, className }) {
@@ -55,7 +68,9 @@ export default function SectionHeader({ id, style, words, index = 0, onEdit, cla
     <header id={id} className={cn('@container group/heading relative', className)}>
       {/* Padding on an inner box, so its cqw is measured against this heading rather than the page. */}
       <div style={{ paddingBlock: PAD_Y[L.spacing], paddingInline: PAD_X }}>
-        <Template L={L} show={show} w={words} title={title} index={index} />
+        <PieceType.Provider value={type}>
+          <Template L={L} show={show} w={words} title={title} index={index} />
+        </PieceType.Provider>
       </div>
       {onEdit && (
         <button

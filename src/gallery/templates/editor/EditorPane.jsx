@@ -24,13 +24,13 @@ export const PEEK_H = 64
  * `resetLabel` renames the footer's reset action (e.g. "Reset product").
  */
 export default function EditorPane({
-  open, onClose, phone, peek, onPeek, title, subtitle, previewLabel = 'Preview',
+  open, onClose, phone, peek, onPeek, title, previewLabel = 'Preview',
   tabs, tab, onTab, onReset, resetLabel = 'Reset all', modal = true, inline = false, children,
 }) {
   const closable = !!onClose
   const body = (
     <>
-      <Header phone={phone && !inline} peek={peek} onPeek={onPeek} title={title} subtitle={subtitle} previewLabel={previewLabel} tabs={tabs} tab={tab} onTab={onTab} closable={closable} />
+      <Header phone={phone && !inline} peek={peek} onPeek={onPeek} title={title} previewLabel={previewLabel} tabs={tabs} tab={tab} onTab={onTab} closable={closable} />
       <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5', phone && !inline && peek && 'invisible')}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -117,7 +117,7 @@ export default function EditorPane({
   )
 }
 
-function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab, onTab, closable }) {
+function Header({ phone, peek, onPeek, title, previewLabel, tabs, tab, onTab, closable }) {
   return (
     <div className={cn('shrink-0 px-5', !(phone && peek) && 'border-b border-border', !(phone && peek) && tabs.length <= 1 && 'pb-3')}>
       {phone && (
@@ -128,7 +128,6 @@ function Header({ phone, peek, onPeek, title, subtitle, previewLabel, tabs, tab,
       <div className={cn('flex items-center gap-2', phone ? 'pt-0.5' : 'pt-4')}>
         <div className="min-w-0 flex-1">
           <Dialog.Title className="truncate text-16-sb">{title}</Dialog.Title>
-          {subtitle && <p className="truncate text-12-r text-type-2">{subtitle}</p>}
         </div>
         {phone && (
           <button

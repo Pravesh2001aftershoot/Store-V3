@@ -1,39 +1,50 @@
 import { useId, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { Info } from '@phosphor-icons/react'
 import { cn } from '../../../lib/utils'
 import { POSITIONS } from './config'
 
 const ease = [0.22, 1, 0.36, 1]
 
-/** A titled group of controls in the editor. */
+/** A group of controls in the editor, usually titled. Without a title or hint it's just the controls. */
 export function Section({ title, hint, children, className }) {
   return (
     <section className={cn('space-y-3 border-b border-border py-5 first:pt-1 last:border-b-0', className)}>
-      <div>
-        <p className="text-11-sb uppercase text-type-2">{title}</p>
-        {hint && <p className="mt-0.5 text-12-r text-type-3">{hint}</p>}
-      </div>
+      {(title || hint) && (
+        <div>
+          {title && <p className="text-11-sb uppercase text-type-2">{title}</p>}
+          {hint && <p className={cn('text-12-r text-type-3', title && 'mt-0.5')}>{hint}</p>}
+        </div>
+      )}
       {children}
     </section>
   )
 }
 
-export function Label({ children, aside }) {
+/** Control label. `info` adds an ⓘ after it that explains the control on hover / long-press. */
+export function Label({ children, aside, info }) {
   return (
     <div className="mb-2 flex items-center justify-between gap-3">
-      <p className="text-13-m text-type-0">{children}</p>
+      <p className="flex items-center gap-1.5 text-13-m text-type-0">
+        {children}
+        {info && (
+          <span role="img" title={info} aria-label={info} className="text-type-2">
+            <Info size={14} />
+          </span>
+        )}
+      </p>
       {aside && <span className="text-12-r tabular-nums text-type-2">{aside}</span>}
     </div>
   )
 }
 
 /** Pill segmented control. `options`: [{ id, label, icon?, hint? }]. */
-export function Segmented({ label, options, value, onChange }) {
+export function Segmented({ label, info, options, value, onChange }) {
   const id = useId()
   const current = options.find((o) => o.id === value)
   return (
     <div>
-      {label && <Label>{label}</Label>}
+      {label && <Label info={info}>{label}</Label>}
       <div role="radiogroup" aria-label={label} className="grid gap-1 rounded-full bg-surface-2 p-1" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
         {options.map((o) => (
           <button

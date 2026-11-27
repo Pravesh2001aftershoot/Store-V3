@@ -20,7 +20,6 @@ const TABS = [
  */
 export default function FooterEditor({ open, onClose, phone, peek, onPeek, gallery, footer, photo, photos, inline = false }) {
   const [tab, setTab] = useState('templates')
-  const name = TEMPLATES.find((t) => t.id === footer.config.layout.template)?.name ?? 'Custom'
   return (
     <EditorPane
       open={open}
@@ -29,7 +28,6 @@ export default function FooterEditor({ open, onClose, phone, peek, onPeek, galle
       peek={peek}
       onPeek={onPeek}
       title="Customize footer"
-      subtitle={`Template: ${name}${footer.edited ? ' · edited' : ''}`}
       previewLabel="Preview footer"
       tabs={TABS}
       tab={tab}

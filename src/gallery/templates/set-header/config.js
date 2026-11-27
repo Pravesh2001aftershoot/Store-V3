@@ -9,12 +9,17 @@ import { isComposed } from '../cover/config'
 //
 //   layout  — template (the structure), text position, spacing, title size
 //   type    — the title's typeface: font, weight, letter case. `matchCover` follows the cover instead.
-//   show    — optional pieces shared by every heading (photo count, divider)
+//             `type.eyebrow` and `type.note` are the label's and the note's own { font, weight, size };
+//             the cover never decides those.
+//   show    — optional pieces (photo count; fine rules, which always come from the template: see bindRules)
 //   content — the words, per collection: { [collection]: { eyebrow?, title?, description? } }.
 //             Only edited fields are stored; the rest fall back to the collection's own name and count.
+//   perSet  — false: one layout (layout + show) for every heading. true: each collection can have its own.
+//   sets    — per-collection layouts while perSet is on: { [collection]: { layout, show } }. A collection
+//             without one uses the shared layout. Kept when perSet is turned off, so turning it back on restores them.
 //
-// Layout, type and show apply to every collection, so the gallery reads as one piece; the words are
-// per collection. Choosing a template never touches the words or the type.
+// Type always applies to every collection, so the gallery reads as one piece; the words are per
+// collection. Choosing a template never touches the words or the type.
 
 export const LIMITS = { eyebrow: 32, title: 40, description: 160 }
 
@@ -75,17 +80,30 @@ export const TEMPLATES = [
 
 /** Which controls each template uses, so the editor only offers those. */
 export const SUPPORTS = {
-  classic: ['align', 'divider'],
-  centered: ['divider'],
-  split: ['flip', 'divider'],
+  classic: ['align'],
+  centered: [],
+  split: ['flip'],
   numbered: ['align'],
   inline: [],
 }
 export const supports = (layout, key) => SUPPORTS[layout.template]?.includes(key) ?? false
 
+/** Fine rules aren't a setting: a heading has them when its template does (Centered). */
+const bindRules = (layout, show) => ({ ...show, divider: TEMPLATES.find((x) => x.id === layout.template)?.show.divider ?? false })
+
 // Headings follow the cover until the photographer chooses their own type.
-const DEFAULT_TYPE = { matchCover: true, font: 'sans', weight: 600, case: 'none' }
-const DEFAULT = { layout: TEMPLATES[0].layout, show: TEMPLATES[0].show, type: DEFAULT_TYPE, content: {} }
+const DEFAULT_TYPE = {
+  matchCover: true, font: 'sans', weight: 600, case: 'none',
+  eyebrow: { font: 'sans', weight: 600, size: 's' },
+  note: { font: 'sans', weight: 400, size: 'm' },
+}
+const loadType = (t = {}) => ({
+  ...DEFAULT_TYPE,
+  ...t,
+  eyebrow: { ...DEFAULT_TYPE.eyebrow, ...t.eyebrow },
+  note: { ...DEFAULT_TYPE.note, ...t.note },
+})
+const DEFAULT = { layout: TEMPLATES[0].layout, show: TEMPLATES[0].show, type: DEFAULT_TYPE, content: {}, perSet: false, sets: {} }
 
 // Composed covers centre their title on these; the rest sit it to one side (mirrored by `flip`).
 const CENTRED_COVERS = ['frame', 'stacked', 'triptych', 'banner']
@@ -107,18 +125,25 @@ function load(key) {
   try {
     const saved = JSON.parse(localStorage.getItem(key))
     if (!saved) return DEFAULT
+    const layout = { ...DEFAULT.layout, ...saved.layout }
     return {
-      layout: { ...DEFAULT.layout, ...saved.layout },
-      show: { ...DEFAULT.show, ...saved.show },
-      type: { ...DEFAULT_TYPE, ...saved.type },
+      layout,
+      show: bindRules(layout, { ...DEFAULT.show, ...saved.show }),
+      type: loadType(saved.type),
       content: saved.content && typeof saved.content === 'object' ? saved.content : {},
+      perSet: saved.perSet === true,
+      sets: Object.fromEntries(
+        Object.entries(saved.sets && typeof saved.sets === 'object' ? saved.sets : {})
+          .filter(([, v]) => v && typeof v === 'object')
+          .map(([k, v]) => { const l = { ...DEFAULT.layout, ...v.layout }; return [k, { layout: l, show: bindRules(l, { ...DEFAULT.show, ...v.show }) }] })
+      ),
     }
   } catch {
     return DEFAULT
   }
 }
 
-const same = (a, b) => Object.keys(a).every((k) => a[k] === b[k])
+const same = (a, b) => Object.keys(a).every((k) => (a[k] && typeof a[k] === 'object' ? same(a[k], b?.[k] ?? {}) : a[k] === b?.[k]))
 
 // Shared by every reader in this tab, and kept in sync with other tabs and the dashboard preview.
 const family = forGallery('sections', load)
@@ -133,6 +158,8 @@ export function useSectionConfig(cover) {
   const setLayout = useCallback((patch) => setState((s) => ({ ...s, layout: { ...s.layout, ...patch } })), [])
   const setShow = useCallback((patch) => setState((s) => ({ ...s, show: { ...s.show, ...patch } })), [])
   const setType = useCallback((patch) => setState((s) => ({ ...s, type: { ...s.type, ...patch } })), [])
+  /** The label's or the note's own type: `piece` is 'eyebrow' or 'note'. */
+  const setPieceType = useCallback((piece, patch) => setState((s) => ({ ...s, type: { ...s.type, [piece]: { ...s.type[piece], ...patch } } })), [])
   /** Edits the words of one collection's heading. */
   const setContent = useCallback(
     (collection, patch) => setState((s) => ({ ...s, content: { ...s.content, [collection]: { ...s.content[collection], ...patch } } })),
@@ -151,18 +178,54 @@ export function useSectionConfig(cover) {
     if (tpl) setState((s) => ({ ...s, layout: tpl.layout, show: tpl.show }))
   }, [])
   const reset = useCallback(() => setState(DEFAULT), [])
+  /** Same layout for every heading (false) or a layout per collection (true). */
+  const setPerSet = useCallback((perSet) => setState((s) => ({ ...s, perSet })), [])
 
   const fromCover = useMemo(() => coverStyle(cover), [cover])
 
-  // What the headings actually draw with: matching the cover overrides type, alignment and size.
-  const style = useMemo(() => {
-    if (!state.type.matchCover) return { layout: state.layout, show: state.show, type: state.type }
+  // What a heading actually draws with: matching the cover overrides type, alignment and size.
+  const resolve = useCallback((layout, rawShow) => {
+    const show = bindRules(layout, rawShow)
+    if (!state.type.matchCover) return { layout, show, type: state.type }
     return {
-      layout: { ...state.layout, ...(supports(state.layout, 'align') ? { align: fromCover.align } : {}), size: fromCover.size },
-      show: state.show,
+      layout: { ...layout, ...(supports(layout, 'align') ? { align: fromCover.align } : {}), size: fromCover.size },
+      show,
       type: { ...state.type, ...fromCover.type },
     }
-  }, [state, fromCover])
+  }, [state.type, fromCover])
+  const style = useMemo(() => resolve(state.layout, state.show), [resolve, state.layout, state.show])
+
+  /** The layout a collection uses: its own while perSet is on (if it has one), else the shared one. */
+  const own = useCallback(
+    (collection) => (state.perSet && collection && state.sets[collection]) || { layout: state.layout, show: state.show },
+    [state]
+  )
+  /** The style one collection's heading draws with. */
+  const styleFor = useCallback((collection) => { const o = own(collection); return resolve(o.layout, o.show) }, [own, resolve])
+
+  /**
+   * Layout reads and writes for one collection: its own layout while perSet is on, the shared one otherwise.
+   * `{ layout, show, style, setLayout, setShow, applyTemplate }`.
+   */
+  const scoped = useCallback((collection) => {
+    const o = own(collection)
+    const write = (fn) => setState((s) => {
+      if (!s.perSet || !collection) return { ...s, ...fn({ layout: s.layout, show: s.show }) }
+      const cur = s.sets[collection] ?? { layout: s.layout, show: s.show }
+      return { ...s, sets: { ...s.sets, [collection]: { ...cur, ...fn(cur) } } }
+    })
+    return {
+      layout: o.layout,
+      show: o.show,
+      style: resolve(o.layout, o.show),
+      setLayout: (patch) => write((c) => ({ layout: { ...c.layout, ...patch } })),
+      setShow: (patch) => write((c) => ({ show: { ...c.show, ...patch } })),
+      applyTemplate: (id) => {
+        const tpl = TEMPLATES.find((x) => x.id === id)
+        if (tpl) write(() => ({ layout: tpl.layout, show: tpl.show }))
+      },
+    }
+  }, [own, resolve])
 
   /** A collection's words, with its own name and count filled in where nothing's been typed. */
   const words = useCallback(
@@ -181,5 +244,8 @@ export function useSectionConfig(cover) {
   const tpl = TEMPLATES.find((x) => x.id === state.layout.template)
   const edited = !tpl || !same(tpl.layout, state.layout) || !same(tpl.show, state.show) || !same(DEFAULT_TYPE, state.type)
 
-  return { state, style, words, fromCover, edited, setLayout, setShow, setType, setContent, clearContent, applyTemplate, reset }
+  return {
+    state, style, styleFor, scoped, words, fromCover, edited,
+    setLayout, setShow, setType, setPieceType, setContent, clearContent, applyTemplate, setPerSet, reset,
+  }
 }

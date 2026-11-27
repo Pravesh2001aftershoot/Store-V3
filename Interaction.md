@@ -222,7 +222,7 @@ Opens from "Edit footer". The editor uses the cover editor's shell ([EditorPane.
 
 ### Collection headings and heading editor: [src/gallery/templates/set-header/SectionHeader.jsx](src/gallery/templates/set-header/SectionHeader.jsx), [SectionEditor.jsx](src/gallery/templates/set-header/SectionEditor.jsx)
 
-Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, underlined tabs (Templates / Text / Style), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
+Opens from the pencil on any collection heading. The editor uses the shared shell ([EditorPane.jsx](src/gallery/templates/editor/EditorPane.jsx)): same pane and sheet motion, phone collapse, underlined tabs (Templates / Text), tab body crossfade, Reset all and Done. Like the footer editor it's non-modal (`modal={false}`), and `SectionEditor` locks page scroll itself. Done, Esc and ✕ close it; clicks outside don't.
 
 | Element | Trigger | Animation | Values | Library |
 |---|---|---|---|---|
@@ -230,16 +230,18 @@ Opens from the pencil on any collection heading. The editor uses the shared shel
 | Edit pencil | Hover | Background `surface-1 → surface-2`, icon `type-1 → type-0` | Tailwind default | Tailwind |
 | Preview stage | Editor opens / closes | Fades in beside the pane (or above the phone sheet); follows the sheet as it collapses | `opacity 0 → 1`, `0.35s`, `ease`; `left` / `bottom`, `550ms`, `cubic-bezier(.22,1,.36,1)` | framer-motion + Tailwind |
 | "Live preview · <collection>" label | Stage scrolls | Stays pinned to the top-left of the stage | `sticky top-0` | CSS |
-| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Thumbnails are real headings at 1280px, scaled to the card ([FitThumb.jsx](src/gallery/templates/editor/FitThumb.jsx)) | Tailwind default; `ResizeObserver` scale | Tailwind + React |
+| "Different layout for each set" switch (top of Templates) | Toggle | Off (default): one template, position and details for every heading. On: a collection picker appears under it, and picking a template, position, size, spacing or the label switch changes only that collection's heading (the page and stage update instantly). Type and Match cover still change every heading. Turning it off shows the shared layout on every heading; each set's own is remembered | Knob slides as in the cover editor; the picker appears instantly | framer-motion |
+| Template card | Hover / selected | Ring `border → type-3` on hover, `ring-2 type-0` and a check badge when selected. Cards are stacked in one column, each a full-width 3:1 frame of the same height; thumbnails are real headings rendered at 1280px, scaled to the card and centred (shrunk further if taller) ([FitThumb.jsx](src/gallery/templates/editor/FitThumb.jsx)) | Tailwind default; `ResizeObserver` scale | Tailwind + React |
 | Template thumbnails | Words or type change | Re-render live with the current words, font and cover match | n/a | React |
-| Collection picker (Text) | Collection chosen | The fields and the stage switch to that collection's words instantly | n/a | n/a |
+| Collection picker (Templates and Text, only while "Different layout for each set" is on; off, the editor edits the heading whose pencil opened it) | Collection chosen | The fields, the selected template and the stage switch to that collection instantly. A native select on tablet/desktop, a bottom sheet on phones | n/a | n/a |
 | Label / title / note fields | Typing | Same as the cover editor's text fields. The heading on the page and in the stage update as you type | Tailwind default | Tailwind |
 | "Restore <collection>'s original words" | Click | The words snap back to the defaults; the button disappears | n/a | n/a |
-| Match cover switch (Style) | Toggle | Knob slides as in the cover editor. While on, the typeface, alignment and size controls fade to `45%` opacity and ignore clicks | `transition-opacity`, Tailwind default | framer-motion + Tailwind |
-| Font card | Hover / chosen | Border `input → type-3` on hover; chosen gets `border-type-0 ring-1` | Tailwind default | Tailwind |
-| Segmented controls (weight, case, alignment, title side, size, space around) | Option chosen | Same as the cover editor | `layoutId="seg-{id}"`, `0.35s`, `ease` | framer-motion |
+| "Match the cover’s title" switch (Templates, under "Different layout for each set") | Toggle | Knob slides as in the cover editor. While on, in the Text tab the text alignment and the title's font family, weight and text size fade to `45%` opacity and ignore clicks; label and note type stay editable | `transition-opacity`, Tailwind default | framer-motion + Tailwind |
+| Font family / Weight dropdowns (under each of Label, Title, Note) | Option chosen | That piece's type changes on every heading instantly. A native select on tablet/desktop, a bottom sheet titled "Font family" / "Weight" on phones | n/a | n/a |
+| ⓘ after Text alignment, Space around, Text size | Hover / long-press | Shows the control's explanation as a native tooltip | n/a | n/a |
+| Segmented controls (text alignment, title side, space around, text size) | Option chosen | Same as the cover editor | `layoutId="seg-{id}"`, `0.35s`, `ease` | framer-motion |
 | Headings (page and stage) | Template, type or spacing change | Update instantly; no transition between templates | n/a | n/a |
-| Headings | Cover changes while Match cover is on | Font, weight, case, alignment and size follow the cover instantly | n/a | n/a |
+| Headings | Cover changes while Match cover is on | The title's font, weight, case and size, and the alignment, follow the cover instantly | n/a | n/a |
 
 ### Sign-in: [src/gallery/components/SignIn.jsx](src/gallery/components/SignIn.jsx), [visitor.js](src/gallery/lib/visitor.js)
 
